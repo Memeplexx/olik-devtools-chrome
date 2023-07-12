@@ -1,0 +1,18 @@
+{
+  "name": "Olik Devtools",
+  "description": "Makes use of the devtools.inspectedWindow API to collect data and display it inside of a devtools panel.",
+  "version": "1.0",
+  "manifest_version": 3,
+  "devtools_page": "devtools.html",
+  "permissions": [ "management", "scripting", "tabs" ] ,
+  "host_permissions": [
+    "*://*/*",
+    "<all_urls>"
+],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"]
+    }
+  ]
+}
