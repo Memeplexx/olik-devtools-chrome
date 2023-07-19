@@ -8,6 +8,7 @@ export type EditorHookArgs = {
 } & EditorProps;
 
 export type EditorProps = {
+  query: string,
   state: RecursiveRecord | null,
   onChange: (text: string) => void,
 }

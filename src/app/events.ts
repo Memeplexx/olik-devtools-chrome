@@ -1,13 +1,16 @@
 import { useHooks } from "./hooks";
 
 export const useEvents = (props: ReturnType<typeof useHooks>) => ({
-  onEditorChange: (text: string) => (
-    props.setQuery(text)
-  ),
+  onEditorChange: (text: string) => {
+    props.setQuery(text);
+  },
   onMouseEnterItem: (id: number) => () => {
-    props.setQuery(props.items.find(item => item.id === id)?.type || '')
+    const item = props.items.find(item => item.id === id)!;
+    props.setQuery(item.type || '');
+    props.setSelectedState(item.state);
   },
   onMouseLeaveItem: (/*id: number*/) => () => {
-    props.setQuery('')
+    props.setQuery('');
+    props.setSelectedState(null);
   },
 })

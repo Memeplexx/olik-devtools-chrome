@@ -14,12 +14,14 @@ export const App = () => {
 			{!chrome.runtime && <DemoApp />}
 			<DevtoolsPanel>
 				<EditorPanel
+					query={hooks.query}
 					state={hooks.state}
 					onChange={events.onEditorChange}
 				/>
 				<TreePanel
 					state={hooks.state}
 					query={hooks.query}
+					selectedState={hooks.selectedState}
 				/>
 				<Items>
 					{hooks.items.map(item => (

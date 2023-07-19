@@ -1,4 +1,5 @@
 import { RecursiveRecord, Store, createStore, deserialize, mustBe, updateFunctions, getStore } from "olik";
+import { StoreInternal } from "olik/dist/type-internal";
 import React from "react";
 import styled from "styled-components";
 
@@ -6,12 +7,23 @@ import styled from "styled-components";
 export const Tree = (props: {
   state: RecursiveRecord | null,
   query: string,
+  selectedState: RecursiveRecord | null,
   className?: string,
 }) => {
   const storeRef = React.useRef<Store<RecursiveRecord> | null>(null);
   const stateRef = React.useRef<unknown | null>(null);
   const createdStore = React.useRef(false);
   const justUpdated = React.useRef(false);
+
+  if (props.selectedState) {
+    return (
+      <ScrollPane className={props.className}>
+        <JsonWrapper>
+          {JSON.stringify(props.selectedState, null, 2)}
+        </JsonWrapper>
+      </ScrollPane>
+    );
+  }
 
   if (!props.state) {
     return <div></div>;
@@ -36,51 +48,41 @@ export const Tree = (props: {
   }
   stateRef.current = props.state;
 
-  // determine selected state
-  let subStore: Store<unknown> = storeRef.current;
-  props.query
-    .split('.')
-    .filter(i => !!i)
-    .forEach(key => {
-      const arg = key.match(/\(([^)]*)\)/)?.[1];
-      const containsParenthesis = arg !== null && arg !== undefined;
-      let subStoreLocal: Store<unknown>;
-      if (containsParenthesis) {
-        const functionName = key.split('(')[0];
-        const typedArg = deserialize(arg);
-        const storeProp = mustBe.record(subStore)[functionName];
-        if (typeof storeProp !== 'function') {
-          return;
-        } else {
-          const storeFunction = mustBe.function<unknown, Store<unknown>>(storeProp);
-          if (updateFunctions.includes(functionName)) {
-            const updateRequested = props.query.endsWith('\n');
-            if (updateRequested) {
-              justUpdated.current = true;
-              subStoreLocal = storeFunction(typedArg);
-              chrome?.tabs?.query({ active: true })
-                .then(result => chrome.scripting.executeScript({
-                  target: { tabId: result[0].id! },
-                  func: (action) => document.getElementById('olik-action')!.innerHTML = action,
-                  args: [props.query],
-                }))
-                .catch(console.error);
-            }
-            return;
-          } else {
-            subStoreLocal = storeFunction(typedArg);
-          }
-        }
-      } else {
-        subStoreLocal = mustBe.record<Store<unknown>>(subStore)[key];
+  let subStore = getStore() as unknown as StoreInternal;
+  const segments = props.query.split('.');
+  if (segments[0] === 'store') {
+    segments.shift();
+  }
+  segments.forEach(key => {
+    const arg = key.match(/\(([^)]*)\)/)?.[1];
+    const containsParenthesis = arg !== null && arg !== undefined;
+    if (containsParenthesis) {
+      const functionName = key.split('(')[0];
+      const typedArg = deserialize(arg);
+      const functionToCall = subStore[functionName];
+      if (!updateFunctions.includes(functionName)) {
+        subStore = functionToCall(typedArg);
+      } else if (props.query.endsWith('\n')) {
+        subStore = functionToCall(typedArg);
+        justUpdated.current = true;
+        chrome?.tabs?.query({ active: true })
+          .then(result => chrome.scripting.executeScript({
+            target: { tabId: result[0].id! },
+            func: (action) => document.getElementById('olik-action')!.innerHTML = action,
+            args: [props.query],
+          }))
+          .catch(console.error);
       }
-      const state = subStoreLocal.$state;
-      if (state == null || (Array.isArray(state) && state.every(e => e == null))) {
-        return;
+    } else {
+      subStore = subStore[key];
+    }
+    if (subStore) {
+      const state = subStore.$state;
+      if (state != null && (!Array.isArray(state) || !state.every(e => e == null))) {
+        stateRef.current = state;
       }
-      stateRef.current = state;
-      subStore = subStoreLocal;
-    });
+    }
+  })
 
   console.log('!')
   return (

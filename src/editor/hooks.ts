@@ -17,6 +17,7 @@ export const useHooks = (props: EditorProps) => {
   useMonacoTextEditor(hookArgs);
   addTypescriptSupportToEditor();
   useEditorValueSetter(hookArgs);
+  useQuerySetter(hookArgs);
   useEditorChangeListener(hookArgs);
   useEditLimiter(hookArgs);
   return {
@@ -33,11 +34,24 @@ const addTypescriptSupportToEditor = () => {
 const useEditorValueSetter = ({ editorRef, state }: EditorHookArgs) => {
   const propsStateRef = React.useRef(state);
   if (state && state !== propsStateRef.current) {
+    const typeDefString = olikTypeDefsAsString + `; const store: Store<${generateTypeDefinition(state).replace(/\n|\r/g, "")}>;`;
     propsStateRef.current = state;
-    editorRef.current?.setValue([
-      olikTypeDefsAsString + `; const store: Store<${generateTypeDefinition(state).replace(/\n|\r/g, "")}>;`,
-      'store.',
-    ].join('\n'));
+    if (editorRef.current!.getModel()!.getLineCount() === 2) {
+      const secondLine = editorRef.current?.getModel()!.getLineContent(2);
+      editorRef.current?.setValue([typeDefString, secondLine].join('\n'));
+    } else {
+      editorRef.current?.setValue([typeDefString, 'store.'].join('\n'));
+    }
+  }
+}
+
+const useQuerySetter = ({ editorRef, query }: EditorHookArgs) => {
+  if (!editorRef.current || !query) { return; }
+  if (query.endsWith('\n')) { return; }
+  const action = editorRef.current.getModel()!.getLineContent(2);
+  if (action !== query) {
+    const typeDefString = editorRef.current.getModel()!.getLineContent(1);
+    editorRef.current.setValue([typeDefString, `store.${query}`].join('\n'));
   }
 }
 
@@ -59,9 +73,7 @@ const useEditorChangeListener = ({ editorRef, onChange, runErrorChecker }: Edito
                 editorRef.current!.setPosition({ lineNumber: 2, column: editorRef.current!.getValue().length + 1 });
               } else {
                 onChange(lines[1] + '\n'); // make sure that the state is updated
-                const lineSplit = lines[1].split('.');
-                lineSplit.pop();
-                const newValue = [lines[0], lineSplit.join('.')].join('\n');
+                const newValue = [lines[0], lines[1]].join('\n');
                 setTimeout(() => {
                   editorRef.current!.setValue(newValue);
                   editorRef.current!.setPosition({ lineNumber: 2, column: editorRef.current!.getValue().length + 1 });
@@ -85,23 +97,18 @@ const useEditorChangeListener = ({ editorRef, onChange, runErrorChecker }: Edito
 const useMonacoTextEditor = ({ divEl, editorRef }: EditorHookArgs) => {
   React.useEffect(() => {
     if (!divEl.current || !!editorRef.current) { return; }
-
-
     monaco.editor.defineTheme('olik-editor-theme', {
       base: 'vs-dark',
       inherit: false,
-      rules: [       
-        { token: 'green', background: 'FF0000', foreground: '00FF00', fontStyle: 'italic'},
-        { token: 'red', foreground: 'FF0000' , fontStyle: 'bold underline'},
-        // { background: '000000' },
-        // { foreground: 'FFFFFF' }
+      rules: [
+        { token: 'green', background: 'FF0000', foreground: '00FF00', fontStyle: 'italic' },
+        { token: 'red', foreground: 'FF0000', fontStyle: 'bold underline' },
       ],
       colors: {
         'editor.foreground': '#FFFFFF',
         'editor.background': '#00000000',
       }
     });
-
     editorRef.current = monaco.editor.create(divEl.current, {
       language: 'typescript',
       minimap: {
@@ -123,7 +130,6 @@ const useMonacoTextEditor = ({ divEl, editorRef }: EditorHookArgs) => {
       // theme: 'vs-dark',
       theme: 'olik-editor-theme',
     });
-
     editorRef.current.setScrollPosition({ scrollTop: lineHeight });
     return () => {
       editorRef.current?.dispose();

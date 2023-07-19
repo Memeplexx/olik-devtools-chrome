@@ -3,8 +3,8 @@ import { useHooks } from "./hooks";
 import { EditorProps } from "./constants";
 
 
-export const Editor = ({ state, onChange, ...props }: EditorProps) => {
-	const hooks = useHooks({ state, onChange });
+export const Editor = ({ state, onChange, query, ...props }: EditorProps) => {
+	const hooks = useHooks({ state, onChange, query });
   return (
     <div {...props}>
       <EditorPane ref={hooks.divEl} />
