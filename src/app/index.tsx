@@ -49,6 +49,7 @@ const Items = styled.div`
 const Item = styled.div`
 	padding: 4px 8px;
 	cursor: pointer;
+	white-space: nowrap;
 	&:hover {
 		background-color: black;
 	}

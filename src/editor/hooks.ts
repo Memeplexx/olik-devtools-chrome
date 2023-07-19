@@ -2,7 +2,8 @@ import React from "react";
 import * as monaco from 'monaco-editor';
 import { EditorHookArgs, EditorProps } from "./constants";
 import * as olikTypeDefsText from '../../node_modules/olik/dist/type.d.ts?raw';
-import { updateFunctions } from "olik";
+import { RecursiveRecord, updateFunctions } from "olik";
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 
 const olikTypeDefsAsString = olikTypeDefsText.default.replace(/\n|\r/g, "");
 
@@ -14,17 +15,24 @@ export const useHooks = (props: EditorProps) => {
   const runErrorChecker = useErrorChecker();
   const hookArgs = { divEl, editorRef, runErrorChecker, ...props };
   useMonacoTextEditor(hookArgs);
-  updateEditorValue(hookArgs);
-  reactToEditorChanges(hookArgs);
-  ensureCannotSwitchLines(hookArgs);
+  addTypescriptSupportToEditor();
+  useEditorValueSetter(hookArgs);
+  useEditorChangeListener(hookArgs);
+  useEditLimiter(hookArgs);
   return {
     divEl
   }
 }
 
-const updateEditorValue = ({ editorRef, state }: EditorHookArgs) => {
+const addTypescriptSupportToEditor = () => {
+  self.MonacoEnvironment = {
+    getWorker: () => new tsWorker(),
+  };
+}
+
+const useEditorValueSetter = ({ editorRef, state }: EditorHookArgs) => {
   const propsStateRef = React.useRef(state);
-  if (state !== propsStateRef.current) {
+  if (state && state !== propsStateRef.current) {
     propsStateRef.current = state;
     editorRef.current?.setValue([
       olikTypeDefsAsString + `; const store: Store<${generateTypeDefinition(state).replace(/\n|\r/g, "")}>;`,
@@ -33,7 +41,7 @@ const updateEditorValue = ({ editorRef, state }: EditorHookArgs) => {
   }
 }
 
-const reactToEditorChanges = ({ editorRef, onChange, runErrorChecker }: EditorHookArgs) => {
+const useEditorChangeListener = ({ editorRef, onChange, runErrorChecker }: EditorHookArgs) => {
   React.useEffect(() => {
     const subscription = editorRef.current!.onDidChangeModelContent(() => {
       const value = editorRef.current!.getValue();
@@ -71,12 +79,12 @@ const reactToEditorChanges = ({ editorRef, onChange, runErrorChecker }: EditorHo
       }
     });
     return () => subscription.dispose();
-  }, []);
+  }, [editorRef, onChange, runErrorChecker]);
 }
 
 const useMonacoTextEditor = ({ divEl, editorRef }: EditorHookArgs) => {
   React.useEffect(() => {
-    if (!divEl.current /*|| !!editorRef.current*/) { return; }
+    if (!divEl.current || !!editorRef.current) { return; }
 
 
     monaco.editor.defineTheme('olik-editor-theme', {
@@ -116,25 +124,23 @@ const useMonacoTextEditor = ({ divEl, editorRef }: EditorHookArgs) => {
       theme: 'olik-editor-theme',
     });
 
-    
-
     editorRef.current.setScrollPosition({ scrollTop: lineHeight });
     return () => {
       editorRef.current?.dispose();
       editorRef.current = null;
     }
-  }, [])
+  }, [divEl, editorRef])
 }
 
 
-const generateTypeDefinition = (obj: any) => {
+const generateTypeDefinition = (obj: RecursiveRecord) => {
   const collector = { str: `{\n` };
   recurseObject(collector, obj, 1);
   collector.str += '};\n';
   return collector.str;
 }
 
-const recurseObject = (collector: { str: string }, obj: any, level: number) => {
+const recurseObject = (collector: { str: string }, obj: RecursiveRecord, level: number) => {
   Object.keys(obj).forEach(key => {
     const value = obj[key];
     collector.str += '\t'.repeat(level);
@@ -152,7 +158,7 @@ const recurseObject = (collector: { str: string }, obj: any, level: number) => {
         collector.str += `${key}: Array<null>;\n`;
       } else {
         const collectorInner = { str: '{\n' };
-        recurseObject(collectorInner, value[0], level + 1);
+        recurseObject(collectorInner, value[0] as RecursiveRecord, level + 1);
         collector.str += `${key}: Array<${collectorInner.str}${'\t'.repeat(level)}>;\n`;
       }
     } else if (typeof value === 'object') {
@@ -163,7 +169,7 @@ const recurseObject = (collector: { str: string }, obj: any, level: number) => {
   });
 }
 
-const ensureCannotSwitchLines = ({ editorRef }: EditorHookArgs) => {
+const useEditLimiter = ({ editorRef }: EditorHookArgs) => {
   React.useEffect(() => {
     const subscription = editorRef.current!.onDidScrollChange(() => {
       if (editorRef.current!.getScrollTop() !== lineHeight) {
@@ -172,11 +178,11 @@ const ensureCannotSwitchLines = ({ editorRef }: EditorHookArgs) => {
       }
     });
     return () => subscription.dispose();
-  }, []);
+  }, [editorRef]);
 }
 
 const useErrorChecker = () => {
-  return () => {
+  return React.useCallback(() => {
     return new Promise<boolean>(resolve => {
       const sub = monaco.editor.onDidChangeMarkers(([uri]) => {
         const markers = monaco.editor.getModelMarkers({ resource: uri })
@@ -185,5 +191,5 @@ const useErrorChecker = () => {
         resolve(hasErrors);
       })
     })
-  }
+  }, []);
 }

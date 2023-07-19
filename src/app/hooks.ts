@@ -1,9 +1,10 @@
 import React from "react";
 import { Message } from "./constants";
+import { RecursiveRecord } from "olik";
 
 export const useHooks = () => {
 
-	const [state, setState] = React.useState(null);
+	const [state, setState] = React.useState<RecursiveRecord | null>(null);
 
 	const [query, setQuery] = React.useState('');
 
@@ -11,7 +12,7 @@ export const useHooks = () => {
 
 	React.useEffect(() => {
 		const getInitialState = () => {
-			return JSON.parse(document.getElementById('olik-state')!.innerHTML);
+			return JSON.parse(document.getElementById('olik-state')!.innerHTML) as RecursiveRecord;
 		}
 		const processEvent = ({ action: { state, type } }: Message) => {
 			setState(state);
@@ -35,7 +36,8 @@ export const useHooks = () => {
 					target: { tabId: result[0].id! },
 					func: getInitialState,
 				}))
-				.then(r => setState(r[0].result!));
+				.then(r => setState(r[0].result))
+				.catch(console.error);
 		}
 	}, []);
 

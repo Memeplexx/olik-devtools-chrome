@@ -3,7 +3,7 @@ import { useHooks } from './hooks';
 
 
 
-export const Demo = (props: any) => {
+export const Demo = (props: { className?: string }) => {
   const hooks = useHooks();
   return (
     <div {...props}>

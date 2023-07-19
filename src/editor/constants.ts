@@ -1,4 +1,5 @@
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor'; 
+import { RecursiveRecord } from 'olik';
 
 export type EditorHookArgs = {
   divEl: React.RefObject<HTMLDivElement>,
@@ -7,6 +8,6 @@ export type EditorHookArgs = {
 } & EditorProps;
 
 export type EditorProps = {
-  state?: any,
+  state: RecursiveRecord | null,
   onChange: (text: string) => void,
 }
