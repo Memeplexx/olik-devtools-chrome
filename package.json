@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@types/node": "^20.4.1",
     "monaco-editor": "^0.40.0",
     "olik": "1.0.8",
     "olik-react": "1.0.2",
@@ -20,6 +19,7 @@
     "vite-plugin-static-copy": "^0.16.0"
   },
   "devDependencies": {
+    "@types/node": "^20.4.1",
     "@types/chrome": "^0.0.240",
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",

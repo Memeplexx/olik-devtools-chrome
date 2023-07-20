@@ -1,15 +1,23 @@
 import { appStore } from '../store';
 import { useHooks } from './hooks';
+import { AddButton, Container } from './styles';
 
 
-
-export const Demo = (props: { className?: string }) => {
+export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const hooks = useHooks();
   return (
-    <div {...props}>
-      App
-      <button onClick={() => appStore.num.$add(1)}>Increment | {hooks.num}</button>
-    </div>
+    <Container 
+      {...props}
+      inside={
+        <>
+          App
+          <AddButton 
+            onClick={() => appStore.num.$add(1)}
+            inside={`Increment | ${hooks.num}`}
+          />
+        </>
+      }
+    />
   )
 };
 
