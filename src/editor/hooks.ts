@@ -55,9 +55,9 @@ const useQuerySetter = ({ editorRef, query }: EditorHookArgs) => {
   }
 }
 
-const useEditorChangeListener = ({ editorRef, onChange, runErrorChecker }: EditorHookArgs) => {
+const useEditorChangeListener = ({ editorRef, onTextChanged, runErrorChecker }: EditorHookArgs) => {
   React.useEffect(() => {
-    const subscription = editorRef.current!.onDidChangeModelContent(() => {
+    editorRef.current!.onDidChangeModelContent(() => {
       const value = editorRef.current!.getValue();
       const lines = value.split('\n')!;
       if (lines.length >= 3) { // user must have pressed enter
@@ -72,7 +72,7 @@ const useEditorChangeListener = ({ editorRef, onChange, runErrorChecker }: Edito
                 editorRef.current!.setValue(lines.slice(0, 2).join('\n'));
                 editorRef.current!.setPosition({ lineNumber: 2, column: editorRef.current!.getValue().length + 1 });
               } else {
-                onChange(lines[1] + '\n'); // make sure that the state is updated
+                onTextChanged(lines[1] + '\n'); // make sure that the state is updated
                 const newValue = [lines[0], lines[1]].join('\n');
                 setTimeout(() => {
                   editorRef.current!.setValue(newValue);
@@ -87,11 +87,10 @@ const useEditorChangeListener = ({ editorRef, onChange, runErrorChecker }: Edito
         }
         editorRef.current!.setValue(lines.slice(0, 2).join('\n'));
       } else {
-        setTimeout(() => onChange(lines[1]));
+        setTimeout(() => onTextChanged(lines[1]));
       }
-    });
-    return () => subscription.dispose();
-  }, [editorRef, onChange, runErrorChecker]);
+    })
+  }, [editorRef, onTextChanged, runErrorChecker]);
 }
 
 const useMonacoTextEditor = ({ divEl, editorRef }: EditorHookArgs) => {

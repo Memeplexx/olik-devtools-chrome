@@ -17,7 +17,7 @@ export const App = () => {
 						<EditorPanel
 							query={hooks.query}
 							state={hooks.state}
-							onChange={events.onEditorChange}
+							onTextChanged={events.onEditorChange}
 						/>
 						<TreePanel
 							state={hooks.state}
