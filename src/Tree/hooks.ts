@@ -16,7 +16,6 @@ export const useHooks = (props: TreeProps) => {
 const useState = (props: TreeProps) => {
   const storeRef = React.useRef<Store<RecursiveRecord> | null>(null);
   const stateRef = React.useRef<unknown | null>(null);
-  const createdStore = React.useRef(false);
   const justUpdated = React.useRef(false);
 
   if (props.selectedState) {
@@ -35,9 +34,8 @@ const useState = (props: TreeProps) => {
   // initialize store
   if (!storeRef.current) {
     if (!chrome.runtime) {
-      storeRef.current = getStore();
+      storeRef.current = getStore(); // get store from demo app
     } else {
-      createdStore.current = true;
       storeRef.current = createStore<RecursiveRecord>({ state: props.state });
     }
   }

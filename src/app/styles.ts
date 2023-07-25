@@ -54,9 +54,12 @@ export const ResizeHandle = styled(PanelResizeHandle)`
 	flex: 0 0 1.5em;
   position: relative;
   outline: none;
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.05);
+	&:hover {
+		background-color: rgba(255, 255, 255, 0.1);
+	}
 	&[data-resize-handle-active] {
-		background-color: rgba(255, 255, 255, 0.2);;
+		background-color: rgba(255, 255, 255, 0.2);
 	}
 `;
 
