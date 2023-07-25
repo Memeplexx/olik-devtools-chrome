@@ -31,6 +31,7 @@ export const App = () => {
 												state={hooks.state}
 												query={hooks.query}
 												selectedState={hooks.selectedState}
+												storeRef={hooks.storeRef}
 											/>
 										}
 									/>

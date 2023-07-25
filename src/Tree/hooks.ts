@@ -1,4 +1,4 @@
-import { RecursiveRecord, Store, createStore, deserialize, getStore, updateFunctions } from "olik";
+import { deserialize, updateFunctions } from "olik";
 import React from "react";
 import { TreeProps } from "./constants";
 import { StoreInternal } from "olik/dist/type-internal";
@@ -9,39 +9,24 @@ export const useHooks = (props: TreeProps) => {
   const state = useInitialHooks(props);
   if (props.selectedState) { return beautifyJson(props.selectedState); }
   if (state.justUpdated.current) { setTimeout(() => state.justUpdated.current = false); return ''; }
-  initializeStore(state);
   selectStore(state, sendActionToApp(props));
   return beautifyJson(state.stateRef.current);
 }
 
 const useInitialHooks = (props: TreeProps) => {
-  const storeRef = React.useRef<Store<RecursiveRecord> | null>(null);
   const stateRef = React.useRef<unknown | null>(null);
   const justUpdated = React.useRef(false);
   return {
     ...props,
-    storeRef,
     stateRef,
     justUpdated
   }
 }
 
-const initializeStore = (props: TreeState) => {
-  if (!props.storeRef.current) {
-    if (!chrome.runtime) {
-      props.storeRef.current = getStore(); // get store from demo app
-    } else {
-      props.storeRef.current = createStore<RecursiveRecord>({ state: props.state! });
-    }
-  }
-  if (chrome.runtime) {
-    props.storeRef.current.$set(props.state!);
-  }
-}
-
 const selectStore = (props: TreeState, onActionRequested: () => unknown) => {
   props.stateRef.current = props.state;
-  let subStore = getStore() as unknown as StoreInternal;
+  if (!props.storeRef.current) { return }
+  let subStore = props.storeRef.current as unknown as StoreInternal;
   const segments = props.query.split('.');
   if (segments[0] === 'store') {
     segments.shift();
