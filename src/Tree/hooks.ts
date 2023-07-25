@@ -3,47 +3,44 @@ import React from "react";
 import { TreeProps } from "./constants";
 import { StoreInternal } from "olik/dist/type-internal";
 
+type TreeState = TreeProps & ReturnType<typeof useInitialHooks>;
+
 export const useHooks = (props: TreeProps) => {
-
-  const thing = useState(props);
-  const state = !thing ? '' : syntaxHighlight(JSON.stringify(thing, null, 2)).replace(/"([^"]+)":/g, '$1:');
-
-  return {
-    state
-  }
+  const state = useInitialHooks(props);
+  if (props.selectedState) { return beautifyJson(props.selectedState); }
+  if (state.justUpdated.current) { setTimeout(() => state.justUpdated.current = false); return ''; }
+  initializeStore(state);
+  selectStore(state, sendActionToApp(props));
+  return beautifyJson(state.stateRef.current);
 }
 
-const useState = (props: TreeProps) => {
+const useInitialHooks = (props: TreeProps) => {
   const storeRef = React.useRef<Store<RecursiveRecord> | null>(null);
   const stateRef = React.useRef<unknown | null>(null);
   const justUpdated = React.useRef(false);
-
-  if (props.selectedState) {
-    return props.selectedState;
+  return {
+    ...props,
+    storeRef,
+    stateRef,
+    justUpdated
   }
+}
 
-  if (!props.state) {
-    return;
-  }
-
-  if (justUpdated.current) {
-    setTimeout(() => justUpdated.current = false);
-    return;
-  }
-
-  // initialize store
-  if (!storeRef.current) {
+const initializeStore = (props: TreeState) => {
+  if (!props.storeRef.current) {
     if (!chrome.runtime) {
-      storeRef.current = getStore(); // get store from demo app
+      props.storeRef.current = getStore(); // get store from demo app
     } else {
-      storeRef.current = createStore<RecursiveRecord>({ state: props.state });
+      props.storeRef.current = createStore<RecursiveRecord>({ state: props.state! });
     }
   }
   if (chrome.runtime) {
-    storeRef.current.$set(props.state);
+    props.storeRef.current.$set(props.state!);
   }
-  stateRef.current = props.state;
+}
 
+const selectStore = (props: TreeState, onActionRequested: () => unknown) => {
+  props.stateRef.current = props.state;
   let subStore = getStore() as unknown as StoreInternal;
   const segments = props.query.split('.');
   if (segments[0] === 'store') {
@@ -60,8 +57,8 @@ const useState = (props: TreeProps) => {
         subStore = functionToCall(typedArg);
       } else if (props.query.endsWith('\n')) {
         subStore = functionToCall(typedArg);
-        justUpdated.current = true;
-        sendActionToApp(props);
+        props.justUpdated.current = true;
+        onActionRequested();
       }
     } else {
       subStore = subStore[key];
@@ -69,16 +66,14 @@ const useState = (props: TreeProps) => {
     if (subStore) {
       const state = subStore.$state;
       if (state != null && (!Array.isArray(state) || !state.every(e => e == null))) {
-        stateRef.current = state;
+        props.stateRef.current = state;
       }
     }
   });
-
-  return stateRef.current;
 }
 
 const sendActionToApp = (props: TreeProps) => {
-  chrome?.tabs?.query({ active: true })
+  return () => chrome?.tabs?.query({ active: true })
     .then(result => chrome.scripting.executeScript({
       target: { tabId: result[0].id! },
       func: (action) => document.getElementById('olik-action')!.innerHTML = action,
@@ -87,9 +82,12 @@ const sendActionToApp = (props: TreeProps) => {
     .catch(console.error);
 }
 
-const syntaxHighlight = (json: string) => {
-  json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, (match) => {
+const beautifyJson = (object: unknown) => {
+  if (!object) { return ''; }
+  return JSON.stringify(object, null, 2)
+    .replace(/"([^"]+)":/g, '$1:')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, (match) => {
     let cls = 'number';
     if (/^"/.test(match)) {
       if (/:$/.test(match)) {
