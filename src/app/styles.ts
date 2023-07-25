@@ -61,7 +61,6 @@ export const ResizeHandleInner = styled.div`
 	left: 0.25em;
 	right: 0.25em;
 	border-radius: 0.25em;
-	/* background-color: var(--background - color); */
 	transition: all - color 0.2s linear;
 `;
 
@@ -73,8 +72,11 @@ export const ResizeIcon = styled.svg`
   top: calc(50% - 0.5rem);
 `;
 
-export const ResizeIconPath = styled.path``;
+export const ResizeIconPath = styled.path`
+`;
 
 export const ResizablePanel = styled(Panel)`
 	overflow: auto!important;
+	display: flex;
+  flex-direction: column-reverse;
 `;
