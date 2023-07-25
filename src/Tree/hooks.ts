@@ -7,7 +7,7 @@ type TreeState = TreeProps & ReturnType<typeof useInitialHooks>;
 
 export const useHooks = (props: TreeProps) => {
   const state = useInitialHooks(props);
-  if (props.selectedState) { return beautifyJson(props.selectedState); }
+  if (props.selected) { return beautifyJson(props.selected); }
   if (state.justUpdated.current) { setTimeout(() => state.justUpdated.current = false); return ''; }
   selectStore(state, sendActionToApp(props));
   return beautifyJson(state.stateRef.current);

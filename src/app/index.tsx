@@ -30,7 +30,7 @@ export const App = () => {
 											<TreePanel
 												state={hooks.state}
 												query={hooks.query}
-												selectedState={hooks.selectedState}
+												selected={hooks.selected}
 												storeRef={hooks.storeRef}
 											/>
 										}

@@ -12,19 +12,19 @@ export const useHooks = () => {
 
 	const [query, setQuery] = React.useState('');
 
-	const [selectedState, setSelectedState] = React.useState<RecursiveRecord | null>(null);
+	const [selected, setSelected] = React.useState<{before: unknown | null, after: unknown | null} | null>(null);
 
-	const [items, setItems] = React.useState<{ type: string, typeFormatted: string, id: number, state: RecursiveRecord, globalState: RecursiveRecord }[]>([]);
+	const [items, setItems] = React.useState<{ type: string, typeFormatted: string, id: number, state: RecursiveRecord }[]>([]);
 
 	React.useEffect(() => {
 		const getInitialState = () => {
 			return JSON.parse(document.getElementById('olik-state')!.innerHTML) as RecursiveRecord;
 		}
-		const processEvent = ({ action: { state, type, selectedState } }: Message) => {
+		const processEvent = ({ action: { state, type } }: Message) => {
 			setState(state);
 			const typeFormatted = type
 				.replace(/\$[A-Za-z0-9]+/g, match => `<span class="action">${match}</span>`);
-			setItems(items => [...items, { type, typeFormatted, id: Math.random(), state: selectedState, globalState: state }]);
+			setItems(items => [...items, { type, typeFormatted, id: Math.random(), state }]);
 		}
 		const messageListener = (e: MessageEvent<Message>) => {
 			if (e.origin !== window.location.origin) { return; }
@@ -59,8 +59,8 @@ export const useHooks = () => {
 		query,
 		setQuery,
 		setState,
-		selectedState,
-		setSelectedState,
+		selected,
+		setSelected,
 		storeRef,
 	}
 }
