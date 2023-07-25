@@ -62,7 +62,7 @@ export const App = () => {
 																<Item
 																	key={item.id}
 																	onMouseEnter={events.onMouseEnterItem(item.id)}
-																	onMouseLeave={events.onMouseLeaveItem()}
+																	onMouseLeave={events.onMouseLeaveItem}
 																	dangerouslySetInnerHTML={{__html: item.typeFormatted }}
 																/>
 															))}
