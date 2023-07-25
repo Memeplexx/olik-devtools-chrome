@@ -8,9 +8,9 @@ export const Tree = (props: TreeProps) => {
   return (
     <ScrollPane
       className={props.className}
-      inside={
+      children={
         <JsonWrapper
-          inside={!hooks.state ? '' : JSON.stringify(hooks.state, null, 2)}
+          children={!hooks.state ? '' : JSON.stringify(hooks.state, null, 2)}
         />
       }
     />

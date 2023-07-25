@@ -10,7 +10,7 @@ export const Editor = (props: EditorProps) => {
   return (
     <Container 
       {...propsRev}
-      inside={
+      children={
         <EditorPane
           ref={hooks.divEl}
         />

@@ -8,12 +8,12 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
   return (
     <Container 
       {...props}
-      inside={
+      children={
         <>
           App
           <AddButton 
             onClick={() => appStore.num.$add(1)}
-            inside={`Increment | ${hooks.num}`}
+            children={`Increment | ${hooks.num}`}
           />
         </>
       }

@@ -2,9 +2,9 @@ import styled from "styled-components";
 import { Editor } from "../editor";
 import { Demo } from "../demo";
 import { Tree } from "../tree";
-import { Div } from "../html";
+import { Panel, PanelResizeHandle } from "react-resizable-panels";
 
-export const Items = styled(Div)`
+export const Items = styled.div`
 	z-index: 1;
 	display: flex;
 	flex-direction: column;
@@ -13,7 +13,7 @@ export const Items = styled(Div)`
 	font-weight: 100;
 `;
 
-export const Item = styled(Div)`
+export const Item = styled.div`
 	padding: 4px 8px;
 	cursor: pointer;
 	white-space: nowrap;
@@ -31,7 +31,7 @@ export const EditorPanel = styled(Editor)`
 	height: 18px;
 `;
 
-export const DevtoolsPanel = styled(Div)`
+export const DevtoolsPanel = styled.div`
 	flex: 1;
 	display: flex;
 	flex-direction: column;
@@ -42,4 +42,39 @@ export const DevtoolsPanel = styled(Div)`
 
 export const TreePanel = styled(Tree)`
 	flex: 1;
+`;
+
+export const ResizeHandle = styled(PanelResizeHandle)`
+	flex: 0 0 1.5em;
+  position: relative;
+  outline: none;
+  background-color: transparent;
+	&[data-resize-handle-active] {
+		background-color: rgba(255, 255, 255, 0.2);;
+	}
+`;
+
+export const ResizeHandleInner = styled.div`
+	position: absolute;
+	top: 0.25em;
+	bottom: 0.25em;
+	left: 0.25em;
+	right: 0.25em;
+	border-radius: 0.25em;
+	/* background-color: var(--background - color); */
+	transition: all - color 0.2s linear;
+`;
+
+export const ResizeIcon = styled.svg`
+	width: 1em;
+  height: 1em;
+  position: absolute;
+  left: calc(50% - 0.5rem);
+  top: calc(50% - 0.5rem);
+`;
+
+export const ResizeIconPath = styled.path``;
+
+export const ResizablePanel = styled(Panel)`
+	overflow: auto!important;
 `;
