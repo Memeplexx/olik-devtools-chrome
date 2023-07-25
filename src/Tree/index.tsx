@@ -10,7 +10,7 @@ export const Tree = (props: TreeProps) => {
       className={props.className}
       children={
         <JsonWrapper
-          children={!hooks.state ? '' : JSON.stringify(hooks.state, null, 2)}
+          dangerouslySetInnerHTML={{__html: hooks.state}}
         />
       }
     />

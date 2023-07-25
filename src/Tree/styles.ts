@@ -8,4 +8,9 @@ export const ScrollPane = styled(Div)`
 export const JsonWrapper = styled(Pre)`
   font-family: 'Source Code Pro', monospace;
   font-size: 12px;
+  .string { color: green; }
+  .number { color: darkorange; }
+  .boolean { color: blue; }
+  .null { color: magenta; }
+  .key { color: red; }
 `;

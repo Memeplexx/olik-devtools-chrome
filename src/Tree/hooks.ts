@@ -5,7 +5,8 @@ import { StoreInternal } from "olik/dist/type-internal";
 
 export const useHooks = (props: TreeProps) => {
 
-  const state = useState(props);
+  const thing = useState(props);
+  const state = !thing ? '' : syntaxHighlight(JSON.stringify(thing, null, 2)).replace(/"([^"]+)":/g, '$1:');
 
   return {
     state
@@ -62,13 +63,7 @@ const useState = (props: TreeProps) => {
       } else if (props.query.endsWith('\n')) {
         subStore = functionToCall(typedArg);
         justUpdated.current = true;
-        chrome?.tabs?.query({ active: true })
-          .then(result => chrome.scripting.executeScript({
-            target: { tabId: result[0].id! },
-            func: (action) => document.getElementById('olik-action')!.innerHTML = action,
-            args: [props.query],
-          }))
-          .catch(console.error);
+        sendActionToApp(props);
       }
     } else {
       subStore = subStore[key];
@@ -82,4 +77,33 @@ const useState = (props: TreeProps) => {
   });
 
   return stateRef.current;
+}
+
+const sendActionToApp = (props: TreeProps) => {
+  chrome?.tabs?.query({ active: true })
+    .then(result => chrome.scripting.executeScript({
+      target: { tabId: result[0].id! },
+      func: (action) => document.getElementById('olik-action')!.innerHTML = action,
+      args: [props.query],
+    }))
+    .catch(console.error);
+}
+
+const syntaxHighlight = (json: string) => {
+  json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, (match) => {
+    let cls = 'number';
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) {
+        cls = 'key';
+      } else {
+        cls = 'string';
+      }
+    } else if (/true|false/.test(match)) {
+      cls = 'boolean';
+    } else if (/null/.test(match)) {
+      cls = 'null';
+    }
+    return '<span class="' + cls + '">' + match + '</span>';
+  });
 }
