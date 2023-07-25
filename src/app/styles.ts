@@ -17,6 +17,12 @@ export const Item = styled.div`
 	padding: 4px 8px;
 	cursor: pointer;
 	white-space: nowrap;
+	.action {
+		color: #00aaff;
+	}
+	&:nth-of-type(odd) {
+  	background-color: rgba(255,255,255,0.05);
+	}
 	&:hover {
 		background-color: black;
 	}

@@ -10,7 +10,7 @@ export const useHooks = () => {
 
 	const [selectedState, setSelectedState] = React.useState<RecursiveRecord | null>(null);
 
-	const [items, setItems] = React.useState<{ type: string, id: number, state: RecursiveRecord }[]>([]);
+	const [items, setItems] = React.useState<{ type: string, typeFormatted: string, id: number, state: RecursiveRecord }[]>([]);
 
 	React.useEffect(() => {
 		const getInitialState = () => {
@@ -18,14 +18,17 @@ export const useHooks = () => {
 		}
 		const processEvent = ({ action: { state, type, selectedState } }: Message) => {
 			setState(state);
-			setItems(items => [...items, { type, id: Math.random(), state: selectedState }]);
+			const typeFormatted = type
+				.replace(/\$[A-Za-z0-9]+/g, match => `<span class="action">${match}</span>`);
+			setItems(items => [...items, { type, typeFormatted, id: Math.random(), state: selectedState }]);
+		}
+		const messageListener = (e: MessageEvent<Message>) => {
+			if (e.origin !== window.location.origin) { return; }
+			if (e.data.source !== 'olik-devtools-extension') { return; }
+			processEvent(e.data);
 		}
 		if (!chrome.runtime) {
-			window.addEventListener('message', (e: MessageEvent<Message>) => {
-				if (e.origin !== window.location.origin) { return; }
-				if (e.data.source !== 'olik-devtools-extension') { return; }
-				processEvent(e.data);
-			});
+			window.addEventListener('message', messageListener);
 			setState(getInitialState());
 		} else {
 			chrome.runtime.onMessage
@@ -40,6 +43,9 @@ export const useHooks = () => {
 				}))
 				.then(r => setState(r[0].result))
 				.catch(console.error);
+		}
+		return () => {
+			window.removeEventListener('message', messageListener);
 		}
 	}, []);
 

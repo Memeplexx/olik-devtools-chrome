@@ -27,22 +27,11 @@ export const App = () => {
 									<ResizablePanel
 										maxSize={75}
 										children={
-											<>
-												<Items
-													children={
-														<>
-															{hooks.items.map(item => (
-																<Item
-																	key={item.id}
-																	onMouseEnter={events.onMouseEnterItem(item.id)}
-																	onMouseLeave={events.onMouseLeaveItem()}
-																	children={item.type}
-																/>
-															))}
-														</>
-													}
-												/>
-											</>
+											<TreePanel
+												state={hooks.state}
+												query={hooks.query}
+												selectedState={hooks.selectedState}
+											/>
 										}
 									/>
 									<ResizeHandle
@@ -65,11 +54,22 @@ export const App = () => {
 									<ResizablePanel
 										maxSize={75}
 										children={
-											<TreePanel
-												state={hooks.state}
-												query={hooks.query}
-												selectedState={hooks.selectedState}
-											/>
+											<>
+												<Items
+													children={
+														<>
+															{hooks.items.map(item => (
+																<Item
+																	key={item.id}
+																	onMouseEnter={events.onMouseEnterItem(item.id)}
+																	onMouseLeave={events.onMouseLeaveItem()}
+																	dangerouslySetInnerHTML={{__html: item.typeFormatted }}
+																/>
+															))}
+														</>
+													}
+												/>
+											</>
 										}
 									/>
 								</>
