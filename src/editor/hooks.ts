@@ -60,6 +60,11 @@ const useEditorChangeListener = ({ editorRef, onTextChanged, runErrorChecker }: 
     editorRef.current!.onDidChangeModelContent(() => {
       const value = editorRef.current!.getValue();
       const lines = value.split('\n')!;
+      if (!lines[1].startsWith('store.')) {
+        editorRef.current!.setValue([lines[0], 'store.'].join('\n'));
+        editorRef.current!.setPosition({ lineNumber: 2, column: value.length + 1 });
+        return;
+      }
       if (lines.length >= 3) { // user must have pressed enter
         const lastSeg = lines[1].split('.').reverse()[0];
         const arg = lastSeg.match(/\(([^)]*)\)/)?.[1];
@@ -70,13 +75,13 @@ const useEditorChangeListener = ({ editorRef, onTextChanged, runErrorChecker }: 
             runErrorChecker().then(hasErrors => {
               if (hasErrors) {
                 editorRef.current!.setValue(lines.slice(0, 2).join('\n'));
-                editorRef.current!.setPosition({ lineNumber: 2, column: editorRef.current!.getValue().length + 1 });
+                editorRef.current!.setPosition({ lineNumber: 2, column: value.length + 1 });
               } else {
                 onTextChanged(lines[1] + '\n'); // make sure that the state is updated
                 const newValue = [lines[0], lines[1]].join('\n');
                 setTimeout(() => {
                   editorRef.current!.setValue(newValue);
-                  editorRef.current!.setPosition({ lineNumber: 2, column: editorRef.current!.getValue().length + 1 });
+                  editorRef.current!.setPosition({ lineNumber: 2, column: value.length + 1 });
                 });
               }
             }).catch(() => {
