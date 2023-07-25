@@ -46,7 +46,7 @@ const useEditorValueSetter = ({ editorRef, state }: EditorHookArgs) => {
 }
 
 const useQuerySetter = ({ editorRef, query }: EditorHookArgs) => {
-  if (!editorRef.current || !query) { return; }
+  if (!editorRef.current) { return; }
   if (query.endsWith('\n')) { return; }
   const action = editorRef.current.getModel()!.getLineContent(2);
   if (action !== query) {
