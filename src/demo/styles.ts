@@ -6,3 +6,6 @@ export const Container = styled(Div)`
 
 export const AddButton = styled(Button)`
 `;
+
+export const TransactButton = styled(Button)`
+`;

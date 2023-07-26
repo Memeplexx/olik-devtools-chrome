@@ -1,6 +1,5 @@
-import { StoreInternal } from "olik/dist/type-internal";
 import { useHooks } from "./hooks";
-import { StateAction, deserialize, readState, updateFunctions } from "olik";
+import { StateAction, deserialize, libState, readState, updateFunctions } from "olik";
 
 export const useEvents = (props: ReturnType<typeof useHooks>) => ({
   onEditorChange: (text: string) => {
@@ -10,19 +9,23 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
     const itemIndex = props.items.findIndex(item => item.id === id)!;
     const item = props.items[itemIndex];
     props.setQuery(item.type || '');
-    const internals = (props.storeRef.current as unknown as StoreInternal).$internals;
-    const itemBefore = itemIndex === 0 ? { type: '', state: internals.initialState } : props.items[itemIndex - 1];
+    const itemBefore = itemIndex === 0
+      ? { type: '', state: libState.initialState }
+      : props.items.slice(0, itemIndex).reverse().find(item => item.last)!
     props.setSelected({
       before: doReadState(item.type, itemBefore.state),
       after: doReadState(item.type, item.state),
     });
-    internals.disableDevtoolsDispatch = true;
+    libState.disableDevtoolsDispatch = true;
     props.storeRef.current!.$set(item.state);
-    internals.disableDevtoolsDispatch = false;
+    libState.disableDevtoolsDispatch = false;
   },
   onMouseLeaveItem: () => {
     props.setQuery('');
     props.setSelected(null);
+    libState.disableDevtoolsDispatch = true;
+    props.storeRef.current!.$set(props.items[props.items.length - 1].state);
+    libState.disableDevtoolsDispatch = false;
   },
 })
 

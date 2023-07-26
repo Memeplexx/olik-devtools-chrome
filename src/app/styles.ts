@@ -13,7 +13,7 @@ export const Items = styled.div`
 	font-weight: 100;
 `;
 
-export const Item = styled.div`
+export const Item = styled.div<{ last: boolean }>`
 	padding: 4px 8px;
 	cursor: pointer;
 	white-space: nowrap;
@@ -26,6 +26,7 @@ export const Item = styled.div`
 	&:hover {
 		background-color: black;
 	}
+	border-top: 1px solid ${p => p.last ? 'rgba(255,255,255,0.4)': 'transparent'};
 `;
 
 export const DemoApp = styled(Demo)`

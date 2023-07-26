@@ -14,17 +14,17 @@ export const useHooks = () => {
 
 	const [selected, setSelected] = React.useState<{before: unknown | null, after: unknown | null} | null>(null);
 
-	const [items, setItems] = React.useState<{ type: string, typeFormatted: string, id: number, state: RecursiveRecord }[]>([]);
+	const [items, setItems] = React.useState<{ type: string, typeFormatted: string, id: number, state: RecursiveRecord, last: boolean }[]>([]);
 
 	React.useEffect(() => {
 		const getInitialState = () => {
 			return JSON.parse(document.getElementById('olik-state')!.innerHTML) as RecursiveRecord;
 		}
-		const processEvent = ({ action: { state, type } }: Message) => {
+		const processEvent = ({ action: { state, type, last } }: Message) => {
 			setState(state);
 			const typeFormatted = type
 				.replace(/\$[A-Za-z0-9]+/g, match => `<span class="action">${match}</span>`);
-			setItems(items => [...items, { type, typeFormatted, id: Math.random(), state }]);
+			setItems(items => [...items, { type, typeFormatted, id: Math.random(), state, last }]);
 		}
 		const messageListener = (e: MessageEvent<Message>) => {
 			if (e.origin !== window.location.origin) { return; }

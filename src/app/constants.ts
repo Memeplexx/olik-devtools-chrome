@@ -5,6 +5,7 @@ export type Message = {
   action: {
     type: string,
     state: RecursiveRecord,
+    last: boolean,
     selectedState: RecursiveRecord,
   }
 }

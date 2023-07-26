@@ -65,6 +65,7 @@ export const App = () => {
 																	onMouseEnter={events.onMouseEnterItem(item.id)}
 																	onMouseLeave={events.onMouseLeaveItem}
 																	dangerouslySetInnerHTML={{__html: item.typeFormatted }}
+																	last={item.last}
 																/>
 															))}
 														</>
