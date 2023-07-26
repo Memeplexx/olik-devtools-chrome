@@ -3,18 +3,13 @@ import { Message } from "./constants";
 import { RecursiveRecord, Store, createStore, getStore } from "olik";
 
 export const useHooks = () => {
-
 	const [state, setState] = React.useState<RecursiveRecord | null>(null);
-
 	const storeRef = React.useRef<Store<RecursiveRecord> | null>(null);
-
 	initializeStore({ state, storeRef });
-
 	const [query, setQuery] = React.useState('');
-
 	const [selected, setSelected] = React.useState<{before: unknown | null, after: unknown | null} | null>(null);
-
 	const [items, setItems] = React.useState<{ type: string, typeFormatted: string, id: number, state: RecursiveRecord, last: boolean }[]>([]);
+	const [selectedId, setSelectedId] = React.useState<number | null>(null);
 
 	React.useEffect(() => {
 		const getInitialState = () => {
@@ -24,7 +19,7 @@ export const useHooks = () => {
 			setState(state);
 			const typeFormatted = type
 				.replace(/\$[A-Za-z0-9]+/g, match => `<span class="action">${match}</span>`);
-			setItems(items => [...items, { type, typeFormatted, id: Math.random(), state, last }]);
+			setItems(items => [...items, { type, typeFormatted, id: idCounter++, state, last }]);
 		}
 		const messageListener = (e: MessageEvent<Message>) => {
 			if (e.origin !== window.location.origin) { return; }
@@ -62,6 +57,8 @@ export const useHooks = () => {
 		selected,
 		setSelected,
 		storeRef,
+		selectedId,
+		setSelectedId,
 	}
 }
 
@@ -78,3 +75,5 @@ const initializeStore = (props: { state: RecursiveRecord | null, storeRef: Mutab
     props.storeRef.current.$set(props.state);
   }
 }
+
+let idCounter = 1;

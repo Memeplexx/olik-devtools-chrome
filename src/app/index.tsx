@@ -64,8 +64,10 @@ export const App = () => {
 																	key={item.id}
 																	onMouseEnter={events.onMouseEnterItem(item.id)}
 																	onMouseLeave={events.onMouseLeaveItem}
+																	onClick={events.onClickItem(item.id)}
 																	dangerouslySetInnerHTML={{__html: item.typeFormatted }}
-																	last={item.last}
+																	isLast={item.last}
+																	isSelected={item.id === hooks.selectedId}
 																/>
 															))}
 														</>

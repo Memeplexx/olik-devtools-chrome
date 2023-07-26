@@ -6,9 +6,9 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
     props.setQuery(text);
   },
   onMouseEnterItem: (id: number) => () => {
-    const itemIndex = props.items.findIndex(item => item.id === id)!;
+    const itemIndex = props.items.findIndex(item => item.id === id);
     const item = props.items[itemIndex];
-    props.setQuery(item.type || '');
+    props.setQuery(item.type);
     const itemBefore = itemIndex === 0
       ? { type: '', state: libState.initialState }
       : props.items.slice(0, itemIndex).reverse().find(item => item.last)!
@@ -21,12 +21,24 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
     libState.disableDevtoolsDispatch = false;
   },
   onMouseLeaveItem: () => {
-    props.setQuery('');
-    props.setSelected(null);
-    libState.disableDevtoolsDispatch = true;
-    props.storeRef.current!.$set(props.items[props.items.length - 1].state);
-    libState.disableDevtoolsDispatch = false;
+    if (props.selectedId) {
+      const item = props.items.find(item => item.id === props.selectedId)!;
+      props.setQuery(item.type);
+      props.setSelected(null);
+      libState.disableDevtoolsDispatch = true;
+      props.storeRef.current!.$set(item.state);
+      libState.disableDevtoolsDispatch = false;      
+    } else {
+      props.setQuery('');
+      props.setSelected(null);
+      libState.disableDevtoolsDispatch = true;
+      props.storeRef.current!.$set(props.items[props.items.length - 1].state);
+      libState.disableDevtoolsDispatch = false;
+    }
   },
+  onClickItem: (id: number) => () => {
+    props.setSelectedId(id === props.selectedId ? null : id);
+  }
 })
 
 const doReadState = (type: string, state: unknown) => {

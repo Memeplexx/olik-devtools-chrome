@@ -13,20 +13,18 @@ export const Items = styled.div`
 	font-weight: 100;
 `;
 
-export const Item = styled.div<{ last: boolean }>`
+export const Item = styled.div<{ isLast: boolean, isSelected: boolean }>`
 	padding: 4px 8px;
 	cursor: pointer;
 	white-space: nowrap;
 	.action {
 		color: #00aaff;
 	}
-	&:nth-of-type(odd) {
-  	background-color: rgba(255,255,255,0.05);
-	}
 	&:hover {
 		background-color: black;
 	}
-	border-top: 1px solid ${p => p.last ? 'rgba(255,255,255,0.4)': 'transparent'};
+	border-top: 1px solid ${p => p.isLast ? 'rgba(255,255,255,0.4)': 'transparent'};
+	background-color: ${p => p.isSelected ? 'black' : 'transparent'};
 `;
 
 export const DemoApp = styled(Demo)`
