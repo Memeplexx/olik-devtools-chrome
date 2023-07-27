@@ -6,6 +6,7 @@ export const useHooks = () => {
 	const hooks = useHooksInitializer();
 	useMessageReceiver(hooks);
 	useHistoryClipper(hooks);
+	usePageReloadListener(hooks);
 	return hooks;
 }
 
@@ -98,4 +99,28 @@ const useHistoryClipper = (hooks: ReturnType<typeof useHooksInitializer>) => {
 		});
 		return () => subscription.unsubscribe();
 	}, [hooks.items, hooks.selectedId, hooks.storeRef]);
+}
+
+const usePageReloadListener = (hooks: ReturnType<typeof useHooksInitializer>) => {
+	const setItemsRef = React.useRef(hooks.setItems);
+	const setQueryRef = React.useRef(hooks.setQuery);
+	const setSelectedRef = React.useRef(hooks.setSelected);
+	const setSelectedIdRef = React.useRef(hooks.setSelectedId);
+	React.useEffect(() => {
+		if (!chrome.runtime) { return; }
+		const listener: Parameters<typeof chrome.tabs.onUpdated.addListener>[0] = (tabId) => {
+			chrome.tabs
+				.query({ active: true })
+				.then(tabs => {
+					if (tabs[0].id === tabId) {
+						setItemsRef.current([]);
+						setQueryRef.current('');
+						setSelectedRef.current(null);
+						setSelectedIdRef.current(null);
+					}
+				}).catch(console.error);
+		};
+		chrome.tabs.onUpdated.addListener(listener);
+		return () => chrome.tabs.onUpdated.removeListener(listener);
+	}, []);
 }

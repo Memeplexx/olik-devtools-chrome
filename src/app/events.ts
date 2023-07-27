@@ -1,5 +1,5 @@
 import { useHooks } from "./hooks";
-import { StateAction, deserialize, libState, readState, updateFunctions } from "olik";
+import { RecursiveRecord, StateAction, deserialize, libState, readState, updateFunctions } from "olik";
 
 export const useEvents = (props: ReturnType<typeof useHooks>) => ({
   onEditorChange: (text: string) => {
@@ -16,24 +16,18 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
       before: doReadState(item.type, itemBefore.state),
       after: doReadState(item.type, item.state),
     });
-    libState.disableDevtoolsDispatch = true;
-    props.storeRef.current!.$set(item.state);
-    libState.disableDevtoolsDispatch = false;
+    silentlyUpdateStoreState(props, item.state);
   },
   onMouseLeaveItem: () => {
     if (props.selectedId) {
       const item = props.items.find(item => item.id === props.selectedId)!;
       props.setQuery(item.type);
       props.setSelected(null);
-      libState.disableDevtoolsDispatch = true;
-      props.storeRef.current!.$set(item.state);
-      libState.disableDevtoolsDispatch = false;      
+      silentlyUpdateStoreState(props, item.state);
     } else {
       props.setQuery('');
       props.setSelected(null);
-      libState.disableDevtoolsDispatch = true;
-      props.storeRef.current!.$set(props.items[props.items.length - 1].state);
-      libState.disableDevtoolsDispatch = false;
+      silentlyUpdateStoreState(props, props.items[props.items.length - 1].state);
     }
   },
   onClickItem: (id: number) => () => {
@@ -59,4 +53,18 @@ const doReadState = (type: string, state: unknown) => {
     });
   stateActions.push({ name: '$state' });
   return readState({ state, stateActions, cursor: { index: 0 } });
+}
+
+const silentlyUpdateStoreState = (props: ReturnType<typeof useHooks>, state: RecursiveRecord) => {
+  if (!chrome.runtime) {
+    libState.disableDevtoolsDispatch = true;
+    props.storeRef.current!.$set(state);
+    libState.disableDevtoolsDispatch = false;
+  } else {
+    const updateStateDiv = (state: string) => document.getElementById('olik-state')!.innerHTML = state;
+    chrome.tabs
+      .query({ active: true })
+      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: updateStateDiv, args: [JSON.stringify(state)] }))
+      .catch(console.error);
+  }
 }
