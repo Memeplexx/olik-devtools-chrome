@@ -9,7 +9,6 @@ export const Items = styled.div`
 	display: flex;
 	flex-direction: column;
 	font-family: 'Source Code Pro', monospace;
-	font-size: 12px;
 	font-weight: 100;
 `;
 

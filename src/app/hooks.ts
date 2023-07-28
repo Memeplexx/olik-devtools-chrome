@@ -47,6 +47,7 @@ const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 				const newId = items.length ? items[items.length - 1].id + 1 : 0;
 				return [...items, { type, typeFormatted, id: newId, state, last }];
 			});
+			hooks.setQuery(type);
 		}
 		const messageListener = (e: MessageEvent<Message>) => {
 			if (e.origin !== window.location.origin) { return; }

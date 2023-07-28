@@ -115,6 +115,7 @@ const useMonacoTextEditor = ({ divEl, editorRef }: EditorHookArgs) => {
     });
     editorRef.current = monaco.editor.create(divEl.current, {
       language: 'typescript',
+      fontSize: 11,
       minimap: {
         enabled: false
       },
