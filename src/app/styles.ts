@@ -22,7 +22,8 @@ export const Item = styled.div<{ isLast: boolean, isSelected: boolean }>`
 	&:hover {
 		background-color: black;
 	}
-	border-top: 1px solid ${p => p.isLast ? 'rgba(255,255,255,0.4)': 'transparent'};
+	border-left: 3px solid rgba(255,255,255,0.4);
+	margin-bottom: ${p => p.isLast ? '5px': '0px'};
 	background-color: ${p => p.isSelected ? 'black' : 'transparent'};
 `;
 

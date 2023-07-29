@@ -1,6 +1,7 @@
 import React, { MutableRefObject } from "react";
-import { Message } from "./constants";
+import { Item, Message, itemId } from "./constants";
 import { RecursiveRecord, Store, createStore, getStore, libState } from "olik";
+import { doReadState } from "./functions";
 
 export const useHooks = () => {
 	const hooks = useHooksInitializer();
@@ -16,7 +17,7 @@ const useHooksInitializer = () => {
 	initializeStore({ state, storeRef });
 	const [query, setQuery] = React.useState('');
 	const [selected, setSelected] = React.useState<{ before: unknown | null, after: unknown | null } | null>(null);
-	const [items, setItems] = React.useState<{ type: string, typeFormatted: string, id: number, state: RecursiveRecord, last: boolean }[]>([]);
+	const [items, setItems] = React.useState<Item[]>([]);
 	const [selectedId, setSelectedId] = React.useState<number | null>(null);
 	return {
 		items,
@@ -36,38 +37,49 @@ const useHooksInitializer = () => {
 const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 	const setStateRef = React.useRef(hooks.setState);
 	const setItemsRef = React.useRef(hooks.setItems);
+	const setQueryRef = React.useRef(hooks.setQuery);
+	const setSelectedRef = React.useRef(hooks.setSelected);
 	React.useEffect(() => {
-		const setState = setStateRef.current;
-		const setItems = setItemsRef.current;
-		const getInitialState = () => JSON.parse(document.getElementById('olik-state')!.innerHTML) as RecursiveRecord;
+		const getInitialState = () => {
+			const el = document.getElementById('olik-state');
+			if (!el) { return {}; }
+			return JSON.parse(el.innerHTML) as RecursiveRecord;
+		}
 		const processEvent = ({ action: { state, type, last } }: Message) => {
-			setState(state);
+			setStateRef.current(state);
+			const itemBefore = hooks.items.length ? hooks.items[hooks.items.length - 1] : { type: '', state: libState.initialState };
 			const typeFormatted = type.replace(/\$[A-Za-z0-9]+/g, match => `<span class="action">${match}</span>`);
-			setItems(items => {
-				const newId = items.length ? items[items.length - 1].id + 1 : 0;
-				return [...items, { type, typeFormatted, id: newId, state, last }];
+			const item = { type, typeFormatted, id: itemId.val++, state, last };
+			setItemsRef.current(i => [...i, item]);
+			setQueryRef.current(type);
+			setSelectedRef.current({
+				before: doReadState(item.type, itemBefore.state),
+				after: doReadState(item.type, item.state),
 			});
-			hooks.setQuery(type);
 		}
 		const messageListener = (e: MessageEvent<Message>) => {
 			if (e.origin !== window.location.origin) { return; }
 			if (e.data.source !== 'olik-devtools-extension') { return; }
 			processEvent(e.data);
 		}
+		const chromeMessageListener = (event: Message) => processEvent(event);
 		if (!chrome.runtime) {
 			window.addEventListener('message', messageListener);
-			setState(getInitialState());
+			setStateRef.current(getInitialState());
 		} else {
 			chrome.runtime.onMessage
-				.addListener((event: Message) => processEvent(event));
+				.addListener(chromeMessageListener);
 			chrome.tabs
 				.query({ active: true })
 				.then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: getInitialState }))
-				.then(r => setState(r[0].result))
+				.then(r => setStateRef.current(r[0].result))
 				.catch(console.error);
 		}
-		return () => window.removeEventListener('message', messageListener)
-	}, []);
+		return () => {
+			window.removeEventListener('message', messageListener);
+			chrome.runtime?.onMessage.removeListener(chromeMessageListener);
+		}
+	}, [hooks.items]);
 }
 
 const initializeStore = (props: { state: RecursiveRecord | null, storeRef: MutableRefObject<Store<RecursiveRecord> | null> }) => {

@@ -1,5 +1,6 @@
+import { doReadState } from "./functions";
 import { useHooks } from "./hooks";
-import { RecursiveRecord, StateAction, deserialize, libState, readState, updateFunctions } from "olik";
+import { RecursiveRecord, libState } from "olik";
 
 export const useEvents = (props: ReturnType<typeof useHooks>) => ({
   onEditorChange: (text: string) => {
@@ -34,26 +35,6 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
     props.setSelectedId(id === props.selectedId ? null : id);
   }
 })
-
-const doReadState = (type: string, state: unknown) => {
-  if (!type) { return null; }
-  const segments = type.split('.');
-  segments.pop();
-  const stateActions: StateAction[] = segments
-    .map(seg => {
-      const arg = seg.match(/\(([^)]*)\)/)?.[1];
-      const containsParenthesis = arg !== null && arg !== undefined;
-      if (containsParenthesis && !updateFunctions.includes(seg)) {
-        const functionName = seg.split('(')[0];
-        const typedArg = deserialize(arg);
-        return { name: functionName, arg: typedArg };
-      } else {
-        return { name: seg, arg: null };
-      }
-    });
-  stateActions.push({ name: '$state' });
-  return readState({ state, stateActions, cursor: { index: 0 } });
-}
 
 const silentlyUpdateStoreState = (props: ReturnType<typeof useHooks>, state: RecursiveRecord) => {
   if (!chrome.runtime) {
