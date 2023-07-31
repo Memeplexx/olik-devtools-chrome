@@ -7,17 +7,7 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
     props.setQuery(text);
   },
   onMouseEnterItem: (id: number) => () => {
-    const itemIndex = props.items.findIndex(item => item.id === id);
-    const itemAfter = props.items[itemIndex];
-    props.setQuery(itemAfter.type);
-    const itemBefore = itemIndex === 0
-      ? { type: '', state: libState.initialState }
-      : props.items.slice(0, itemIndex).reverse().find(item => item.last)!
-    props.setSelected({
-      before: doReadState(itemAfter.type, itemBefore.state),
-      after: doReadState(itemAfter.type, itemAfter.state),
-    });
-    silentlyUpdateAppStoreState(props, itemAfter.state);
+    focusItem(props, id);
   },
   onMouseLeaveItem: () => {
     if (props.selectedId) {
@@ -32,9 +22,44 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
     }
   },
   onClickItem: (id: number) => () => {
+    const isSelecting = props.selectedId === null;
+    if (isSelecting) {
+      const item = props.items.find(item => item.id === id)!;
+      silentlyUpdateAppStoreState(props, item.state);
+    }
     props.setSelectedId(id === props.selectedId ? null : id);
+  },
+  onKeyDownItems: (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const itemIndex = props.items.findIndex(item => item.id === props.selectedId);
+    if (e.key === 'ArrowUp' && itemIndex > 0) {
+      const item = props.items[itemIndex - 1];
+      silentlyUpdateAppStoreState(props, item.state);
+      props.setSelectedId(item.id);
+    } else if (e.key === 'ArrowDown' && itemIndex < props.items.length - 1) {
+      const item = props.items[itemIndex + 1];
+      focusItem(props, item.id);
+      silentlyUpdateAppStoreState(props, item.state);
+      props.setSelectedId(item.id);
+    }
+  },
+  onClickClear: () => {
+    props.setItems([]);
   }
 })
+
+
+const focusItem = (props: ReturnType<typeof useHooks>, id: number) => {
+  const itemIndex = props.items.findIndex(item => item.id === id);
+  const itemAfter = props.items[itemIndex];
+  props.setQuery(itemAfter.type);
+  const itemBefore = itemIndex === 0
+    ? { type: '', state: libState.initialState }
+    : props.items.slice(0, itemIndex).reverse().find(item => item.last)!
+  props.setSelected({
+    before: doReadState(itemAfter.type, itemBefore.state),
+    after: doReadState(itemAfter.type, itemAfter.state),
+  });
+}
 
 const silentlyUpdateAppStoreState = (props: ReturnType<typeof useHooks>, state: RecursiveRecord) => {
   if (!chrome.runtime) {

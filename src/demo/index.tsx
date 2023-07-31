@@ -11,7 +11,6 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
       {...props}
       children={
         <>
-          App
           <AddButton 
             onClick={() => appStore.num.$add(1)}
             children={`Increment | ${hooks.num}`}

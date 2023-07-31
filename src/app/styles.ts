@@ -3,6 +3,26 @@ import { Editor } from "../editor";
 import { Demo } from "../demo";
 import { Tree } from "../tree";
 import { Panel, PanelResizeHandle } from "react-resizable-panels";
+import { CiCircleRemove } from 'react-icons/ci';
+
+export const ClearButton = styled.button`
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	width: 20px;
+	height: 20px;
+	display: flex;
+	cursor: pointer;
+	border-radius: 50%;
+	:hover {
+		background-color: rgba(255,255,255,0.2);
+	}
+`;
+
+export const ClearIcon = styled(CiCircleRemove)`
+  flex: 1;
+  height: auto;
+`;
 
 export const Items = styled.div`
 	z-index: 1;
@@ -10,26 +30,33 @@ export const Items = styled.div`
 	flex-direction: column;
 	font-family: 'Source Code Pro', monospace;
 	font-weight: 100;
+	outline: none;
+
+	overflow-x: auto;
 `;
 
-export const Item = styled.div<{ isLast: boolean, isSelected: boolean }>`
+export const Item = styled.div`
+`;
+
+export const ItemContent = styled.div<{ isLast: boolean, isSelected: boolean }>`
 	padding: 4px 8px;
+	margin-bottom: ${p => p.isLast ? '5px' : '0px'};
+	border-left: 3px solid rgba(255,255,255,0.4);
+	background-color: ${p => p.isSelected ? 'white!important' : 'transparent'};
+	color: ${p => p.isSelected ? 'black' : ''};
 	cursor: pointer;
 	white-space: nowrap;
-	.action {
-		color: #00aaff;
-	}
 	&:hover {
 		background-color: black;
 	}
-	border-left: 3px solid rgba(255,255,255,0.4);
-	margin-bottom: ${p => p.isLast ? '5px': '0px'};
-	background-color: ${p => p.isSelected ? 'black' : 'transparent'};
+	.action {
+		color: #00aaff;
+	}
 `;
 
 export const DemoApp = styled(Demo)`
-	flex: 1;
 	background-color: #dfdfdf;
+	min-width: 300px;
 `;
 
 export const EditorPanel = styled(Editor)`
@@ -43,6 +70,7 @@ export const DevtoolsPanel = styled.div`
 	padding: 8px;
 	background-color: rgb(28 28 28);
   color: white;
+	overflow-x: auto;
 `;
 
 export const TreePanel = styled(Tree)`
@@ -50,7 +78,6 @@ export const TreePanel = styled(Tree)`
 `;
 
 export const ResizeHandle = styled(PanelResizeHandle)`
-	flex: 0 0 1.5em;
   position: relative;
   outline: none;
   background-color: rgba(255, 255, 255, 0.05);
@@ -60,24 +87,24 @@ export const ResizeHandle = styled(PanelResizeHandle)`
 	&[data-resize-handle-active] {
 		background-color: rgba(255, 255, 255, 0.2);
 	}
+	display: flex;
+	height: 20px;
 `;
 
 export const ResizeHandleInner = styled.div`
+	flex: 1;
 	position: absolute;
-	top: 0.25em;
-	bottom: 0.25em;
-	left: 0.25em;
-	right: 0.25em;
-	border-radius: 0.25em;
 	transition: all - color 0.2s linear;
+	position: relative;
+	display: flex;
 `;
 
 export const ResizeIcon = styled.svg`
-	width: 1em;
-  height: 1em;
-  position: absolute;
-  left: calc(50% - 0.5rem);
-  top: calc(50% - 0.5rem);
+	height: 15px;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
 `;
 
 export const ResizeIconPath = styled.path`
