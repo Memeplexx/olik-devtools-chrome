@@ -1,6 +1,6 @@
 import { useHooks } from './hooks';
 import { useEvents } from './events';
-import { ClearButton, ClearIcon, DemoApp, DevtoolsPanel, EditorPanel, Item, ItemContent, Items, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, TreePanel } from './styles';
+import { ClearButton, ClearIcon, DemoApp, DevtoolsPanel, EditorPanel, Item, ItemContent, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, TreePanel } from './styles';
 import { PanelGroup } from 'react-resizable-panels';
 
 
@@ -58,7 +58,7 @@ export const App = () => {
 											/>
 										}
 									/>
-									<ResizablePanel
+									<ItemsWrapper
 										maxSize={75}
 										children={
 											<Items

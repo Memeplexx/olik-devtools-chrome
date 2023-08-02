@@ -31,8 +31,6 @@ export const Items = styled.div`
 	font-family: 'Source Code Pro', monospace;
 	font-weight: 100;
 	outline: none;
-
-	overflow-x: auto;
 `;
 
 export const Item = styled.div`
@@ -114,4 +112,11 @@ export const ResizablePanel = styled(Panel)`
 	overflow: auto!important;
 	display: flex;
   flex-direction: column-reverse;
+`;
+
+export const ItemsWrapper = styled(Panel)`
+	overflow-y:auto!important;
+	overflow-x: auto!important;
+	display:flex;
+	flex-direction:column-reverse;
 `;

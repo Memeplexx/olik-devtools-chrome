@@ -18,7 +18,7 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
     } else {
       props.setQuery('');
       props.setSelected(null);
-      silentlyUpdateAppStoreState(props, props.items[props.items.length - 1].state);
+      // silentlyUpdateAppStoreState(props, props.items[props.items.length - 1].state);
     }
   },
   onClickItem: (id: number) => () => {
