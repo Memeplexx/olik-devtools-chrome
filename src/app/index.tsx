@@ -1,6 +1,6 @@
 import { useHooks } from './hooks';
 import { useEvents } from './events';
-import { ClearButton, ClearIcon, DemoApp, DevtoolsPanel, EditorPanel, Item, ItemContent, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, TreePanel } from './styles';
+import { ClearButton, ClearIcon, DemoApp, DevtoolsPanel, EditorPanel, Item, ItemContent, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, TreePanel } from './styles';
 import { PanelGroup } from 'react-resizable-panels';
 
 
@@ -17,7 +17,7 @@ export const App = () => {
 					<>
 						<EditorPanel
 							query={hooks.query}
-							state={hooks.state}
+							state={hooks.storeState}
 							onTextChanged={events.onEditorChange}
 						/>
 						<PanelGroup
@@ -28,7 +28,7 @@ export const App = () => {
 										maxSize={75}
 										children={
 											<TreePanel
-												state={hooks.state}
+												state={hooks.storeState}
 												query={hooks.query}
 												selected={hooks.selected}
 												storeRef={hooks.storeRef}
@@ -47,6 +47,13 @@ export const App = () => {
 																	fill="currentColor"
 																	d="M8,18H11V15H2V13H22V15H13V18H16L12,22L8,18M12,2L8,6H11V9H2V11H22V9H13V6H16L12,2Z"
 																/>
+															}
+														/>
+														<ShowUnchangedToggle
+															title="Show args which have no effect"
+															onClick={events.onClickShowHiddenArgs}
+															children={
+																<>{hooks.showHiddenArgs ? <ToggleOnIcon /> : <ToggleOffIcon />}</>
 															}
 														/>
 														<ClearButton

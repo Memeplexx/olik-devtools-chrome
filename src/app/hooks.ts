@@ -12,30 +12,33 @@ export const useHooks = () => {
 }
 
 const useHooksInitializer = () => {
-	const [state, setState] = React.useState<RecursiveRecord | null>(null);
+	const [storeState, setStoreState] = React.useState<RecursiveRecord | null>(null);
 	const storeRef = React.useRef<Store<RecursiveRecord> | null>(null);
-	initializeStore({ state, storeRef });
+	initializeStore({ state: storeState, storeRef });
 	const [query, setQuery] = React.useState('');
 	const [selected, setSelected] = React.useState<{ before: unknown | null, after: unknown | null } | null>(null);
 	const [items, setItems] = React.useState<Item[]>([]);
+	const [showHiddenArgs, setShowHiddenArgs] = React.useState(false);
 	const [selectedId, setSelectedId] = React.useState<number | null>(null);
 	return {
 		items,
 		setItems,
-		state,
+		storeState,
 		query,
 		setQuery,
-		setState,
+		setStoreState,
 		selected,
 		setSelected,
 		storeRef,
 		selectedId,
 		setSelectedId,
+		showHiddenArgs,
+		setShowHiddenArgs,
 	};
 }
 
 const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
-	const setStateRef = React.useRef(hooks.setState);
+	const setStateRef = React.useRef(hooks.setStoreState);
 	const setItemsRef = React.useRef(hooks.setItems);
 	const setQueryRef = React.useRef(hooks.setQuery);
 	const setSelectedRef = React.useRef(hooks.setSelected);

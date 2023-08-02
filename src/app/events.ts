@@ -9,6 +9,9 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
   onMouseEnterItem: (id: number) => () => {
     focusItem(props, id);
   },
+  onClickShowHiddenArgs: () => {
+    props.setShowHiddenArgs(!props.showHiddenArgs);
+  },
   onMouseLeaveItem: () => {
     if (props.selectedId) {
       const itemAfter = props.items.find(item => item.id === props.selectedId)!;

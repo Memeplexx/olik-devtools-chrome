@@ -4,6 +4,7 @@ import { Demo } from "../demo";
 import { Tree } from "../tree";
 import { Panel, PanelResizeHandle } from "react-resizable-panels";
 import { CiCircleRemove } from 'react-icons/ci';
+import { BsToggleOff, BsToggleOn } from 'react-icons/bs';
 
 export const ClearButton = styled.button`
 	position: absolute;
@@ -17,6 +18,24 @@ export const ClearButton = styled.button`
 	:hover {
 		background-color: rgba(255,255,255,0.2);
 	}
+`;
+
+export const ToggleOffIcon = styled(BsToggleOff)`
+	width: auto;
+	height: auto;
+`;
+
+export const ToggleOnIcon = styled(BsToggleOn)`
+	width: auto;
+	height: auto;
+`;
+
+export const ShowUnchangedToggle = styled.button`
+	cursor: pointer;
+	position: absolute;
+	height: 20px;
+  display: flex;
+	right: 40px;
 `;
 
 export const ClearIcon = styled(CiCircleRemove)`
