@@ -170,7 +170,7 @@ const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNot
 	}
 	const payloadStringified = JSON.stringify(action.payload);
 	if (typeof (action.payload) === 'object' && !Array.isArray(action.payload)) {
-		const stateBefore = action.stateBefore as Record<string, unknown>;
+		const stateBefore = action.stateBefore === undefined ? {} :  action.stateBefore as Record<string, unknown>;
 		const payload = action.payload as Record<string, unknown>;
 		const keyValuePairsChanged = new Array<string>();
 		const keyValuePairsUnchanged = new Array<string>();

@@ -32,7 +32,7 @@ export const getTreeHTML = ({ before, after, depth }: { before: unknown, after: 
 					return `${tabbed}<span class="${className}">${key}: ${getTreeHTML({ before: beforeRecord[key], after: afterRecord[key], depth: depth + 1 })}</span>`;
 				}).join(',\n') + '\n}';
 		} else {
-			const beforeArray = before as unknown[];
+			const beforeArray = before === undefined ? [] : before as unknown[];
 			const afterArray = after as unknown[];
 			const allIndices = Array.from(new Set([...beforeArray.keys(), ...afterArray.keys()]));
 			return '[\n' + allIndices
