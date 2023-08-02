@@ -52,9 +52,7 @@ export const App = () => {
 														<ShowUnchangedToggle
 															title="Show args which have no effect"
 															onClick={events.onClickShowHiddenArgs}
-															children={
-																<>{hooks.showHiddenArgs ? <ToggleOnIcon /> : <ToggleOffIcon />}</>
-															}
+															children={hooks.showHiddenArgs ? <ToggleOnIcon /> : <ToggleOffIcon />}
 														/>
 														<ClearButton
 															children={<ClearIcon />}
