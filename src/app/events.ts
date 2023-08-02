@@ -1,3 +1,4 @@
+import { getTreeHTML } from "../shared/functions";
 import { doReadState } from "./functions";
 import { useHooks } from "./hooks";
 import { RecursiveRecord, libState } from "olik";
@@ -16,11 +17,11 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
     if (props.selectedId) {
       const itemAfter = props.items.find(item => item.id === props.selectedId)!;
       props.setQuery(itemAfter.type);
-      props.setSelected(null);
+      props.setSelected('');
       silentlyUpdateAppStoreState(props, itemAfter.state);
     } else {
       props.setQuery('');
-      props.setSelected(null);
+      props.setSelected('');
       // silentlyUpdateAppStoreState(props, props.items[props.items.length - 1].state);
     }
   },
@@ -58,10 +59,8 @@ const focusItem = (props: ReturnType<typeof useHooks>, id: number) => {
   const itemBefore = itemIndex === 0
     ? { type: '', state: libState.initialState }
     : props.items.slice(0, itemIndex).reverse().find(item => item.last)!
-  props.setSelected({
-    before: doReadState(itemAfter.type, itemBefore.state),
-    after: doReadState(itemAfter.type, itemAfter.state),
-  });
+  const selected = getTreeHTML({ before: doReadState(itemAfter.type, itemBefore.state), after: doReadState(itemAfter.type, itemAfter.state), depth: 0 });
+  props.setSelected(selected);
 }
 
 const silentlyUpdateAppStoreState = (props: ReturnType<typeof useHooks>, state: RecursiveRecord) => {

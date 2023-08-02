@@ -4,7 +4,7 @@ import { MutableRefObject } from "react";
 export interface TreeProps {
   state: RecursiveRecord | null,
   query: string,
-  selected: { before: unknown, after: unknown } | null,
+  selected: string,
   className?: string,
   storeRef: MutableRefObject<Store<RecursiveRecord> | null>,
 }

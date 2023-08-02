@@ -2,6 +2,7 @@ import React, { MutableRefObject } from "react";
 import { Item, Message, itemId } from "./constants";
 import { OlikAction, RecursiveRecord, Store, createStore, getStore, libState } from "olik";
 import { doReadState } from "./functions";
+import { getTreeHTML } from "../shared/functions";
 
 export const useHooks = () => {
 	const hooks = useHooksInitializer();
@@ -16,7 +17,7 @@ const useHooksInitializer = () => {
 	const storeRef = React.useRef<Store<RecursiveRecord> | null>(null);
 	initializeStore({ state: storeState, storeRef });
 	const [query, setQuery] = React.useState('');
-	const [selected, setSelected] = React.useState<{ before: unknown | null, after: unknown | null } | null>(null);
+	const [selected, setSelected] = React.useState('');
 	const [items, setItems] = React.useState<Item[]>([]);
 	const [hideIneffectiveActions, setHideIneffectiveActions] = React.useState(false);
 	const [selectedId, setSelectedId] = React.useState<number | null>(null);
@@ -63,10 +64,8 @@ const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 			const item = { type, typeFormatted, id: itemId.val++, state, last, ineffective: !typeFormatted.includes('<span class="touched">') };
 			setItemsRef.current(i => [...i, item]);
 			setQueryRef.current(type);
-			setSelectedRef.current({
-				before: stateBefore,
-				after: stateAfter,
-			});
+			const selected = getTreeHTML({ before: stateBefore, after: stateAfter, depth: 0 });
+			setSelectedRef.current(selected);
 		}
 		const messageListener = (e: MessageEvent<Message>) => {
 			if (e.origin !== window.location.origin) { return; }
@@ -139,7 +138,7 @@ const usePageReloadListener = (hooks: ReturnType<typeof useHooksInitializer>) =>
 					if (tabs[0].id === tabId) {
 						setItemsRef.current([]);
 						setQueryRef.current('');
-						setSelectedRef.current(null);
+						setSelectedRef.current('');
 						setSelectedIdRef.current(null);
 					}
 				}).catch(console.error);
@@ -183,3 +182,5 @@ const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNot
 		return `<span class="touched">${payloadStringified}</span>`;
 	}
 }
+
+

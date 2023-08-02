@@ -12,4 +12,10 @@ export const JsonWrapper = styled(Pre)`
   .boolean { color: blue; }
   .null { color: magenta; }
   .key { color: red; }
+  .touched {
+		color: #00b63d;
+	}
+	.untouched {
+		color: #5d5d5d;
+	}
 `;
