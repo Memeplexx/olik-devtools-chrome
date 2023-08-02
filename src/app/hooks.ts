@@ -1,6 +1,6 @@
 import React, { MutableRefObject } from "react";
 import { Item, Message, itemId } from "./constants";
-import { RecursiveRecord, Store, createStore, getStore, libState } from "olik";
+import { OlikAction, RecursiveRecord, Store, createStore, getStore, libState } from "olik";
 import { doReadState } from "./functions";
 
 export const useHooks = () => {
@@ -18,8 +18,9 @@ const useHooksInitializer = () => {
 	const [query, setQuery] = React.useState('');
 	const [selected, setSelected] = React.useState<{ before: unknown | null, after: unknown | null } | null>(null);
 	const [items, setItems] = React.useState<Item[]>([]);
-	const [showHiddenArgs, setShowHiddenArgs] = React.useState(false);
+	const [hideIneffectiveActions, setHideIneffectiveActions] = React.useState(false);
 	const [selectedId, setSelectedId] = React.useState<number | null>(null);
+	const itemsForView = React.useMemo(() => !hideIneffectiveActions ? items : items.filter(i => !i.ineffective), [items, hideIneffectiveActions]);
 	return {
 		items,
 		setItems,
@@ -32,8 +33,9 @@ const useHooksInitializer = () => {
 		storeRef,
 		selectedId,
 		setSelectedId,
-		showHiddenArgs,
-		setShowHiddenArgs,
+		hideIneffectiveActions,
+		setHideIneffectiveActions,
+		itemsForView,
 	};
 }
 
@@ -48,16 +50,22 @@ const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 			if (!el) { return {}; }
 			return JSON.parse(el.innerHTML) as RecursiveRecord;
 		}
-		const processEvent = ({ action: { state, type, last } }: Message) => {
+		const processEvent = ({ action: { state, type, payload, last } }: Message) => {
 			setStateRef.current(state);
 			const itemBefore = hooks.items.length ? hooks.items[hooks.items.length - 1] : { type: '', state: libState.initialState };
-			const typeFormatted = type.replace(/\$[A-Za-z0-9]+/g, match => `<span class="action">${match}</span>`);
-			const item = { type, typeFormatted, id: itemId.val++, state, last };
+			const stateBefore = doReadState(type, itemBefore.state);
+			const stateAfter = doReadState(type, state);
+			const stateBeforeString = JSON.stringify(stateBefore);
+			const stateAfterString = JSON.stringify(stateAfter);
+			const stateHasNotChanged = stateBeforeString === stateAfterString;
+			const payloadString = getPayloadHTML({ type, payload, stateBefore, stateHasNotChanged });
+			const typeFormatted = getTypeHTML({ type, payloadString, stateHasNotChanged });
+			const item = { type, typeFormatted, id: itemId.val++, state, last, ineffective: !typeFormatted.includes('<span class="touched">') };
 			setItemsRef.current(i => [...i, item]);
 			setQueryRef.current(type);
 			setSelectedRef.current({
-				before: doReadState(item.type, itemBefore.state),
-				after: doReadState(item.type, item.state),
+				before: stateBefore,
+				after: stateAfter,
 			});
 		}
 		const messageListener = (e: MessageEvent<Message>) => {
@@ -139,4 +147,39 @@ const usePageReloadListener = (hooks: ReturnType<typeof useHooksInitializer>) =>
 		chrome.tabs.onUpdated.addListener(listener);
 		return () => chrome.tabs.onUpdated.removeListener(listener);
 	}, []);
+}
+
+const getTypeHTML = (action: { type: string, payloadString?: string, stateHasNotChanged: boolean }) => {
+	if (action.stateHasNotChanged) {
+		return `<span class="untouched">${action.type.substring(0, action.type.length - 1)}${action.payloadString || ''})</span>`;
+	}
+	const typeFormatted = action.type.replace(/\$[A-Za-z0-9]+/g, match => `<span class="action">${match}</span>`);
+	const typeBeforeClosingParenthesis = typeFormatted.substring(0, typeFormatted.length - 1);
+	return `${typeBeforeClosingParenthesis}${action.payloadString || ''})`;
+}
+
+const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNotChanged: boolean }) => {
+	if (action.payload === undefined) {
+		return undefined;
+	}
+	if (action.stateHasNotChanged) {
+		return JSON.stringify(action.payload);
+	}
+	const payloadStringified = JSON.stringify(action.payload);
+	if (typeof (action.payload) === 'object' && !Array.isArray(action.payload)) {
+		const stateBefore = action.stateBefore as Record<string, unknown>;
+		const payload = action.payload as Record<string, unknown>;
+		const keyValuePairsChanged = new Array<string>();
+		const keyValuePairsUnchanged = new Array<string>();
+		Object.keys(action.payload as object).forEach(key => {
+			if (stateBefore[key] !== payload[key]) {
+				keyValuePairsChanged.push(`<span class="touched">${key}: ${JSON.stringify(payload[key])}</span>`);
+			} else {
+				keyValuePairsUnchanged.push(`<span class="untouched">${key}: ${JSON.stringify(payload[key])}</span>`);
+			}
+		});
+		return `{ ${[...keyValuePairsChanged, ...keyValuePairsUnchanged].join(', ')} }`;
+	} else {
+		return `<span class="touched">${payloadStringified}</span>`;
+	}
 }

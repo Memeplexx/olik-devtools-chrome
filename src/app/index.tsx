@@ -50,9 +50,9 @@ export const App = () => {
 															}
 														/>
 														<ShowUnchangedToggle
-															title="Show args which have no effect"
+															title="Hide ineffective actions"
 															onClick={events.onClickShowHiddenArgs}
-															children={hooks.showHiddenArgs ? <ToggleOnIcon /> : <ToggleOffIcon />}
+															children={hooks.hideIneffectiveActions ? <ToggleOnIcon /> : <ToggleOffIcon />}
 														/>
 														<ClearButton
 															children={<ClearIcon />}
@@ -71,7 +71,7 @@ export const App = () => {
 												onKeyDown={events.onKeyDownItems}
 												children={
 													<>
-														{hooks.items.map(item => (
+														{hooks.itemsForView.map(item => (
 															<Item
 																key={item.id}
 																onMouseEnter={events.onMouseEnterItem(item.id)}

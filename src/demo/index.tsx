@@ -1,7 +1,7 @@
 import { transact } from 'olik';
 import { appStore } from '../store';
 import { useHooks } from './hooks';
-import { AddButton, Container, TransactButton } from './styles';
+import { AddButton, Container, PatchButton, ToggleButton, TransactButton } from './styles';
 
 
 export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
@@ -14,6 +14,18 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
           <AddButton 
             onClick={() => appStore.num.$add(1)}
             children={`Increment | ${hooks.num}`}
+          />
+          <PatchButton
+            onClick={() => appStore.flatObj.$patch({ one: 'hee', two: 'ggg' })}
+            children='patch'
+          />
+          <PatchButton
+            onClick={() => appStore.flatObj.$patch({ one: 'hee', two: 'xxx' })}
+            children='patch2'
+          />
+          <ToggleButton
+            onClick={() => appStore.bool.$toggle()}
+            children='toggle'
           />
           <TransactButton
             children='transact'

@@ -10,7 +10,7 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
     focusItem(props, id);
   },
   onClickShowHiddenArgs: () => {
-    props.setShowHiddenArgs(!props.showHiddenArgs);
+    props.setHideIneffectiveActions(!props.hideIneffectiveActions);
   },
   onMouseLeaveItem: () => {
     if (props.selectedId) {

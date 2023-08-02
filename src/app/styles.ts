@@ -69,6 +69,12 @@ export const ItemContent = styled.div<{ isLast: boolean, isSelected: boolean }>`
 	.action {
 		color: #00aaff;
 	}
+	.touched {
+		color: #00b63d;
+	}
+	.untouched {
+		color: #5d5d5d;
+	}
 `;
 
 export const DemoApp = styled(Demo)`

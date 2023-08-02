@@ -1,13 +1,12 @@
-import { RecursiveRecord } from "olik"
+import { OlikAction, RecursiveRecord } from "olik"
 
 export type Message = {
   source: string,
   action: {
-    type: string,
     state: RecursiveRecord,
     last: boolean,
     selectedState: RecursiveRecord,
-  }
+  } & OlikAction
 }
 
 export type Item = {
@@ -15,7 +14,8 @@ export type Item = {
   typeFormatted: string,
   id: number,
   state: RecursiveRecord,
-  last: boolean
+  last: boolean,
+  ineffective: boolean,
 }
 
 export const itemId = {

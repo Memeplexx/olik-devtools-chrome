@@ -8,12 +8,19 @@ export const Container = styled(Div)`
   padding: 8px;
 `;
 
-export const AddButton = styled(Button)`
+const SimplyButton = styled(Button)`
   padding: 4px;
   border: 1px solid grey;
 `;
 
-export const TransactButton = styled(Button)`
-  padding: 4px;
-  border: 1px solid grey;
+export const AddButton = styled(SimplyButton)`
+`;
+
+export const PatchButton = styled(SimplyButton)`
+`
+
+export const TransactButton = styled(SimplyButton)`
+`;
+
+export const ToggleButton = styled(SimplyButton)`
 `;

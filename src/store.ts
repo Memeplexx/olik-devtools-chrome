@@ -2,6 +2,12 @@ import { createStore } from "olik";
 
 export const appStore = createStore({
   state: {
+    bool: false,
+    flatObj: {
+      one: 'hello',
+      two: 'world',
+      three: 'another',
+    },
     num: 0,
     obj: {
       one: {
