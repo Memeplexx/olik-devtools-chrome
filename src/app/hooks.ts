@@ -148,18 +148,22 @@ const usePageReloadListener = (hooks: ReturnType<typeof useHooksInitializer>) =>
 	}, []);
 }
 
-const getTypeHTML = (action: { type: string, payloadString?: string, stateHasNotChanged: boolean }) => {
+const getTypeHTML = (action: { type: string, payloadString?: string | null | undefined, stateHasNotChanged: boolean }) => {
+	const payload = action.payloadString === null ? 'null' : action.payloadString === undefined ? '' : action.payloadString;
 	if (action.stateHasNotChanged) {
-		return `<span class="untouched">${action.type.substring(0, action.type.length - 1)}${action.payloadString || ''})</span>`;
+		return `<span class="untouched">${action.type.substring(0, action.type.length - 1)}${payload})</span>`;
 	}
 	const typeFormatted = action.type.replace(/\$[A-Za-z0-9]+/g, match => `<span class="action">${match}</span>`);
 	const typeBeforeClosingParenthesis = typeFormatted.substring(0, typeFormatted.length - 1);
-	return `${typeBeforeClosingParenthesis}${action.payloadString || ''})`;
+	return `${typeBeforeClosingParenthesis}${payload})`;
 }
 
 const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNotChanged: boolean }) => {
 	if (action.payload === undefined) {
 		return undefined;
+	}
+	if (action.payload === null) {
+		return null;
 	}
 	if (action.stateHasNotChanged) {
 		return JSON.stringify(action.payload);
@@ -170,7 +174,7 @@ const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNot
 		const payload = action.payload as Record<string, unknown>;
 		const keyValuePairsChanged = new Array<string>();
 		const keyValuePairsUnchanged = new Array<string>();
-		Object.keys(action.payload as object).forEach(key => {
+		Object.keys(action.payload).forEach(key => {
 			if (stateBefore[key] !== payload[key]) {
 				keyValuePairsChanged.push(`<span class="touched">${key}: ${JSON.stringify(payload[key])}</span>`);
 			} else {

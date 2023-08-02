@@ -27,6 +27,10 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
             onClick={() => appStore.bool.$toggle()}
             children='toggle'
           />
+          <ToggleButton
+            onClick={() => appStore.modal.$set(appStore.modal.$state ? null : 'confirmDeleteGroup')}
+            children='toggle modal'
+          />
           <TransactButton
             children='transact'
             onClick={() => transact(

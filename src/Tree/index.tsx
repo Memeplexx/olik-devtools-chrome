@@ -5,7 +5,6 @@ import { JsonWrapper, ScrollPane } from "./styles";
 
 export const Tree = (props: TreeProps) => {
   const hooks = useHooks(props);
-  console.log(hooks);
   return (
     <ScrollPane
       className={props.className}
