@@ -16,7 +16,7 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
   onMouseLeaveItem: () => {
     if (props.selectedId) {
       const itemAfter = props.items.find(item => item.id === props.selectedId)!;
-      props.setQuery(itemAfter.type);
+      props.setQuery(itemAfter.query);
       props.setSelected('');
       silentlyUpdateAppStoreState(props, itemAfter.state);
     } else {
@@ -55,7 +55,7 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
 const focusItem = (props: ReturnType<typeof useHooks>, id: number) => {
   const itemIndex = props.items.findIndex(item => item.id === id);
   const itemAfter = props.items[itemIndex];
-  props.setQuery(itemAfter.type);
+  props.setQuery(itemAfter.query);
   const itemBefore = itemIndex === 0
     ? { type: '', state: libState.initialState }
     : props.items.slice(0, itemIndex).reverse().find(item => item.last)!

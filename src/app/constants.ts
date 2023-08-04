@@ -16,6 +16,7 @@ export type Item = {
   state: RecursiveRecord,
   last: boolean,
   ineffective: boolean,
+  query: string,
 }
 
 export const itemId = {

@@ -61,9 +61,10 @@ const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 			const stateHasNotChanged = stateBeforeString === stateAfterString;
 			const payloadString = getPayloadHTML({ type, payload, stateBefore, stateHasNotChanged });
 			const typeFormatted = getTypeHTML({ type, payloadString, stateHasNotChanged });
-			const item = { type, typeFormatted, id: itemId.val++, state, last, ineffective: !typeFormatted.includes('<span class="touched">') };
+			const query = getQueryHTML(type, payload);
+			const item = { type, typeFormatted, id: itemId.val++, state, last, query, ineffective: !typeFormatted.includes('<span class="touched">') };
 			setItemsRef.current(i => [...i, item]);
-			setQueryRef.current(type);
+			setQueryRef.current(query);
 			const selected = getTreeHTML({ before: stateBefore, after: stateAfter, depth: 0 });
 			setSelectedRef.current(selected);
 		}
@@ -156,6 +157,10 @@ const getTypeHTML = (action: { type: string, payloadString?: string | null | und
 	const typeFormatted = action.type.replace(/\$[A-Za-z0-9]+/g, match => `<span class="action">${match}</span>`);
 	const typeBeforeClosingParenthesis = typeFormatted.substring(0, typeFormatted.length - 1);
 	return `${typeBeforeClosingParenthesis}${payload})`;
+}
+
+const getQueryHTML = (type: string, payload: unknown) => {
+	return `${type.substring(0, type.length - 1)}${payload === undefined ? '' : JSON.stringify(payload).replace(/"([^"]+)":/g, '$1:')})`;
 }
 
 const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNotChanged: boolean }) => {
