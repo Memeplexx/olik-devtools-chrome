@@ -8,60 +8,33 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
     props.setQuery(text);
   },
   onMouseEnterItem: (id: number) => () => {
-    focusItem(props, id);
+    const itemIndex = props.items.findIndex(item => item.id === id);
+    const stateBefore = itemIndex > 0 ? props.items[itemIndex - 1].state : libState.initialState;
+    const stateAfter = props.items[itemIndex].state;
+    const query = props.query.substring('store.'.length);
+    const selected = getTreeHTML({
+      before: doReadState(query, stateBefore),
+      after: doReadState(query, stateAfter),
+      depth: 1
+    });
+    props.setSelected(selected);
   },
   onClickShowHiddenArgs: () => {
     props.setHideIneffectiveActions(!props.hideIneffectiveActions);
   },
   onMouseLeaveItem: () => {
-    if (props.selectedId) {
-      const itemAfter = props.items.find(item => item.id === props.selectedId)!;
-      props.setQuery(itemAfter.query);
-      props.setSelected('');
-      silentlyUpdateAppStoreState(props, itemAfter.state);
-    } else {
-      props.setQuery('');
-      props.setSelected('');
-      // silentlyUpdateAppStoreState(props, props.items[props.items.length - 1].state);
-    }
+    props.setSelected('');
   },
   onClickItem: (id: number) => () => {
-    const isSelecting = props.selectedId === null;
-    if (isSelecting) {
-      const item = props.items.find(item => item.id === id)!;
-      silentlyUpdateAppStoreState(props, item.state);
-    }
-    props.setSelectedId(id === props.selectedId ? null : id);
-  },
-  onKeyDownItems: (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const itemIndex = props.items.findIndex(item => item.id === props.selectedId);
-    if (e.key === 'ArrowUp' && itemIndex > 0) {
-      const item = props.items[itemIndex - 1];
-      silentlyUpdateAppStoreState(props, item.state);
-      props.setSelectedId(item.id);
-    } else if (e.key === 'ArrowDown' && itemIndex < props.items.length - 1) {
-      const item = props.items[itemIndex + 1];
-      focusItem(props, item.id);
-      silentlyUpdateAppStoreState(props, item.state);
-      props.setSelectedId(item.id);
-    }
+    const item = props.items.find(item => item.id === id)!;
+    const segments = item.type.split('.');
+    segments.pop();
+    props.setQuery(segments.join('.'));
   },
   onClickClear: () => {
     props.setItems([]);
   }
 })
-
-
-const focusItem = (props: ReturnType<typeof useHooks>, id: number) => {
-  const itemIndex = props.items.findIndex(item => item.id === id);
-  const itemAfter = props.items[itemIndex];
-  props.setQuery(itemAfter.query);
-  const itemBefore = itemIndex === 0
-    ? { type: '', state: libState.initialState }
-    : props.items.slice(0, itemIndex).reverse().find(item => item.last)!
-  const selected = getTreeHTML({ before: doReadState(itemAfter.type, itemBefore.state), after: doReadState(itemAfter.type, itemAfter.state), depth: 0 });
-  props.setSelected(selected);
-}
 
 const silentlyUpdateAppStoreState = (props: ReturnType<typeof useHooks>, state: RecursiveRecord) => {
   if (!chrome.runtime) {

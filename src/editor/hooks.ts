@@ -31,14 +31,16 @@ const addTypescriptSupportToEditor = () => {
   };
 }
 
-const useEditorValueSetter = ({ editorRef, state }: EditorHookArgs) => {
+const useEditorValueSetter = ({ editorRef, state, query }: EditorHookArgs) => {
   const propsStateRef = React.useRef(state);
   if (state && state !== propsStateRef.current) {
     const typeDefString = olikTypeDefsAsString + `; const store: Store<${generateTypeDefinition(state).replace(/\n|\r/g, "")}>;`;
     propsStateRef.current = state;
     if (editorRef.current!.getModel()!.getLineCount() === 2) {
       const secondLine = editorRef.current?.getModel()!.getLineContent(2);
-      editorRef.current?.setValue([typeDefString, secondLine].join('\n'));
+      if (secondLine !== query) {
+        editorRef.current?.setValue([typeDefString, secondLine].join('\n'));
+      }
     } else {
       editorRef.current?.setValue([typeDefString, 'store.'].join('\n'));
     }
@@ -56,6 +58,7 @@ const useQuerySetter = ({ editorRef, query }: EditorHookArgs) => {
 }
 
 const useEditorChangeListener = ({ editorRef, onTextChanged, runErrorChecker }: EditorHookArgs) => {
+  const onTextChangedRef = React.useRef(onTextChanged);
   React.useEffect(() => {
     editorRef.current!.onDidChangeModelContent(() => {
       const value = editorRef.current!.getValue();
@@ -77,7 +80,7 @@ const useEditorChangeListener = ({ editorRef, onTextChanged, runErrorChecker }: 
                 editorRef.current!.setValue(lines.slice(0, 2).join('\n'));
                 editorRef.current!.setPosition({ lineNumber: 2, column: value.length + 1 });
               } else {
-                onTextChanged(lines[1] + '\n'); // make sure that the state is updated
+                onTextChangedRef.current(lines[1] + '\n'); // make sure that the state is updated
                 const newValue = [lines[0], lines[1]].join('\n');
                 setTimeout(() => {
                   editorRef.current!.setValue(newValue);
@@ -92,10 +95,10 @@ const useEditorChangeListener = ({ editorRef, onTextChanged, runErrorChecker }: 
         }
         editorRef.current!.setValue(lines.slice(0, 2).join('\n'));
       } else {
-        setTimeout(() => onTextChanged(lines[1]));
+        setTimeout(() => onTextChangedRef.current(lines[1]));
       }
     })
-  }, [editorRef, onTextChanged, runErrorChecker]);
+  }, [editorRef, runErrorChecker]);
 }
 
 const useMonacoTextEditor = ({ divEl, editorRef }: EditorHookArgs) => {

@@ -5,18 +5,19 @@ export type Message = {
   action: {
     state: RecursiveRecord,
     last: boolean,
-    selectedState: RecursiveRecord,
+    type: string,
+    payload: unknown,
   } & OlikAction
 }
 
 export type Item = {
   type: string,
   typeFormatted: string,
+  payload: unknown,
   id: number,
   state: RecursiveRecord,
   last: boolean,
   ineffective: boolean,
-  query: string,
 }
 
 export const itemId = {

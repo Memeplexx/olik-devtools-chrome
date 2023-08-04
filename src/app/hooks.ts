@@ -1,18 +1,22 @@
 import React, { MutableRefObject } from "react";
 import { Item, Message, itemId } from "./constants";
-import { OlikAction, RecursiveRecord, Store, createStore, getStore, libState } from "olik";
-import { doReadState } from "./functions";
-import { getTreeHTML } from "../shared/functions";
+import { OlikAction, RecursiveRecord, Store, createStore, getStore, libState, readState } from "olik";
+import { doReadState, updateSetSelection } from "./functions";
 
 export const useHooks = () => {
 	const hooks = useHooksInitializer();
 	useMessageReceiver(hooks);
-	useHistoryClipper(hooks);
 	usePageReloadListener(hooks);
+
+	useDiffAction(hooks.query, () => updateSetSelection(hooks));
+	useDiffAction(hooks.action, () => updateListItems(hooks));
+	useDiffAction(hooks.action, () => updateSetSelection(hooks));
+
 	return hooks;
 }
 
 const useHooksInitializer = () => {
+	const [action, setAction] = React.useState<Message['action'] | null>(null);
 	const [storeState, setStoreState] = React.useState<RecursiveRecord | null>(null);
 	const storeRef = React.useRef<Store<RecursiveRecord> | null>(null);
 	initializeStore({ state: storeState, storeRef });
@@ -20,7 +24,7 @@ const useHooksInitializer = () => {
 	const [selected, setSelected] = React.useState('');
 	const [items, setItems] = React.useState<Item[]>([]);
 	const [hideIneffectiveActions, setHideIneffectiveActions] = React.useState(false);
-	const [selectedId, setSelectedId] = React.useState<number | null>(null);
+	// const [selectedId, setSelectedId] = React.useState<number | null>(null);
 	const itemsForView = React.useMemo(() => !hideIneffectiveActions ? items : items.filter(i => !i.ineffective), [items, hideIneffectiveActions]);
 	return {
 		items,
@@ -32,19 +36,19 @@ const useHooksInitializer = () => {
 		selected,
 		setSelected,
 		storeRef,
-		selectedId,
-		setSelectedId,
+		// selectedId,
+		// setSelectedId,
 		hideIneffectiveActions,
 		setHideIneffectiveActions,
 		itemsForView,
+		action,
+		setAction,
 	};
 }
 
 const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 	const setStateRef = React.useRef(hooks.setStoreState);
-	const setItemsRef = React.useRef(hooks.setItems);
-	const setQueryRef = React.useRef(hooks.setQuery);
-	const setSelectedRef = React.useRef(hooks.setSelected);
+	const setActionRef = React.useRef(hooks.setAction);
 	React.useEffect(() => {
 		const getInitialState = () => {
 			const el = document.getElementById('olik-state');
@@ -52,21 +56,7 @@ const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 			return JSON.parse(el.innerHTML) as RecursiveRecord;
 		}
 		const processEvent = ({ action: { state, type, payload, last } }: Message) => {
-			setStateRef.current(state);
-			const itemBefore = hooks.items.length ? hooks.items[hooks.items.length - 1] : { type: '', state: libState.initialState };
-			const stateBefore = doReadState(type, itemBefore.state);
-			const stateAfter = doReadState(type, state);
-			const stateBeforeString = JSON.stringify(stateBefore);
-			const stateAfterString = JSON.stringify(stateAfter);
-			const stateHasNotChanged = stateBeforeString === stateAfterString;
-			const payloadString = getPayloadHTML({ type, payload, stateBefore, stateHasNotChanged });
-			const typeFormatted = getTypeHTML({ type, payloadString, stateHasNotChanged });
-			const query = getQueryHTML(type, payload);
-			const item = { type, typeFormatted, id: itemId.val++, state, last, query, ineffective: !typeFormatted.includes('<span class="touched">') };
-			setItemsRef.current(i => [...i, item]);
-			setQueryRef.current(query);
-			const selected = getTreeHTML({ before: stateBefore, after: stateAfter, depth: 0 });
-			setSelectedRef.current(selected);
+			setActionRef.current({ state, type, payload, last });
 		}
 		const messageListener = (e: MessageEvent<Message>) => {
 			if (e.origin !== window.location.origin) { return; }
@@ -90,7 +80,7 @@ const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 			window.removeEventListener('message', messageListener);
 			chrome.runtime?.onMessage.removeListener(chromeMessageListener);
 		}
-	}, [hooks.items]);
+	}, []);
 }
 
 const initializeStore = (props: { state: RecursiveRecord | null, storeRef: MutableRefObject<Store<RecursiveRecord> | null> }) => {
@@ -107,29 +97,12 @@ const initializeStore = (props: { state: RecursiveRecord | null, storeRef: Mutab
 	}
 }
 
-const useHistoryClipper = (hooks: ReturnType<typeof useHooksInitializer>) => {
-	const setSelectedIdRef = React.useRef(hooks.setSelectedId);
-	const setItemsRef = React.useRef(hooks.setItems);
-	React.useEffect(() => {
-		if (!hooks.storeRef.current) { return; }
-		const setSelectedId = setSelectedIdRef.current;
-		const setItems = setItemsRef.current;
-		const subscription = hooks.storeRef.current.$onChange(() => {
-			if (libState.disableDevtoolsDispatch) { return; }
-			if (!hooks.selectedId) { return; }
-			setSelectedId(null);
-			const index = hooks.items.findIndex(e => e.id === hooks.selectedId);
-			setItems(items => items.slice(0, index + 1));
-		});
-		return () => subscription.unsubscribe();
-	}, [hooks.items, hooks.selectedId, hooks.storeRef]);
-}
 
 const usePageReloadListener = (hooks: ReturnType<typeof useHooksInitializer>) => {
 	const setItemsRef = React.useRef(hooks.setItems);
 	const setQueryRef = React.useRef(hooks.setQuery);
 	const setSelectedRef = React.useRef(hooks.setSelected);
-	const setSelectedIdRef = React.useRef(hooks.setSelectedId);
+	// const setSelectedIdRef = React.useRef(hooks.setSelectedId);
 	React.useEffect(() => {
 		if (!chrome.runtime) { return; }
 		const listener: Parameters<typeof chrome.tabs.onUpdated.addListener>[0] = (tabId) => {
@@ -140,7 +113,7 @@ const usePageReloadListener = (hooks: ReturnType<typeof useHooksInitializer>) =>
 						setItemsRef.current([]);
 						setQueryRef.current('');
 						setSelectedRef.current('');
-						setSelectedIdRef.current(null);
+						// setSelectedIdRef.current(null);
 					}
 				}).catch(console.error);
 		};
@@ -159,10 +132,6 @@ const getTypeHTML = (action: { type: string, payloadString?: string | null | und
 	return `${typeBeforeClosingParenthesis}${payload})`;
 }
 
-const getQueryHTML = (type: string, payload: unknown) => {
-	return `${type.substring(0, type.length - 1)}${payload === undefined ? '' : JSON.stringify(payload).replace(/"([^"]+)":/g, '$1:')})`;
-}
-
 const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNotChanged: boolean }) => {
 	if (action.payload === undefined) {
 		return undefined;
@@ -175,7 +144,7 @@ const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNot
 	}
 	const payloadStringified = JSON.stringify(action.payload);
 	if (typeof (action.payload) === 'object' && !Array.isArray(action.payload)) {
-		const stateBefore = action.stateBefore === undefined ? {} :  action.stateBefore as Record<string, unknown>;
+		const stateBefore = action.stateBefore === undefined ? {} : action.stateBefore as Record<string, unknown>;
 		const payload = action.payload as Record<string, unknown>;
 		const keyValuePairsChanged = new Array<string>();
 		const keyValuePairsUnchanged = new Array<string>();
@@ -192,4 +161,26 @@ const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNot
 	}
 }
 
+const updateListItems = (hooks: ReturnType<typeof useHooksInitializer>) => {
+	if (!hooks.action) { return; }
+	hooks.setStoreState(hooks.action.state);
+	const { type, payload, last, state } = hooks.action;
+	const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].payload : {};
+	const stateAfter = state;
+	const query = hooks.query.substring('store.'.length);
+	const stateBeforeString = JSON.stringify( doReadState( query, stateBefore ) );
+	const stateAfterString = JSON.stringify( doReadState( query, stateAfter ) );
+	const stateHasNotChanged = stateBeforeString === stateAfterString;
+	const payloadString = getPayloadHTML({ type, payload, stateBefore, stateHasNotChanged });
+	const typeFormatted = getTypeHTML({ type, payloadString, stateHasNotChanged });
+	const item = { type, typeFormatted, id: itemId.val++, state, last, payload, ineffective: !typeFormatted.includes('<span class="touched">') };
+	hooks.setItems(i => [...i, item]);
+}
+
+const useDiffAction = <T>(state: T, action: () => unknown) => {
+	const stateRef = React.useRef(state);
+	if (state === stateRef.current) { return; }
+	action();
+	stateRef.current = state;
+}
 

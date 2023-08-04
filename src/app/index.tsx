@@ -68,7 +68,7 @@ export const App = () => {
 										children={
 											<Items
 												tabIndex={0}
-												onKeyDown={events.onKeyDownItems}
+												// onKeyDown={events.onKeyDownItems}
 												children={
 													<>
 														{hooks.itemsForView.map(item => (
@@ -79,7 +79,7 @@ export const App = () => {
 																onClick={events.onClickItem(item.id)}
 																children={
 																	<ItemContent
-																		isSelected={item.id === hooks.selectedId}
+																		// isSelected={item.id === hooks.selectedId}
 																		isLast={item.last}
 																		dangerouslySetInnerHTML={{ __html: item.typeFormatted }}
 																	/>

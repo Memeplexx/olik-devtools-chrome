@@ -55,7 +55,7 @@ export const Items = styled.div`
 export const Item = styled.div`
 `;
 
-export const ItemContent = styled.div<{ isLast: boolean, isSelected: boolean }>`
+export const ItemContent = styled.div<{ isLast: boolean, isSelected?: boolean }>`
 	padding: 4px 8px;
 	margin-bottom: ${p => p.isLast ? '5px' : '0px'};
 	border-left: 3px solid rgba(255,255,255,0.4);
