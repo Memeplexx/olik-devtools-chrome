@@ -2,12 +2,8 @@ import { OlikAction, RecursiveRecord } from "olik"
 
 export type Message = {
   source: string,
-  action: {
-    state: RecursiveRecord,
-    last: boolean,
-    type: string,
-    payload: unknown,
-  } & OlikAction
+  actions: Array<OlikAction>,
+  state: RecursiveRecord,
 }
 
 export type Item = {
