@@ -27,6 +27,7 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
   },
   onClickItem: (id: number) => () => {
     const item = props.items.find(item => item.id === id)!;
+    // fetch(item.location!).then(r => r.text()).then(console.log);
     const segments = item.type.split('.');
     segments.pop();
     props.set({ query: segments.join('.') });

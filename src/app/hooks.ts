@@ -2,6 +2,7 @@ import React, { MutableRefObject } from "react";
 import { Item, Message, itemId } from "./constants";
 import { OlikAction, RecursiveRecord, Store, createStore, getStore } from "olik";
 import { doReadState, updateSetSelection } from "./functions";
+import Stacktracey from 'stacktracey';
 
 export const useHooks = () => {
 	const hooks = useHooksInitializer();
@@ -21,6 +22,7 @@ const useHooksInitializer = () => {
 		incoming: {
 			actions: Array<OlikAction>(),
 			state: null as RecursiveRecord | null,
+			location: '' as string | undefined,
 		},
 		storeState: null as RecursiveRecord | null,
 		query: '',
@@ -49,7 +51,12 @@ const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 			return JSON.parse(el.innerHTML) as RecursiveRecord;
 		}
 		const processEvent = (incoming: Message) => {
-			setRef.current({ incoming });
+			if (incoming.stack) {
+				const item = new Stacktracey(incoming.stack).items.find(i => !i.thirdParty)!;
+				setRef.current({ incoming: {...incoming, location: `${item.file}:${item.line!}:${item.column!}`} });
+			} else {
+				setRef.current({ incoming: { ...incoming, location: undefined } });
+			}
 		}
 		const messageListener = (e: MessageEvent<Message>) => {
 			if (e.origin !== window.location.origin) { return; }
@@ -170,7 +177,8 @@ const updateListItems = (hooks: ReturnType<typeof useHooksInitializer>) => {
 					state: stateAfter,
 					last: hooks.incoming.actions.length - 1 === i,
 					payload,
-					ineffective: !typeFormatted.includes('<span class="touched">')
+					ineffective: !typeFormatted.includes('<span class="touched">'),
+					location: hooks.incoming.location,
 				};
 			})]
 	}));

@@ -7,7 +7,7 @@ import { appStore } from "../store";
 export const useHooks = () => {
   const num = appStore.num.$useState();
   React.useEffect(() => {
-    connectOlikDevtoolsToStore();
+    connectOlikDevtoolsToStore({ trace: true });
   }, []);
   return {
     num

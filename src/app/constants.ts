@@ -4,6 +4,7 @@ export type Message = {
   source: string,
   actions: Array<OlikAction>,
   state: RecursiveRecord,
+  stack: string,
 }
 
 export type Item = {
@@ -14,6 +15,7 @@ export type Item = {
   state: RecursiveRecord,
   last: boolean,
   ineffective: boolean,
+  location?: string,
 }
 
 export const itemId = {
