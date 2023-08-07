@@ -28,6 +28,7 @@ export const App = () => {
 										maxSize={75}
 										children={
 											<TreePanel
+												ref={hooks.treeRef}
 												state={hooks.storeState}
 												query={hooks.query}
 												selected={hooks.selected}
@@ -65,21 +66,22 @@ export const App = () => {
 									/>
 									<ItemsWrapper
 										maxSize={75}
+										id="itemsWrapper"
 										children={
 											<Items
 												tabIndex={0}
-												// onKeyDown={events.onKeyDownItems}
 												children={
 													<>
 														{hooks.itemsForView.map(item => (
 															<Item
+																id={item.id.toString()}
 																key={item.id}
 																onMouseEnter={events.onMouseEnterItem(item.id)}
 																onMouseLeave={events.onMouseLeaveItem}
 																onClick={events.onClickItem(item.id)}
 																children={
 																	<ItemContent
-																		// isSelected={item.id === hooks.selectedId}
+																		isSelected={item.id === hooks.selectedId}
 																		isLast={item.last}
 																		dangerouslySetInnerHTML={{ __html: item.typeFormatted }}
 																	/>

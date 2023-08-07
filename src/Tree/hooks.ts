@@ -2,15 +2,31 @@ import { deserialize, updateFunctions } from "olik";
 import React from "react";
 import { TreeProps } from "./constants";
 import { StoreInternal } from "olik/dist/type-internal";
+import { useForwardedRef } from "../shared/functions";
 
 type TreeState = TreeProps & ReturnType<typeof useInitialHooks>;
 
-export const useHooks = (props: TreeProps) => {
+export const useHooks = (props: TreeProps, ref: React.ForwardedRef<HTMLPreElement>) => {
   const state = useInitialHooks(props);
-  if (props.selected) { return props.selected; }
-  if (state.justUpdated.current) { setTimeout(() => state.justUpdated.current = false); return ''; }
+  const containerRef = useForwardedRef<HTMLPreElement>(ref);
+  if (props.selected) {
+    return {
+      data: props.selected,
+      containerRef,
+    };
+  }
+  if (state.justUpdated.current) {
+    setTimeout(() => state.justUpdated.current = false);
+    return {
+      data: '',
+      containerRef,
+    };
+  }
   selectStore(state, sendActionToApp(props));
-  return beautifyJson(state.stateRef.current);
+  return {
+    data: beautifyJson(state.stateRef.current),
+    containerRef,
+  }
 }
 
 const useInitialHooks = (props: TreeProps) => {
@@ -19,7 +35,8 @@ const useInitialHooks = (props: TreeProps) => {
   return {
     ...props,
     stateRef,
-    justUpdated
+    justUpdated,
+    
   }
 }
 

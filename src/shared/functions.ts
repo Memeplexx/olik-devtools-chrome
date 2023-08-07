@@ -11,6 +11,23 @@ export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(prop
   }).current;
 }
 
+export const useForwardedRef = <T>(forwardedRef: React.ForwardedRef<T>) => {
+  const basicRef = React.useRef<T | null>(null);
+  const targetRef = React.useRef<T | null>(null)
+  const refs = React.useMemo(() => [basicRef, forwardedRef], [forwardedRef]);
+  React.useEffect(() => {
+    refs.forEach(ref => {
+      if (!ref) return
+      if (typeof ref === 'function') {
+        ref(targetRef.current)
+      } else {
+        ref.current = targetRef.current
+      }
+    })
+  }, [refs])
+  return targetRef
+}
+
 const tabSize = 2;
 
 export const getTreeHTML = ({ before, after, depth }: { before: unknown, after: unknown, depth: number }): string => {
@@ -25,7 +42,7 @@ export const getTreeHTML = ({ before, after, depth }: { before: unknown, after: 
 		return `<span class="${className}">null</span>`;
 	} else if (typeof(after) === 'object') {
 		if (!Array.isArray(after)) {
-			const beforeRecord = before as Record<string, unknown>;
+			const beforeRecord = before === undefined ? {} : before as Record<string, unknown>;
 			const afterRecord = after as Record<string, unknown>;
 			const allKeys = Array.from(new Set([...Object.keys(beforeRecord), ...Object.keys(afterRecord)]));
 			return '{\n' + allKeys

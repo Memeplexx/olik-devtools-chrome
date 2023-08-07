@@ -1,11 +1,9 @@
 import styled from "styled-components";
-import { Div, Pre } from "../html";
+import { Pre } from "../html";
 
-export const ScrollPane = styled(Div)`
-  overflow: auto;
-`;
 
 export const JsonWrapper = styled(Pre)`
+  overflow: auto;
   font-family: 'Source Code Pro', monospace;
   .string { color: green; }
   .number { color: darkorange; }

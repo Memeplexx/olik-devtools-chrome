@@ -18,14 +18,17 @@ export const useHooks = () => {
 
 const useHooksInitializer = () => {
 	const storeRef = React.useRef<Store<RecursiveRecord> | null>(null);
+	const treeRef = React.useRef<HTMLPreElement | null>(null);
 	const [state, setState] = useRecord({
 		incoming: {
 			actions: Array<OlikAction>(),
 			state: null as RecursiveRecord | null,
 			location: '' as string | undefined,
 		},
+		storeStateInitial: null as RecursiveRecord | null,
 		storeState: null as RecursiveRecord | null,
 		query: '',
+		selectedId: null as number | null,
 		selected: '',
 		items: new Array<Item>(),
 		hideIneffectiveActions: false,
@@ -36,6 +39,7 @@ const useHooksInitializer = () => {
 	}, [state.items, state.hideIneffectiveActions]);
 	return {
 		storeRef,
+		treeRef,
 		itemsForView,
 		...state,
 		set: setState,
@@ -52,8 +56,8 @@ const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 		}
 		const processEvent = (incoming: Message) => {
 			if (incoming.stack) {
-				const item = new Stacktracey(incoming.stack).items.find(i => !i.thirdParty)!;
-				setRef.current({ incoming: {...incoming, location: `${item.file}:${item.line!}:${item.column!}`} });
+				const item = new Stacktracey(incoming.stack).items.find(i => !i.thirdParty && !i.file.includes('olik'))!;
+				setRef.current({ incoming: {...incoming, location: item.file} });
 			} else {
 				setRef.current({ incoming: { ...incoming, location: undefined } });
 			}
@@ -66,14 +70,15 @@ const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 		const chromeMessageListener = (event: Message) => processEvent(event);
 		if (!chrome.runtime) {
 			window.addEventListener('message', messageListener);
-			setRef.current({ storeState: getInitialState() });
+			const storeStateInitial = getInitialState();
+			setRef.current({ storeState: storeStateInitial, storeStateInitial });
 		} else {
 			chrome.runtime.onMessage
 				.addListener(chromeMessageListener);
 			chrome.tabs
 				.query({ active: true })
 				.then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: getInitialState }))
-				.then(r => setRef.current({ storeState: r[0].result }))
+				.then(r => setRef.current({ storeState: r[0].result, storeStateInitial: r[0].result }))
 				.catch(console.error);
 		}
 		return () => {
@@ -142,7 +147,7 @@ const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNot
 		const payload = action.payload as Record<string, unknown>;
 		const keyValuePairsChanged = new Array<string>();
 		const keyValuePairsUnchanged = new Array<string>();
-		Object.keys(action.payload).forEach(key => {
+		Object.keys(payload).forEach(key => {
 			if (stateBefore[key] !== payload[key]) {
 				keyValuePairsChanged.push(`<span class="touched">${key}: ${JSON.stringify(payload[key])}</span>`);
 			} else {
@@ -162,13 +167,15 @@ const updateListItems = (hooks: ReturnType<typeof useHooksInitializer>) => {
 			...s.items,
 			...hooks.incoming.actions.map((action, i) => {
 				const { type, payload } = action;
-				const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].payload : {};
+				const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].state : {};
 				const stateAfter = hooks.incoming.state!;
-				const query = hooks.query.substring('store.'.length);
-				const stateBeforeString = JSON.stringify(doReadState(query, stateBefore));
-				const stateAfterString = JSON.stringify(doReadState(query, stateAfter));
+				const query = action.type;
+				const stateBeforeSelected = doReadState(query, stateBefore);
+				const stateAfterSelected = doReadState(query, stateAfter);
+				const stateBeforeString = JSON.stringify(stateBeforeSelected);
+				const stateAfterString = JSON.stringify(stateAfterSelected);
 				const stateHasNotChanged = stateBeforeString === stateAfterString;
-				const payloadString = getPayloadHTML({ type, payload, stateBefore, stateHasNotChanged });
+				const payloadString = getPayloadHTML({ type, payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
 				const typeFormatted = getTypeHTML({ type, payloadString, stateHasNotChanged });
 				return {
 					type,
@@ -182,6 +189,10 @@ const updateListItems = (hooks: ReturnType<typeof useHooksInitializer>) => {
 				};
 			})]
 	}));
+	setTimeout(() => {
+		document.getElementById('data-panel-id-itemsWrapper')!.scrollTop = 999999;
+		hooks.treeRef.current!.scrollTop = 999999;
+	})
 }
 
 const useDiffAction = <T>(state: T, action: () => unknown) => {

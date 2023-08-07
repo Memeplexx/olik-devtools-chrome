@@ -1,36 +1,30 @@
-import { getTreeHTML } from "../shared/functions";
-import { doReadState } from "./functions";
+import { focusId } from "./functions";
 import { useHooks } from "./hooks";
-import { libState } from "olik";
+
 
 export const useEvents = (props: ReturnType<typeof useHooks>) => ({
   onEditorChange: (text: string) => {
     props.set({ query: text });
   },
   onMouseEnterItem: (id: number) => () => {
-    const itemIndex = props.items.findIndex(item => item.id === id);
-    const stateBefore = itemIndex > 0 ? props.items[itemIndex - 1].state : libState.initialState;
-    const stateAfter = props.items[itemIndex].state;
-    const query = props.query.substring('store.'.length);
-    const selected = getTreeHTML({
-      before: doReadState(query, stateBefore),
-      after: doReadState(query, stateAfter),
-      depth: 1
-    });
-    props.set({ selected });
+    if (props.selectedId) { return; }
+    focusId(props, id);
   },
   onClickShowHiddenArgs: () => {
     props.set({ hideIneffectiveActions: !props.hideIneffectiveActions });
   },
   onMouseLeaveItem: () => {
-    props.set({ selected: '' });
+    if (!props.selectedId) {
+      props.set({ selected: '' });
+    }
   },
-  onClickItem: (id: number) => () => {
-    const item = props.items.find(item => item.id === id)!;
-    // fetch(item.location!).then(r => r.text()).then(console.log);
-    const segments = item.type.split('.');
-    segments.pop();
-    props.set({ query: segments.join('.') });
+  onClickItem: (selectedId: number) => () => {
+    if (props.selectedId === selectedId) {
+      props.set({ selectedId: null });
+    } else {
+      props.set({ selectedId });
+      focusId(props, selectedId);
+    }
   },
   onClickClear: () => {
     props.set({ items: [] });
