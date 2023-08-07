@@ -62,3 +62,23 @@ export const getTreeHTML = ({ before, after, depth }: { before: unknown, after: 
 		throw new Error();
 	}
 }
+
+export const useDiffAction = <T>(state: T, action: () => unknown) => {
+	const stateRef = React.useRef(state);
+	if (state === stateRef.current) { return; }
+	action();
+	stateRef.current = state;
+}
+
+export const useRecord = <T extends object>(initializeState: T) => {
+	const [state, oldSetState] = React.useState(initializeState);
+	type NewSetStateAction<T> = Partial<T> | ((prevState: T) => Partial<T>);
+	const set = (arg: NewSetStateAction<T>) => {
+		if (typeof (arg) === 'function') {
+			oldSetState(s => ({ ...s, ...arg(s) }));
+		} else[
+			oldSetState(s => ({ ...s, ...arg }))
+		]
+	}
+	return { ...state, set } as const;
+}

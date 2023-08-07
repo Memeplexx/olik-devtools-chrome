@@ -3,6 +3,7 @@ import { Item, Message, itemId } from "./constants";
 import { OlikAction, RecursiveRecord, Store, createStore, getStore } from "olik";
 import { doReadState, updateSetSelection } from "./functions";
 import Stacktracey from 'stacktracey';
+import { useDiffAction, useRecord } from "../shared/functions";
 
 export const useHooks = () => {
 	const hooks = useHooksInitializer();
@@ -19,7 +20,7 @@ export const useHooks = () => {
 const useHooksInitializer = () => {
 	const storeRef = React.useRef<Store<RecursiveRecord> | null>(null);
 	const treeRef = React.useRef<HTMLPreElement | null>(null);
-	const [state, setState] = useRecord({
+	const state = useRecord({
 		incoming: {
 			actions: Array<OlikAction>(),
 			state: null as RecursiveRecord | null,
@@ -42,7 +43,6 @@ const useHooksInitializer = () => {
 		treeRef,
 		itemsForView,
 		...state,
-		set: setState,
 	};
 }
 
@@ -57,7 +57,7 @@ const useMessageReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 		const processEvent = (incoming: Message) => {
 			if (incoming.stack) {
 				const item = new Stacktracey(incoming.stack).items.find(i => !i.thirdParty && !i.file.includes('olik'))!;
-				setRef.current({ incoming: {...incoming, location: item.file} });
+				setRef.current({ incoming: { ...incoming, location: item.file } });
 			} else {
 				setRef.current({ incoming: { ...incoming, location: undefined } });
 			}
@@ -195,22 +195,4 @@ const updateListItems = (hooks: ReturnType<typeof useHooksInitializer>) => {
 	})
 }
 
-const useDiffAction = <T>(state: T, action: () => unknown) => {
-	const stateRef = React.useRef(state);
-	if (state === stateRef.current) { return; }
-	action();
-	stateRef.current = state;
-}
 
-const useRecord = <T extends object>(initializeState: T) => {
-	const [state, oldSetState] = React.useState(initializeState);
-	type NewSetStateAction<T> = Partial<T> | ((prevState: T) => Partial<T>);
-	const setState = (arg: NewSetStateAction<T>) => {
-		if (typeof (arg) === 'function') {
-			oldSetState(s => ({ ...s, ...arg(s) }));
-		} else[
-			oldSetState(s => ({ ...s, ...arg }))
-		]
-	}
-	return [state, setState] as const;
-}
