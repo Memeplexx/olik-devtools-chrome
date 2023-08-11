@@ -1,23 +1,19 @@
 import React, { MutableRefObject } from "react";
 import { Item, Message, itemId } from "./constants";
 import { OlikAction, RecursiveRecord, Store, createStore, getStore } from "olik";
-import { doReadState, scrollTree, updateSetSelection } from "./functions";
-import { useDiffAction, useOnInit, useRecord } from "../shared/functions";
+import { doReadState } from "./functions";
+import { getTreeHTML, useRecord } from "../shared/functions";
 
 export const useHooks = () => {
 	const hooks = useHooksInitializer();
-	useOnInit(() => receiveActions(hooks));
-	useOnInit(() => resetOnPageReload(hooks));
-	useDiffAction(hooks.incomingNum, () => updateListItems(hooks));
-	useDiffAction(hooks.incomingNum, () => updateSetSelection(hooks));
-	useDiffAction(hooks.incomingNum, () => scrollTree(hooks));
+	useActionsReceiver(hooks);
+	useResetOnPageReload(hooks);
 	return hooks;
 }
 
 const useHooksInitializer = () => {
 	const storeRef = React.useRef<Store<RecursiveRecord> | null>(null);
 	const treeRef = React.useRef<HTMLPreElement | null>(null);
-	const incomingRef = React.useRef({ actions: Array<OlikAction>(), state: null as RecursiveRecord | null });
 	const state = useRecord({
 		incomingNum: 0,
 		storeStateInitial: null as RecursiveRecord | null,
@@ -34,47 +30,98 @@ const useHooksInitializer = () => {
 	return {
 		storeRef,
 		treeRef,
-		incomingRef,
 		itemsForView,
 		...state,
 	};
 }
 
-const receiveActions = (hooks: ReturnType<typeof useHooksInitializer>) => {
+const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 	const getInitialState = () => {
 		const el = document.getElementById('olik-state');
 		if (!el) { return {}; }
 		return JSON.parse(el.innerHTML) as RecursiveRecord;
 	}
-	const processEvent = (incoming: Message) => {
-		hooks.incomingRef.current.actions.push(...incoming.actions);
-		hooks.incomingRef.current.state = incoming.state;
-		hooks.set({ incomingNum: hooks.incomingNum + 1 })
-		console.log(hooks.incomingNum)
-	}
-	const messageListener = (e: MessageEvent<Message>) => {
-		if (e.origin !== window.location.origin) { return; }
-		if (e.data.source !== 'olik-devtools-extension') { return; }
-		processEvent(e.data);
-	}
-	const chromeMessageListener = (event: Message) => processEvent(event);
-	if (!chrome.runtime) {
-		window.addEventListener('message', messageListener);
-		const storeStateInitial = getInitialState();
-		hooks.set({ storeState: storeStateInitial, storeStateInitial });
-	} else {
-		chrome.runtime.onMessage
-			.addListener(chromeMessageListener);
-		chrome.tabs
-			.query({ active: true })
-			.then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: getInitialState }))
-			.then(r => hooks.set({ storeState: r[0].result, storeStateInitial: r[0].result }))
-			.catch(console.error);
-	}
-	return () => {
-		window.removeEventListener('message', messageListener);
-		chrome.runtime?.onMessage.removeListener(chromeMessageListener);
-	}
+	const setRef = React.useRef(hooks.set);
+	setRef.current = hooks.set;
+	const treeRefRef = React.useRef(hooks.treeRef.current);
+	treeRefRef.current = hooks.treeRef.current;
+	const storeStateInitial = React.useRef(hooks.storeStateInitial);
+	React.useEffect(() => {
+		const set = setRef.current;
+		const treeRef = treeRefRef.current;
+		const processEvent = (incoming: Message) => {
+			console.log({incoming})
+			set(s => ({
+				storeState: incoming.state,
+				items: [
+					...s.items,
+					...incoming.actions.map((action, i) => {
+						const { type, payload } = action;
+						const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].state : {};
+						const stateAfter = incoming.state;
+						const query = action.type;
+						const stateBeforeSelected = doReadState(query, stateBefore);
+						const stateAfterSelected = doReadState(query, stateAfter);
+						const stateBeforeString = JSON.stringify(stateBeforeSelected);
+						const stateAfterString = JSON.stringify(stateAfterSelected);
+						const stateHasNotChanged = stateBeforeString === stateAfterString;
+						const payloadString = getPayloadHTML({ type, payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
+						const typeFormatted = getTypeHTML({ type, payloadString, stateHasNotChanged });
+						return {
+							type,
+							typeFormatted,
+							id: itemId.val++,
+							state: stateAfter,
+							last: incoming.actions.length - 1 === i,
+							payload,
+							ineffective: !typeFormatted.includes('<span class="touched">'),
+						};
+					}),
+				]
+			}));
+
+			const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].state : storeStateInitial;
+			const stateAfter = incoming.state;
+			const selected = getTreeHTML({
+				before: stateBefore,
+				after: stateAfter,
+				depth: 1
+			});
+			set({ selected });
+
+			setTimeout(() => {
+				const firstTouchedElement = treeRef!.querySelector('.touched');
+				if (firstTouchedElement) {
+					firstTouchedElement.scrollIntoView(/*{ behavior: 'smooth' }*/);
+				}
+			});
+		}
+		const messageListener = (e: MessageEvent<Message>) => {
+			if (e.origin !== window.location.origin) { return; }
+			if (e.data.source !== 'olik-devtools-extension') { return; }
+			processEvent(e.data);
+		}
+		const chromeMessageListener = (event: Message) => {
+			processEvent(event);
+		}
+		if (!chrome.runtime) {
+			window.addEventListener('message', messageListener);
+			const storeStateInitial = getInitialState();
+			set({ storeState: storeStateInitial, storeStateInitial });
+		} else {
+			chrome.runtime.onMessage
+				.addListener(chromeMessageListener);
+			chrome.tabs
+				.query({ active: true })
+				.then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: getInitialState }))
+				.then(r => set({ storeState: r[0].result, storeStateInitial: r[0].result }))
+				.catch(console.error);
+		}
+		return () => {
+			window.removeEventListener('message', messageListener);
+			chrome.runtime?.onMessage.removeListener(chromeMessageListener);
+		}
+	}, [hooks.items])
 }
 
 const initializeStore = (props: { state: RecursiveRecord | null, storeRef: MutableRefObject<Store<RecursiveRecord> | null> }) => {
@@ -91,19 +138,23 @@ const initializeStore = (props: { state: RecursiveRecord | null, storeRef: Mutab
 	}
 }
 
-const resetOnPageReload = (hooks: ReturnType<typeof useHooksInitializer>) => {
-	if (!chrome.runtime) { return; }
-	const listener: Parameters<typeof chrome.tabs.onUpdated.addListener>[0] = (tabId) => {
-		chrome.tabs
-			.query({ active: true })
-			.then(tabs => {
-				if (tabs[0].id === tabId) {
-					hooks.set({ items: [], selected: '' });
-				}
-			}).catch(console.error);
-	};
-	chrome.tabs.onUpdated.addListener(listener);
-	return () => chrome.tabs.onUpdated.removeListener(listener);
+const useResetOnPageReload = (hooks: ReturnType<typeof useHooksInitializer>) => {
+	const setRef = React.useRef(hooks.set);
+	React.useEffect(() => {
+		const set = setRef.current;
+		if (!chrome.runtime) { return; }
+		const listener: Parameters<typeof chrome.tabs.onUpdated.addListener>[0] = (tabId) => {
+			chrome.tabs
+				.query({ active: true })
+				.then(tabs => {
+					if (tabs[0].id === tabId) {
+						set({ items: [], selected: '' });
+					}
+				}).catch(console.error);
+		};
+		chrome.tabs.onUpdated.addListener(listener);
+		return () => chrome.tabs.onUpdated.removeListener(listener);
+	}, []);
 }
 
 const getTypeHTML = (action: { type: string, payloadString?: string | null | undefined, stateHasNotChanged: boolean }) => {
@@ -143,72 +194,6 @@ const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNot
 	} else {
 		return `<span class="touched">${payloadStringified}</span>`;
 	}
-}
-
-const updateListItems = (hooks: ReturnType<typeof useHooksInitializer>) => {
-	// hooks.set(s => ({
-	// 	storeState: hooks.incomingState,
-	// 	items: [
-	// 		...s.items,
-	// 		...hooks.incomingActions.map((action, i) => {
-	// 			const { type, payload } = action;
-	// 			const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].state : {};
-	// 			const stateAfter = hooks.incomingState!;
-	// 			const query = action.type;
-	// 			const stateBeforeSelected = doReadState(query, stateBefore);
-	// 			const stateAfterSelected = doReadState(query, stateAfter);
-	// 			const stateBeforeString = JSON.stringify(stateBeforeSelected);
-	// 			const stateAfterString = JSON.stringify(stateAfterSelected);
-	// 			const stateHasNotChanged = stateBeforeString === stateAfterString;
-	// 			const payloadString = getPayloadHTML({ type, payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
-	// 			const typeFormatted = getTypeHTML({ type, payloadString, stateHasNotChanged });
-	// 			return {
-	// 				type,
-	// 				typeFormatted,
-	// 				id: itemId.val++,
-	// 				state: stateAfter,
-	// 				last: hooks.incomingActions.length - 1 === i,
-	// 				payload,
-	// 				ineffective: !typeFormatted.includes('<span class="touched">'),
-	// 			};
-	// 		})]
-	// }));
-	// hooks.set(() => ({ incomingActions: [] }));
-	const incomingActions = [...hooks.incomingRef.current.actions];
-	hooks.set(s => ({
-		storeState: hooks.incomingRef.current.state,
-		items: [
-			...s.items,
-			...incomingActions.map((action, i) => {
-				const { type, payload } = action;
-				const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].state : {};
-				const stateAfter = hooks.incomingRef.current.state!;
-				const query = action.type;
-				const stateBeforeSelected = doReadState(query, stateBefore);
-				const stateAfterSelected = doReadState(query, stateAfter);
-				const stateBeforeString = JSON.stringify(stateBeforeSelected);
-				const stateAfterString = JSON.stringify(stateAfterSelected);
-				const stateHasNotChanged = stateBeforeString === stateAfterString;
-				const payloadString = getPayloadHTML({ type, payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
-				const typeFormatted = getTypeHTML({ type, payloadString, stateHasNotChanged });
-				return {
-					type,
-					typeFormatted,
-					id: itemId.val++,
-					state: stateAfter,
-					last: incomingActions.length - 1 === i,
-					payload,
-					ineffective: !typeFormatted.includes('<span class="touched">'),
-				};
-			}),
-		]
-	}));
-	hooks.incomingRef.current.actions.length = 0;
-
-	setTimeout(() => {
-		document.getElementById('data-panel-id-itemsWrapper')!.scrollTop = 999999;
-		hooks.treeRef.current!.scrollTop = 999999;
-	})
 }
 
 

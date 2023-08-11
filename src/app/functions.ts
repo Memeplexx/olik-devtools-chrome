@@ -24,18 +24,6 @@ export const doReadState = (type: string, state: unknown) => {
   return readState({ state, stateActions, cursor: { index: 0 } });
 }
 
-export const updateSetSelection = (hooks: ReturnType<typeof useHooks>) => {
-  if (!hooks.items.length) { return; }
-  const stateBefore = hooks.items[hooks.items.length - 1].state;
-  const stateAfter = hooks.incomingRef.current.state;
-  const selected = getTreeHTML({
-    before: stateBefore,
-    after: stateAfter,
-    depth: 1
-  });
-  hooks.set({ selected });
-}
-
 export const focusId = (props: ReturnType<typeof useHooks>, id: number) => {
   const itemIndex = props.items.findIndex(item => item.id === id);
   const stateBefore = props.items.slice(0, itemIndex).reverse().find(i => !!i.last)?.state || props.storeStateInitial;

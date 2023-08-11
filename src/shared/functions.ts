@@ -63,31 +63,6 @@ export const getTreeHTML = ({ before, after, depth }: { before: unknown, after: 
 	}
 }
 
-export const useDiffAction = <T>(state: T, action: () => unknown) => {
-	const stateRef = React.useRef(state);
-	if (state === stateRef.current) { return; }
-	action();
-	stateRef.current = state;
-}
-
-export const useOnInit = (action: () => unknown) => {
-	const initializedRef = React.useRef(false);
-	if (initializedRef.current) { return; }
-	action();
-	initializedRef.current = true;
-}
-
-export const useOnInitDom = (action: () => unknown) => {
-	const [init, setInit] = React.useState(false);
-	React.useLayoutEffect(() => {
-		setInit(true);
-	}, []);
-	if (init) {
-		action();
-		setInit(false);
-	}
-}
-
 export const useRecord = <T extends object>(initializeState: T) => {
 	const [state, oldSetState] = React.useState(initializeState);
 	type NewSetStateAction<T> = Partial<T> | ((prevState: T) => Partial<T>);
