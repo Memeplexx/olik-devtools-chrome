@@ -4,16 +4,6 @@ import { JsonWrapper } from "./styles";
 import React from "react";
 
 
-// export const Tree = (props: TreeProps) => {
-//   const hooks = useHooks(props);
-//   return (
-//     <JsonWrapper
-//       className={props.className}
-//       dangerouslySetInnerHTML={{ __html: hooks }}
-//     />
-//   );
-// }
-
 export const Tree = React.forwardRef(function Tags(
   props: TreeProps,
   ref: React.ForwardedRef<HTMLPreElement>

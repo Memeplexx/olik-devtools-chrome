@@ -2,148 +2,100 @@ import React from "react";
 import * as monaco from 'monaco-editor';
 import { EditorHookArgs, EditorProps } from "./constants";
 import * as olikTypeDefsText from '../../node_modules/olik/dist/type.d.ts?raw';
-import { RecursiveRecord, updateFunctions } from "olik";
+import { RecursiveRecord } from "olik";
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import { useOnInitDom } from "../shared/functions";
 
 const olikTypeDefsAsString = olikTypeDefsText.default.replace(/\n|\r/g, "");
 
 const lineHeight = 18;
 
 export const useHooks = (props: EditorProps) => {
-  const divEl = React.useRef<HTMLDivElement>(null);
-  const editorRef = React.useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const runErrorChecker = useErrorChecker();
-  const hookArgs = { divEl, editorRef, runErrorChecker, ...props };
-  useMonacoTextEditor(hookArgs);
-  addTypescriptSupportToEditor();
-  useEditorValueSetter(hookArgs);
-  useQuerySetter(hookArgs);
-  useEditorChangeListener(hookArgs);
-  useEditLimiter(hookArgs);
+  const hookArgs = useHooksInitializer(props);
+  useOnInitDom(() => {
+    initializeTextEditor(hookArgs);
+    addTypescriptSupportToEditor(hookArgs);
+    updateTypeDefinitions(hookArgs);
+    preventCertainEditorActions(hookArgs);
+    limitEditorScrolling(hookArgs);
+  })
   return {
-    divEl
+    ...hookArgs,
   }
 }
 
-const addTypescriptSupportToEditor = () => {
+export const useHooksInitializer = (props: EditorProps) => {
+  const divEl = React.useRef<HTMLDivElement>(null);
+  const editorRef = React.useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  return {
+    divEl,
+    editorRef,
+    ...props,
+  };
+}
+
+const addTypescriptSupportToEditor = (args: EditorHookArgs) => {
+  if (!args.editorRef.current) { return; }
   self.MonacoEnvironment = {
     getWorker: () => new tsWorker(),
   };
 }
 
-const useEditorValueSetter = ({ editorRef, state, query }: EditorHookArgs) => {
-  const propsStateRef = React.useRef(state);
-  if (state && state !== propsStateRef.current) {
-    const typeDefString = olikTypeDefsAsString + `; const store: Store<${generateTypeDefinition(state).replace(/\n|\r/g, "")}>;`;
-    propsStateRef.current = state;
-    if (editorRef.current!.getModel()!.getLineCount() === 2) {
-      const secondLine = editorRef.current?.getModel()!.getLineContent(2);
-      if (secondLine !== query) {
-        editorRef.current?.setValue([typeDefString, secondLine].join('\n'));
-      }
-    } else {
-      editorRef.current?.setValue([typeDefString, 'store.'].join('\n'));
+const updateTypeDefinitions = (args: EditorHookArgs) => {
+  if (!args.editorRef.current) { return; }
+  const typeDefString = olikTypeDefsAsString + `; const store: Store<${generateTypeDefinition(args.state!).replace(/\n|\r/g, "")}>;`;
+  args.editorRef.current?.setValue([typeDefString, 'store.'].join('\n'));
+}
+
+const preventCertainEditorActions = (args: EditorHookArgs) => {
+  if (!args.editorRef.current) { return; }
+  args.editorRef.current.onDidChangeModelContent(() => {
+    const value = args.editorRef.current!.getValue();
+    const lines = value.split('\n')!;
+    if (!lines[1].startsWith('store.')) {
+      args.editorRef.current!.setValue([lines[0], 'store.'].join('\n'));
+      args.editorRef.current!.setPosition({ lineNumber: 2, column: value.length + 1 });
     }
-  }
+  })
 }
 
-const useQuerySetter = ({ editorRef, query }: EditorHookArgs) => {
-  if (!editorRef.current) { return; }
-  if (query.endsWith('\n')) { return; }
-  const action = editorRef.current.getModel()!.getLineContent(2);
-  if (action !== query) {
-    const typeDefString = editorRef.current.getModel()!.getLineContent(1);
-    editorRef.current.setValue([typeDefString, `store.${query}`].join('\n'));
-  }
-}
-
-const useEditorChangeListener = ({ editorRef, onTextChanged, runErrorChecker }: EditorHookArgs) => {
-  const onTextChangedRef = React.useRef(onTextChanged);
-  React.useEffect(() => {
-    editorRef.current!.onDidChangeModelContent(() => {
-      const value = editorRef.current!.getValue();
-      const lines = value.split('\n')!;
-      if (!lines[1].startsWith('store.')) {
-        editorRef.current!.setValue([lines[0], 'store.'].join('\n'));
-        editorRef.current!.setPosition({ lineNumber: 2, column: value.length + 1 });
-        return;
-      }
-      if (lines.length >= 3) { // user must have pressed enter
-        const lastSeg = lines[1].split('.').reverse()[0];
-        const arg = lastSeg.match(/\(([^)]*)\)/)?.[1];
-        const containsParenthesis = arg !== null && arg !== undefined;
-        if (containsParenthesis) {
-          const functionName = lastSeg.split('(')[0];
-          if (updateFunctions.includes(functionName)) {
-            runErrorChecker().then(hasErrors => {
-              if (hasErrors) {
-                editorRef.current!.setValue(lines.slice(0, 2).join('\n'));
-                editorRef.current!.setPosition({ lineNumber: 2, column: value.length + 1 });
-              } else {
-                onTextChangedRef.current(lines[1] + '\n'); // make sure that the state is updated
-                const newValue = [lines[0], lines[1]].join('\n');
-                setTimeout(() => {
-                  editorRef.current!.setValue(newValue);
-                  editorRef.current!.setPosition({ lineNumber: 2, column: value.length + 1 });
-                });
-              }
-            }).catch(() => {
-              console.log('error running error checker');
-            })
-            return;
-          }
-        }
-        editorRef.current!.setValue(lines.slice(0, 2).join('\n'));
-      } else {
-        setTimeout(() => onTextChangedRef.current(lines[1]));
-      }
-    })
-  }, [editorRef, runErrorChecker]);
-}
-
-const useMonacoTextEditor = ({ divEl, editorRef }: EditorHookArgs) => {
-  React.useEffect(() => {
-    if (!divEl.current || !!editorRef.current) { return; }
-    monaco.editor.defineTheme('olik-editor-theme', {
-      base: 'vs-dark',
-      inherit: false,
-      rules: [
-        { token: 'green', background: 'FF0000', foreground: '00FF00', fontStyle: 'italic' },
-        { token: 'red', foreground: 'FF0000', fontStyle: 'bold underline' },
-      ],
-      colors: {
-        'editor.foreground': '#FFFFFF',
-        'editor.background': '#00000000',
-      }
-    });
-    editorRef.current = monaco.editor.create(divEl.current, {
-      language: 'typescript',
-      fontSize: 11,
-      minimap: {
-        enabled: false
-      },
-      scrollbar: {
-        vertical: 'hidden',
-        handleMouseWheel: false,
-        verticalSliderSize: 0,
-        horizontal: 'hidden',
-      },
-      wordWrapOverride1: 'off',
-      lineNumbers: 'off',
-      glyphMargin: false,
-      folding: false,
-      // Undocumented see https://github.com/Microsoft/vscode/issues/30795#issuecomment-410998882
-      lineDecorationsWidth: 0,
-      lineNumbersMinChars: 0,
-      // theme: 'vs-dark',
-      theme: 'olik-editor-theme',
-    });
-    editorRef.current.setScrollPosition({ scrollTop: lineHeight });
-    return () => {
-      editorRef.current?.dispose();
-      editorRef.current = null;
+const initializeTextEditor = ({ divEl, editorRef }: EditorHookArgs) => {
+  if (!divEl.current || !!editorRef.current) { return; }
+  monaco.editor.defineTheme('olik-editor-theme', {
+    base: 'vs-dark',
+    inherit: false,
+    rules: [
+      { token: 'green', background: 'FF0000', foreground: '00FF00', fontStyle: 'italic' },
+      { token: 'red', foreground: 'FF0000', fontStyle: 'bold underline' },
+    ],
+    colors: {
+      'editor.foreground': '#FFFFFF',
+      'editor.background': '#00000000',
     }
-  }, [divEl, editorRef])
+  });
+  editorRef.current = monaco.editor.create(divEl.current, {
+    language: 'typescript',
+    fontSize: 11,
+    minimap: {
+      enabled: false
+    },
+    scrollbar: {
+      vertical: 'hidden',
+      handleMouseWheel: false,
+      verticalSliderSize: 0,
+      horizontal: 'hidden',
+    },
+    wordWrapOverride1: 'off',
+    lineNumbers: 'off',
+    glyphMargin: false,
+    folding: false,
+    // Undocumented see https://github.com/Microsoft/vscode/issues/30795#issuecomment-410998882
+    lineDecorationsWidth: 0,
+    lineNumbersMinChars: 0,
+    // theme: 'vs-dark',
+    theme: 'olik-editor-theme',
+  });
+  editorRef.current.setScrollPosition({ scrollTop: lineHeight });
 }
 
 
@@ -155,6 +107,7 @@ const generateTypeDefinition = (obj: RecursiveRecord) => {
 }
 
 const recurseObject = (collector: { str: string }, obj: RecursiveRecord, level: number) => {
+  if (!obj) { return; }
   Object.keys(obj).forEach(key => {
     const value = obj[key];
     collector.str += '\t'.repeat(level);
@@ -183,27 +136,12 @@ const recurseObject = (collector: { str: string }, obj: RecursiveRecord, level: 
   });
 }
 
-const useEditLimiter = ({ editorRef }: EditorHookArgs) => {
-  React.useEffect(() => {
-    const subscription = editorRef.current!.onDidScrollChange(() => {
-      if (editorRef.current!.getScrollTop() !== lineHeight) {
-        editorRef.current!.setScrollPosition({ scrollTop: lineHeight });
-        editorRef.current!.setPosition({ lineNumber: 2, column: editorRef.current!.getValue().length + 1 });
-      }
-    });
-    return () => subscription.dispose();
-  }, [editorRef]);
+const limitEditorScrolling = ({ editorRef }: EditorHookArgs) => {
+  editorRef.current!.onDidScrollChange(() => {
+    if (editorRef.current!.getScrollTop() !== lineHeight) {
+      editorRef.current!.setScrollPosition({ scrollTop: lineHeight });
+      editorRef.current!.setPosition({ lineNumber: 2, column: editorRef.current!.getValue().length + 1 });
+    }
+  });
 }
 
-const useErrorChecker = () => {
-  return React.useCallback(() => {
-    return new Promise<boolean>(resolve => {
-      const sub = monaco.editor.onDidChangeMarkers(([uri]) => {
-        const markers = monaco.editor.getModelMarkers({ resource: uri })
-        const hasErrors = !!markers.filter(e => e.startLineNumber === 2).length;
-        sub.dispose();
-        resolve(hasErrors);
-      })
-    })
-  }, []);
-}

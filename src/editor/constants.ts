@@ -1,14 +1,9 @@
-import * as monaco from 'monaco-editor'; 
 import { RecursiveRecord } from 'olik';
+import { useHooksInitializer } from './hooks';
 
-export type EditorHookArgs = {
-  divEl: React.RefObject<HTMLDivElement>,
-  runErrorChecker: () => Promise<boolean>,
-  editorRef: React.MutableRefObject<monaco.editor.IStandaloneCodeEditor | null>,
-} & EditorProps;
 
 export type EditorProps = {
-  query: string,
   state: RecursiveRecord | null,
-  onTextChanged: (text: string) => void,
 }
+
+export type EditorHookArgs = ReturnType<typeof useHooksInitializer>

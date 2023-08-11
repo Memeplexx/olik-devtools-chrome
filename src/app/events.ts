@@ -1,14 +1,12 @@
-import { focusId } from "./functions";
+import { focusId, scrollTree } from "./functions";
 import { useHooks } from "./hooks";
 
 
 export const useEvents = (props: ReturnType<typeof useHooks>) => ({
-  onEditorChange: (text: string) => {
-    props.set({ query: text });
-  },
   onMouseEnterItem: (id: number) => () => {
     if (props.selectedId) { return; }
     focusId(props, id);
+    scrollTree(props);
   },
   onClickShowHiddenArgs: () => {
     props.set({ hideIneffectiveActions: !props.hideIneffectiveActions });
