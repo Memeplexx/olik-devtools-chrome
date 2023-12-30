@@ -1,7 +1,6 @@
-import { transact } from 'olik';
 import { appStore } from '../store';
 import { useHooks } from './hooks';
-import { AddButton, Container, PatchButton, ToggleButton, TransactButton } from './styles';
+import { AddButton, Container, PatchButton, ToggleButton } from './styles';
 
 
 export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
@@ -30,14 +29,6 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
           <ToggleButton
             onClick={() => appStore.modal.$set(appStore.modal.$state ? null : 'confirmDeleteGroup')}
             children='toggle modal'
-          />
-          <TransactButton
-            children='transact'
-            onClick={() => transact(
-              () => appStore.num.$add(1),
-              () => appStore.arrNum.$push(1),
-              () => appStore.obj.one.two.$set('sss'),
-            )}
           />
         </>
       }

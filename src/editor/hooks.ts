@@ -2,7 +2,6 @@ import React from "react";
 import * as monaco from 'monaco-editor';
 import { EditorHookArgs, EditorProps } from "./constants";
 import * as olikTypeDefsText from '../../node_modules/olik/dist/type.d.ts?raw';
-import { RecursiveRecord } from "olik";
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 
 const olikTypeDefsAsString = olikTypeDefsText.default.replace(/\n|\r/g, "");
@@ -112,14 +111,14 @@ const useInitializeTextEditor = (args: EditorHookArgs) => {
 }
 
 
-const generateTypeDefinition = (obj: RecursiveRecord) => {
+const generateTypeDefinition = (obj: Record<string, unknown>) => {
   const collector = { str: `{\n` };
   recurseObject(collector, obj, 1);
   collector.str += '};\n';
   return collector.str;
 }
 
-const recurseObject = (collector: { str: string }, obj: RecursiveRecord, level: number) => {
+const recurseObject = (collector: { str: string }, obj: Record<string, unknown>, level: number) => {
   if (!obj) { return; }
   Object.keys(obj).forEach(key => {
     const value = obj[key];
@@ -138,12 +137,12 @@ const recurseObject = (collector: { str: string }, obj: RecursiveRecord, level: 
         collector.str += `${key}: Array<null>;\n`;
       } else {
         const collectorInner = { str: '{\n' };
-        recurseObject(collectorInner, value[0] as RecursiveRecord, level + 1);
+        recurseObject(collectorInner, value[0] as Record<string, unknown>, level + 1);
         collector.str += `${key}: Array<${collectorInner.str}${'\t'.repeat(level)}>;\n`;
       }
     } else if (typeof value === 'object') {
       const collectorInner = { str: '{\n' };
-      recurseObject(collectorInner, value, level + 1);
+      recurseObject(collectorInner, value as Record<string, unknown>, level + 1);
       collector.str += `${key}: ${collectorInner.str}${'\t'.repeat(level)}};\n`;
     }
   });

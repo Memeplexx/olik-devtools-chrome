@@ -1,9 +1,9 @@
-import { OlikAction, RecursiveRecord } from "olik"
+import { OlikAction } from "olik"
 
 export type Message = {
   source: string,
-  actions: Array<OlikAction>,
-  state: RecursiveRecord,
+  action: OlikAction,
+  state: Record<string, unknown>,
   stack: string,
 }
 
@@ -12,7 +12,7 @@ export type Item = {
   typeFormatted: string,
   payload: unknown,
   id: number,
-  state: RecursiveRecord,
+  state: Record<string, unknown>,
   last: boolean,
   ineffective: boolean,
   location?: string,

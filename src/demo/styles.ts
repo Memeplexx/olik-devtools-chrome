@@ -19,8 +19,5 @@ export const AddButton = styled(SimplyButton)`
 export const PatchButton = styled(SimplyButton)`
 `
 
-export const TransactButton = styled(SimplyButton)`
-`;
-
 export const ToggleButton = styled(SimplyButton)`
 `;

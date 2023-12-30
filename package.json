@@ -12,8 +12,8 @@
   "dependencies": {
     "@fontsource/roboto": "^5.0.5",
     "monaco-editor": "^0.40.0",
-    "olik": "1.0.8",
-    "olik-react": "1.0.2",
+    "olik": "1.0.33",
+    "olik-react": "1.0.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.10.1",
