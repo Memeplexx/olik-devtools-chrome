@@ -25,9 +25,10 @@ export const doReadState = (type: string, state: unknown) => {
 }
 
 export const focusId = (props: ReturnType<typeof useHooks>, id: number) => {
-  const itemIndex = props.items.findIndex(item => item.id === id);
-  const stateBefore = props.items.slice(0, itemIndex).reverse().find(i => !!i.last)?.state || props.storeStateInitial;
-  const stateAfter = props.items[itemIndex].state;
+  const xxx = props.items.flatMap(i => i.items);
+  const itemIndex = xxx.findIndex(item => item.id === id);
+  const stateBefore = xxx.slice(0, itemIndex).reverse().find(i => !!i.last)?.state || props.storeStateInitial;
+  const stateAfter = xxx[itemIndex].state;
   const selected = getTreeHTML({
     before: stateBefore,
     after: stateAfter,

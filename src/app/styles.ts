@@ -52,16 +52,21 @@ export const Items = styled.div`
 	outline: none;
 `;
 
-export const Item = styled.div`
+export const ItemWrapper = styled.div`
+  background-color: rgba(255,255,255,0.4);
+  padding-left: 3px solid rgba(255,255,255,0.4);
+  margin-bottom: 6px;
 `;
 
-export const ItemContent = styled.div<{ isLast: boolean, isSelected?: boolean }>`
+export const ItemHeading = styled.div`
+`;
+
+export const ItemContent = styled.div<{ isSelected?: boolean }>`
 	padding: 4px 8px;
-	margin-bottom: ${p => p.isLast ? '5px' : '0px'};
-	border-left: 3px solid rgba(255,255,255,0.4);
-	background-color: ${p => p.isSelected ? 'white!important' : 'transparent'};
+	background-color: ${p => p.isSelected ? 'white!important' : '#1C1C1C'};
 	color: ${p => p.isSelected ? 'black' : ''};
 	cursor: pointer;
+  margin-left: 4px;
 	white-space: nowrap;
 	&:hover {
 		background-color: black;

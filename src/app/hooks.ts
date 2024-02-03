@@ -1,5 +1,5 @@
 import React, { MutableRefObject } from "react";
-import { Item, Message, itemId } from "./constants";
+import { ItemWrapper, Message, itemId } from "./constants";
 import { OlikAction, Store, createStore, getStore } from "olik";
 import { doReadState } from "./functions";
 import { getTreeHTML, useRecord } from "../shared/functions";
@@ -20,12 +20,12 @@ const useHooksInitializer = () => {
     storeState: null as Record<string, unknown> | null,
     selectedId: null as number | null,
     selected: '',
-    items: new Array<Item>(),
+    items: new Array<ItemWrapper>(),
     hideIneffectiveActions: false,
   });
   initializeStore({ state: state.storeState, storeRef });
   const itemsForView = React.useMemo(() => {
-    return !state.hideIneffectiveActions ? state.items : state.items.filter(i => !i.ineffective);
+    return !state.hideIneffectiveActions ? state.items : state.items.map(ii => ({ ...ii, items: ii.items.filter(i => !i.ineffective) }));
   }, [state.items, state.hideIneffectiveActions]);
   return {
     storeRef,
@@ -65,7 +65,7 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
     const set = setRef.current;
     const processEvent = (incoming: Message) => {
 
-      const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].state : {};
+      const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].items[hooks.items[hooks.items.length - 1].items.length - 1].state : {};
       const stateAfter = incoming.state;
       const query = incoming.action.type;
       const stateBeforeSelected = doReadState(incoming.action.typeOrig ?? incoming.action.type, stateBefore);
@@ -76,24 +76,28 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
       const payloadString = getPayloadHTML({ type: incoming.action.type, payload: incoming.action.payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
       const typeFormatted = getTypeHTML({ type: query, payloadString, stateHasNotChanged });
 
-      set(s => ({
-        storeState: incoming.state,
-        items: [
-          ...s.items,
-          {
-            type: incoming.action.type,
-            typeFormatted: `${extractFunctionNamesFromStack(incoming.trace)} ${typeFormatted}`,
-            id: itemId.val++,
-            state: stateAfter,
-            last: true,
-            payload: incoming.action.payload,
-            ineffective: !incoming.action.type.includes('<span class="touched">'),
-          }
-        ]
-      }));
+      set(s => {
+        const currentEvent = extractFunctionNamesFromStack(incoming.trace);
+        const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
+        const newItem = {
+          type: incoming.action.type,
+          typeFormatted,
+          id: itemId.val++,
+          state: stateAfter,
+          last: true,
+          payload: incoming.action.payload,
+          ineffective: !incoming.action.type.includes('<span class="touched">'),
+        };
+        return {
+          storeState: incoming.state,
+          items: currentEvent === previousEvent
+            ? [...s.items.slice(0, s.items.length - 1), { ...s.items[s.items.length - 1], items: [...s.items[s.items.length - 1].items, newItem] }]
+            : [...s.items, { id: itemId.val++, event: currentEvent, items: [newItem] }]
+        };
+      });
 
       const selected = getTreeHTML({
-        before: hooks.items.length ? hooks.items[hooks.items.length - 1].state : storeStateInitial,
+        before: hooks.items.length ? hooks.items[hooks.items.length - 1].items[hooks.items[hooks.items.length - 1].items.length - 1].state : storeStateInitial,
         after: stateAfter,
         depth: 1
       });
