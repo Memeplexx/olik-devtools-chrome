@@ -21,3 +21,6 @@ export const PatchButton = styled(SimplyButton)`
 
 export const ToggleButton = styled(SimplyButton)`
 `;
+
+export const NestedButton = styled(SimplyButton)`
+`;

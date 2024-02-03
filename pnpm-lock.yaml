@@ -12,11 +12,11 @@ dependencies:
     specifier: ^0.40.0
     version: 0.40.0
   olik:
-    specifier: 1.0.33
-    version: 1.0.33
+    specifier: 1.0.43
+    version: 1.0.43
   olik-react:
     specifier: 1.0.10
-    version: 1.0.10(olik@1.0.33)(vite@4.5.0)
+    version: 1.0.10(olik@1.0.43)(vite@4.5.0)
   react:
     specifier: ^18.2.0
     version: 18.2.0
@@ -1406,12 +1406,6 @@ packages:
     resolution: {integrity: sha512-soytjxwbgcCu7nh5Pf4S2/4wa6UIu+A3p03U2yVr53qGxi1/VTR3ENI+p50v+UxqqZAfl48j3z55ud7VHIOr9w==}
     dev: false
 
-  /error-stack-parser@2.1.4:
-    resolution: {integrity: sha512-Sk5V6wVazPhq5MhpO+AUxJn5x7XSXGl1R93Vn7i+zS15KDVxQijejNCrz8340/2bgLBjR9GtEG8ZVKONDjcqGQ==}
-    dependencies:
-      stackframe: 1.3.4
-    dev: false
-
   /esbuild@0.18.20:
     resolution: {integrity: sha512-ceqxoedUrcayh7Y7ZX6NdbbDzGROiyVBgC4PriJThBKSVPWnnFHZAkfI1lJT8QFkOwH4qOS2SJkS4wvpGl8BpA==}
     engines: {node: '>=12'}
@@ -2015,23 +2009,21 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: false
 
-  /olik-react@1.0.10(olik@1.0.33)(vite@4.5.0):
+  /olik-react@1.0.10(olik@1.0.43)(vite@4.5.0):
     resolution: {integrity: sha512-IRJt2YuR3StxgEklWGR8ynx5y9oZFMLrfJ5vq7RA4OZOpU0EY+odMgv/psK0jFDuFJ2kDfyzOvR3twibczlXOQ==}
     peerDependencies:
       olik: ^1.0.8
     dependencies:
       '@testing-library/jest-dom': 5.17.0
       '@vitejs/plugin-react': 4.2.0(vite@4.5.0)
-      olik: 1.0.33
+      olik: 1.0.43
     transitivePeerDependencies:
       - supports-color
       - vite
     dev: false
 
-  /olik@1.0.33:
-    resolution: {integrity: sha512-mHxyO81wh98SXSnaWoiEOfyGGI55q5Ui4wT9OlHz4lQdPFcw9uVrf7ctq22kRZkqnha/rxuV+3ApElX6zDLNBQ==}
-    dependencies:
-      stacktrace-js: 2.0.2
+  /olik@1.0.43:
+    resolution: {integrity: sha512-2lxrJmEfvEbLsvUeLtJaERBmLgQdMfE81jAfU8KZSmiLhkfaN9YUxrkILyActETfutuKu2K6a84ZhPMpHPgDTw==}
     dev: false
 
   /once@1.4.0:
@@ -2275,20 +2267,9 @@ packages:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}
     engines: {node: '>=0.10.0'}
 
-  /source-map@0.5.6:
-    resolution: {integrity: sha512-MjZkVp0NHr5+TPihLcadqnlVoGIoWo4IBHptutGh9wI3ttUYvCG26HkSuDi+K6lsZ25syXJXcctwgyVCt//xqA==}
-    engines: {node: '>=0.10.0'}
-    dev: false
-
   /source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
-    dev: false
-
-  /stack-generator@2.0.10:
-    resolution: {integrity: sha512-mwnua/hkqM6pF4k8SnmZ2zfETsRUpWXREfA/goT8SLCV4iOFa4bzOX2nDipWAZFPTjLvQB82f5yaodMVhK0yJQ==}
-    dependencies:
-      stackframe: 1.3.4
     dev: false
 
   /stack-utils@2.0.6:
@@ -2296,25 +2277,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       escape-string-regexp: 2.0.0
-    dev: false
-
-  /stackframe@1.3.4:
-    resolution: {integrity: sha512-oeVtt7eWQS+Na6F//S4kJ2K2VbRlS9D43mAlMyVpVWovy9o+jfgH8O9agzANzaiLjclA0oYzUXEM4PurhSUChw==}
-    dev: false
-
-  /stacktrace-gps@3.1.2:
-    resolution: {integrity: sha512-GcUgbO4Jsqqg6RxfyTHFiPxdPqF+3LFmQhm7MgCuYQOYuWyqxo5pwRPz5d/u6/WYJdEnWfK4r+jGbyD8TSggXQ==}
-    dependencies:
-      source-map: 0.5.6
-      stackframe: 1.3.4
-    dev: false
-
-  /stacktrace-js@2.0.2:
-    resolution: {integrity: sha512-Je5vBeY4S1r/RnLydLl0TBTi3F2qdfWmYsGvtfZgEI+SCprPppaIhQf5nGcal4gI4cGpCV/duLcAzT1np6sQqg==}
-    dependencies:
-      error-stack-parser: 2.1.4
-      stack-generator: 2.0.10
-      stacktrace-gps: 3.1.2
     dev: false
 
   /stacktracey@2.1.8:

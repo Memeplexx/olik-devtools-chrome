@@ -35,6 +35,21 @@ const useHooksInitializer = () => {
   };
 }
 
+const extractFileNameFromPath = (filePath: string) => {
+  const url = new URL(filePath);
+  return url.pathname.split('.')[0];
+}
+
+const extractFunctionNamesFromStack = (stack: string) => {
+  const regex = /at\s+([^\s]+)\s+\(([^\s]+)\)/g;
+  const item = (stack.match(regex) || [])
+    .map((match) => match.match(/at\s+([^\s]+)\s+\(([^\s]+)\)/))
+    .find((match) => match && match[1] && match[2] && !match[1].includes('.'))!;
+  const fileName = extractFileNameFromPath(item[2]);
+  const functionName = item[1];
+  return `${fileName}.${functionName}()`;
+}
+
 const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
   const getInitialState = () => {
     const el = document.getElementById('olik-state');
@@ -48,14 +63,13 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
   const storeStateInitial = React.useRef(hooks.storeStateInitial);
   React.useEffect(() => {
     const set = setRef.current;
-    const treeRef = treeRefRef.current;
     const processEvent = (incoming: Message) => {
 
       const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].state : {};
       const stateAfter = incoming.state;
       const query = incoming.action.type;
-      const stateBeforeSelected = doReadState(query, stateBefore);
-      const stateAfterSelected = doReadState(query, stateAfter);
+      const stateBeforeSelected = doReadState(incoming.action.typeOrig ?? incoming.action.type, stateBefore);
+      const stateAfterSelected = doReadState(incoming.action.typeOrig ?? incoming.action.type, stateAfter);
       const stateAfterString = JSON.stringify(stateAfterSelected);
       const stateBeforeString = JSON.stringify(stateBeforeSelected);
       const stateHasNotChanged = stateBeforeString === stateAfterString;
@@ -66,31 +80,9 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
         storeState: incoming.state,
         items: [
           ...s.items,
-          // ...incoming.actions.map((action, i) => {
-          // 	const { type, payload } = action;
-          // 	const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].state : {};
-          // 	const stateAfter = incoming.state;
-          // 	const query = action.type;
-          // 	const stateBeforeSelected = doReadState(query, stateBefore);
-          // 	const stateAfterSelected = doReadState(query, stateAfter);
-          // 	const stateBeforeString = JSON.stringify(stateBeforeSelected);
-          // 	const stateAfterString = JSON.stringify(stateAfterSelected);
-          // 	const stateHasNotChanged = stateBeforeString === stateAfterString;
-          // 	const payloadString = getPayloadHTML({ type, payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
-          // 	const typeFormatted = getTypeHTML({ type, payloadString, stateHasNotChanged });
-          // 	return {
-          // 		type,
-          // 		typeFormatted,
-          // 		id: itemId.val++,
-          // 		state: stateAfter,
-          // 		last: incoming.actions.length - 1 === i,
-          // 		payload,
-          // 		ineffective: !typeFormatted.includes('<span class="touched">'),
-          // 	};
-          // }),
           {
             type: incoming.action.type,
-            typeFormatted,
+            typeFormatted: `${extractFunctionNamesFromStack(incoming.trace)} ${typeFormatted}`,
             id: itemId.val++,
             state: stateAfter,
             last: true,
@@ -100,8 +92,6 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
         ]
       }));
 
-      // const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].state : storeStateInitial;
-      // const stateAfter = incoming.state;
       const selected = getTreeHTML({
         before: hooks.items.length ? hooks.items[hooks.items.length - 1].state : storeStateInitial,
         after: stateAfter,
@@ -110,7 +100,7 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
       set({ selected });
 
       setTimeout(() => {
-        const firstTouchedElement = treeRef!.querySelector('.touched');
+        const firstTouchedElement = treeRefRef.current!.querySelector('.touched');
         if (firstTouchedElement) {
           firstTouchedElement.scrollIntoView(/*{ behavior: 'smooth' }*/);
         }

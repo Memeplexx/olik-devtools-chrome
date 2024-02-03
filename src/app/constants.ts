@@ -4,7 +4,12 @@ export type Message = {
   source: string,
   action: OlikAction,
   state: Record<string, unknown>,
-  stack: string,
+  trace: string,
+}
+
+export type ItemWrapper = {
+  event: string,
+  items: Item[],
 }
 
 export type Item = {

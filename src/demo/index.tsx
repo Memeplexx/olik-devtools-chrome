@@ -1,16 +1,20 @@
 import { appStore } from '../store';
 import { useHooks } from './hooks';
-import { AddButton, Container, PatchButton, ToggleButton } from './styles';
+import { AddButton, Container, NestedButton, PatchButton, ToggleButton } from './styles';
 
 
 export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const hooks = useHooks();
+  const onClickNested = () => {
+    const one = appStore.arr.$find.id.$eq(3).id;
+    appStore.arr.$find.id.$eq(one).text.$set('changed');
+  };
   return (
-    <Container 
+    <Container
       {...props}
       children={
         <>
-          <AddButton 
+          <AddButton
             onClick={() => appStore.num.$add(1)}
             children={`Increment | ${hooks.num}`}
           />
@@ -29,6 +33,10 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
           <ToggleButton
             onClick={() => appStore.modal.$set(appStore.modal.$state ? null : 'confirmDeleteGroup')}
             children='toggle modal'
+          />
+          <NestedButton
+            onClick={onClickNested}
+            children='nested'
           />
         </>
       }
