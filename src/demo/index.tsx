@@ -8,16 +8,19 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const onClickIncrement = () => {
     appStore.num.$add(1); 
   }
-  const onClickNested = () => {
+  const thing = () => {
     const one = appStore.arr.$find.id.$eq(3).id;
     appStore.arr.$find.id.$eq(one).text.$set('changed');
     appStore.bool.$toggle();
+  }
+  const onClickNested = () => {
+    thing();
   };
   const onClickPatch = () => {
-    appStore.flatObj.$patch({ one: 'hee', two: 'ggg' });
+    appStore.flatObj.$patch({ one: 'hee', two: '' });
   }
   const onClickPatch2 = () => {
-    appStore.flatObj.$patch({ one: 'hee', two: 'xxx' })
+    appStore.flatObj.$patch({ one: 'hee', two: appStore.arr.$find.id.$eq(3).text });
   }
   const onClickToggle = () => {
     appStore.bool.$toggle();
@@ -54,6 +57,13 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
             onClick={onClickNested}
             children='nested'
           />
+          <button onClick={() => {
+            if (!appStore.bool.$state) {
+              appStore.bool.$set(true)
+            } else {
+              appStore.bool.$set(false)
+            }
+          }}>TEST</button>
         </>
       }
     />

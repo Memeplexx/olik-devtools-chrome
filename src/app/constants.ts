@@ -9,7 +9,7 @@ export type Message = {
 
 export type ItemWrapper = {
   id: number,
-  event: string,
+  event: string[],
   items: Item[],
 }
 

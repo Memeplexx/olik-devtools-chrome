@@ -35,19 +35,31 @@ const useHooksInitializer = () => {
   };
 }
 
-const extractFileNameFromPath = (filePath: string) => {
-  const url = new URL(filePath);
-  return url.pathname.split('.')[0];
-}
-
 const extractFunctionNamesFromStack = (stack: string) => {
-  const regex = /at\s+([^\s]+)\s+\(([^\s]+)\)/g;
-  const item = (stack.match(regex) || [])
-    .map((match) => match.match(/at\s+([^\s]+)\s+\(([^\s]+)\)/))
-    .find((match) => match && match[1] && match[2] && !match[1].includes('.'))!;
-  const fileName = extractFileNameFromPath(item[2]);
-  const functionName = item[1];
-  return `${fileName}.${functionName}()`;
+  return stack
+    .trim()
+    .substring('Error'.length)
+    .trim()
+    .split('\n')
+    .filter(s => !s.includes('node_modules'))
+    .map(s => s.trim().substring('at '.length).trim())
+    .map(s => {
+      const [fn, filePath] = s.split(' (');
+      let url: string;
+      const fun = fn.substring(fn.indexOf('.') + 1);
+      try {
+        url = new URL(filePath.replace('(app-pages-browser)/', '').substring(1, filePath.length - 2)).pathname;
+      } catch (e) {
+        return { fn: fun, filePath: '' };
+      }
+      return { fn: fun, filePath: url };
+    })
+    .filter(s => s.filePath !== '')
+    .map(s => ({ ...s, filePath: s.filePath.includes(':') ? s.filePath.substring(0, s.filePath.indexOf(':')) : s.filePath }))
+    .map(s => ({ ...s, filePath: s.filePath.replace(/\.[^/.]+$/, "") }))
+    .map(s => `${s.filePath}.${s.fn}`)
+    .map(s => s.replace('///', ''))
+    .reverse();
 }
 
 const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
@@ -73,7 +85,7 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
       const stateAfterString = JSON.stringify(stateAfterSelected);
       const stateBeforeString = JSON.stringify(stateBeforeSelected);
       const stateHasNotChanged = stateBeforeString === stateAfterString;
-      const payloadString = getPayloadHTML({ type: incoming.action.type, payload: incoming.action.payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
+      const payloadString = getPayloadHTML({ type: incoming.action.type, payload: incoming.action.payloadOrig || incoming.action.payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
       const typeFormatted = getTypeHTML({ type: query, payloadString, stateHasNotChanged });
 
       set(s => {
@@ -90,7 +102,7 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
         };
         return {
           storeState: incoming.state,
-          items: currentEvent === previousEvent
+          items: currentEvent.toString() === previousEvent.toString()
             ? [...s.items.slice(0, s.items.length - 1), { ...s.items[s.items.length - 1], items: [...s.items[s.items.length - 1].items, newItem] }]
             : [...s.items, { id: itemId.val++, event: currentEvent, items: [newItem] }]
         };
@@ -142,13 +154,14 @@ const initializeStore = (props: { state: Record<string, unknown> | null, storeRe
   if (!props.state) { return; }
   if (!props.storeRef.current) {
     if (!chrome.runtime) {
-      props.storeRef.current = getStore(); // get store from demo app
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      props.storeRef.current = getStore() as any; // get store from demo app
     } else {
       props.storeRef.current = createStore<Record<string, unknown>>({ state: props.state });
     }
   }
   if (chrome.runtime) {
-    props.storeRef.current.$set(props.state);
+    props.storeRef.current!.$set(props.state);
   }
 }
 
@@ -189,9 +202,10 @@ const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNot
     return null;
   }
   if (action.stateHasNotChanged) {
-    return JSON.stringify(action.payload);
+    return JSON.stringify(action.payload, null, 2);
   }
-  const payloadStringified = JSON.stringify(action.payload);
+  const stringify = (payload: unknown) => typeof (payload) === 'object' ? JSON.stringify(payload) : typeof(payload) === 'string' ? `"${payload}"` : payload!.toString();
+  const payloadStringified = stringify(action.payload);
   if (typeof (action.payload) === 'object' && !Array.isArray(action.payload)) {
     const stateBefore = action.stateBefore === undefined ? {} : action.stateBefore as Record<string, unknown>;
     const payload = action.payload as Record<string, unknown>;
@@ -199,12 +213,12 @@ const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNot
     const keyValuePairsUnchanged = new Array<string>();
     Object.keys(payload).forEach(key => {
       if (stateBefore[key] !== payload[key]) {
-        keyValuePairsChanged.push(`<span class="touched">${key}: ${JSON.stringify(payload[key])}</span>`);
+        keyValuePairsChanged.push(`&nbsp;&nbsp;<span class="touched">${key}: ${stringify(payload[key])}</span>`);
       } else {
-        keyValuePairsUnchanged.push(`<span class="untouched">${key}: ${JSON.stringify(payload[key])}</span>`);
+        keyValuePairsUnchanged.push(`&nbsp;&nbsp;<span class="untouched">${key}: ${stringify(payload[key])}</span>`);
       }
     });
-    return `{ ${[...keyValuePairsChanged, ...keyValuePairsUnchanged].join(', ')} }`;
+    return `{<br/>${[...keyValuePairsChanged, ...keyValuePairsUnchanged].join(',<br/>')}<br/>}`;
   } else {
     return `<span class="touched">${payloadStringified}</span>`;
   }

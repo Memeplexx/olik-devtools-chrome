@@ -1,6 +1,6 @@
 import { useHooks } from './hooks';
 import { useEvents } from './events';
-import { ClearButton, ClearIcon, DemoApp, DevtoolsPanel, EditorPanel, ItemContent, ItemHeading, ItemWrapper, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, TreePanel } from './styles';
+import { ClearButton, ClearIcon, DemoApp, DevtoolsPanel, EditorPanel, ItemContent, ItemHead, ItemHeading, ItemWrapper, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, TreePanel } from './styles';
 import { PanelGroup } from 'react-resizable-panels';
 
 
@@ -75,7 +75,12 @@ export const App = () => {
                                 children={
                                   <>
                                     <ItemHeading
-                                      children={itemWrapper.event}
+                                      children={itemWrapper.event.map(e => (
+                                        <ItemHead
+                                          key={e}
+                                          children={e}
+                                        />
+                                      ))}
                                     />
                                     {itemWrapper.items.map(item => (
                                       <ItemContent

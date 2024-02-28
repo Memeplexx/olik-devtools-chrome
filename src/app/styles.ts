@@ -61,6 +61,10 @@ export const ItemWrapper = styled.div`
 export const ItemHeading = styled.div`
 `;
 
+export const ItemHead = styled.div`
+  white-space: nowrap;
+`;
+
 export const ItemContent = styled.div<{ isSelected?: boolean }>`
 	padding: 4px 8px;
 	background-color: ${p => p.isSelected ? 'white!important' : '#1C1C1C'};
