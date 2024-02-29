@@ -1,9 +1,7 @@
-import React from "react";
-import { TreeProps } from "./constants";
 import { useForwardedRef } from "../shared/functions";
+import { TreeProps } from "./constants";
 
-export const useHooks = (props: TreeProps, ref: React.ForwardedRef<HTMLPreElement>) => {
-  const state = useInitialHooks(props);
+export const useInputs = (props: TreeProps, ref: React.ForwardedRef<HTMLPreElement>) => {
   const containerRef = useForwardedRef<HTMLPreElement>(ref);
   if (props.selected) {
     return {
@@ -12,16 +10,8 @@ export const useHooks = (props: TreeProps, ref: React.ForwardedRef<HTMLPreElemen
     };
   }
   return {
-    data: beautifyJson(state.stateRef.current),
     containerRef,
-  }
-}
-
-const useInitialHooks = (props: TreeProps) => {
-  const stateRef = React.useRef<unknown | null>(null);
-  return {
-    ...props,
-    stateRef,
+    data: beautifyJson(props.state),
   }
 }
 

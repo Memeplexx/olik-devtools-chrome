@@ -1,9 +1,10 @@
-import { OlikAction } from "olik"
+import { OlikAction, StateAction } from "olik"
 
 export type Message = {
   source: string,
   action: OlikAction,
-  state: Record<string, unknown>,
+  // state: Record<string, unknown>,
+  stateActions: StateAction[],
   trace: string,
 }
 

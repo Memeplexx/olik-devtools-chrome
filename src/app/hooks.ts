@@ -1,8 +1,7 @@
-import React, { MutableRefObject } from "react";
+import React, { MutableRefObject, useState } from "react";
 import { ItemWrapper, Message, itemId } from "./constants";
-import { OlikAction, Store, createStore, getStore } from "olik";
-import { doReadState } from "./functions";
-import { getTreeHTML, useRecord } from "../shared/functions";
+import { OlikAction, StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
+import { getTreeHTML } from "../shared/functions";
 
 export const useHooks = () => {
   const hooks = useHooksInitializer();
@@ -14,7 +13,7 @@ export const useHooks = () => {
 const useHooksInitializer = () => {
   const storeRef = React.useRef<Store<Record<string, unknown>> | null>(null);
   const treeRef = React.useRef<HTMLPreElement | null>(null);
-  const state = useRecord({
+  const [state, setState] = useState({
     incomingNum: 0,
     storeStateInitial: null as Record<string, unknown> | null,
     storeState: null as Record<string, unknown> | null,
@@ -23,7 +22,16 @@ const useHooksInitializer = () => {
     items: new Array<ItemWrapper>(),
     hideIneffectiveActions: false,
   });
-  initializeStore({ state: state.storeState, storeRef });
+  initializeStore({ state: state.storeState, storeRef, onInit: () => setState(s => ({
+    ...s,
+    items: [{ id: itemId.val++, event: ['🥚 createStore'], items: [{ type: 'init', typeFormatted: 'init', id: itemId.val++, state: storeRef.current!.$state, last: true, payload: null, ineffective: false }] }],
+    storeState: storeRef.current!.$state,
+    selected: getTreeHTML({
+      before: {},
+      after: storeRef.current!.$state,
+      depth: 1
+    }),
+  })) });
   const itemsForView = React.useMemo(() => {
     return !state.hideIneffectiveActions ? state.items : state.items.map(ii => ({ ...ii, items: ii.items.filter(i => !i.ineffective) }));
   }, [state.items, state.hideIneffectiveActions]);
@@ -32,6 +40,7 @@ const useHooksInitializer = () => {
     treeRef,
     itemsForView,
     ...state,
+    setState,
   };
 }
 
@@ -68,27 +77,30 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
     if (!el) { return {}; }
     return JSON.parse(el.innerHTML) as Record<string, unknown>;
   }
-  const setRef = React.useRef(hooks.set);
-  setRef.current = hooks.set;
+  const setRef = React.useRef(hooks.setState);
+  setRef.current = hooks.setState;
   const treeRefRef = React.useRef(hooks.treeRef.current);
   treeRefRef.current = hooks.treeRef.current;
-  const storeStateInitial = React.useRef(hooks.storeStateInitial);
   React.useEffect(() => {
     const set = setRef.current;
     const processEvent = (incoming: Message) => {
-
-      const stateBefore = hooks.items.length ? hooks.items[hooks.items.length - 1].items[hooks.items[hooks.items.length - 1].items.length - 1].state : {};
-      const stateAfter = incoming.state;
-      const query = incoming.action.type;
-      const stateBeforeSelected = doReadState(incoming.action.typeOrig ?? incoming.action.type, stateBefore);
-      const stateAfterSelected = doReadState(incoming.action.typeOrig ?? incoming.action.type, stateAfter);
-      const stateAfterString = JSON.stringify(stateAfterSelected);
-      const stateBeforeString = JSON.stringify(stateBeforeSelected);
-      const stateHasNotChanged = stateBeforeString === stateAfterString;
-      const payloadString = getPayloadHTML({ type: incoming.action.type, payload: incoming.action.payloadOrig || incoming.action.payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
-      const typeFormatted = getTypeHTML({ type: query, payloadString, stateHasNotChanged });
-
       set(s => {
+        const stateBefore = s.items.length
+          ? s.items[s.items.length - 1].items[s.items[s.items.length - 1].items.length - 1].state
+          : getInitialState();
+        if (chrome.runtime) {
+          libState.disableDevtoolsDispatch = true;
+          setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
+          libState.disableDevtoolsDispatch = false;
+        }
+        const stateAfter = hooks.storeRef.current!.$state;
+        const query = incoming.action.type;
+        const stateActions = [...incoming.stateActions.slice(0, incoming.stateActions.length - 1), { name: '$state' }] as StateAction[];
+        const stateBeforeSelected = readState({ state: stateBefore, stateActions, cursor: { index: 0 } });
+        const stateAfterSelected = readState({ state: stateAfter, stateActions, cursor: { index: 0 } });
+        const stateHasNotChanged = stateBeforeSelected === stateAfterSelected;
+        const payloadString = getPayloadHTML({ type: incoming.action.type, payload: incoming.action.payloadOrig || incoming.action.payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
+        const typeFormatted = getTypeHTML({ type: query, payloadString, stateHasNotChanged });
         const currentEvent = extractFunctionNamesFromStack(incoming.trace);
         const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
         const newItem = {
@@ -101,20 +113,18 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
           ineffective: !incoming.action.type.includes('<span class="touched">'),
         };
         return {
-          storeState: incoming.state,
+          ...s,
+          storeState: hooks.storeRef.current!.$state,
           items: currentEvent.toString() === previousEvent.toString()
             ? [...s.items.slice(0, s.items.length - 1), { ...s.items[s.items.length - 1], items: [...s.items[s.items.length - 1].items, newItem] }]
-            : [...s.items, { id: itemId.val++, event: currentEvent, items: [newItem] }]
+            : [...s.items, { id: itemId.val++, event: currentEvent, items: [newItem] }],
+          selected: getTreeHTML({
+            before: stateBefore,
+            after: stateAfter,
+            depth: 1
+          }),
         };
       });
-
-      const selected = getTreeHTML({
-        before: hooks.items.length ? hooks.items[hooks.items.length - 1].items[hooks.items[hooks.items.length - 1].items.length - 1].state : storeStateInitial,
-        after: stateAfter,
-        depth: 1
-      });
-      set({ selected });
-
       setTimeout(() => {
         const firstTouchedElement = treeRefRef.current!.querySelector('.touched');
         if (firstTouchedElement) {
@@ -133,24 +143,28 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
     if (!chrome.runtime) {
       window.addEventListener('message', messageListener);
       const storeStateInitial = getInitialState();
-      set({ storeState: storeStateInitial, storeStateInitial });
+      set(s => ({ ...s, storeState: storeStateInitial, storeStateInitial }));
     } else {
       chrome.runtime.onMessage
         .addListener(chromeMessageListener);
       chrome.tabs
         .query({ active: true })
         .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: getInitialState }))
-        .then(r => set({ storeState: r[0].result, storeStateInitial: r[0].result }))
+        .then(r => set(s => ({ ...s, storeState: r[0].result, storeStateInitial: r[0].result })))
         .catch(console.error);
     }
     return () => {
       window.removeEventListener('message', messageListener);
       chrome.runtime?.onMessage.removeListener(chromeMessageListener);
     }
-  }, [hooks.items])
+  }, [hooks.storeRef])
 }
 
-const initializeStore = (props: { state: Record<string, unknown> | null, storeRef: MutableRefObject<Store<Record<string, unknown>> | null> }) => {
+const initializeStore = (props: {
+  state: Record<string, unknown> | null,
+  storeRef: MutableRefObject<Store<Record<string, unknown>> | null>,
+  onInit: () => void,
+}) => {
   if (!props.state) { return; }
   if (!props.storeRef.current) {
     if (!chrome.runtime) {
@@ -159,29 +173,22 @@ const initializeStore = (props: { state: Record<string, unknown> | null, storeRe
     } else {
       props.storeRef.current = createStore<Record<string, unknown>>({ state: props.state });
     }
-  }
-  if (chrome.runtime) {
-    props.storeRef.current!.$set(props.state);
+    props.onInit();
   }
 }
 
 const useResetOnPageReload = (hooks: ReturnType<typeof useHooksInitializer>) => {
-  const setRef = React.useRef(hooks.set);
+  const setRef = React.useRef(hooks.setState);
   React.useEffect(() => {
+    console.log('effect');
     const set = setRef.current;
     if (!chrome.runtime) { return; }
-    const listener: Parameters<typeof chrome.tabs.onUpdated.addListener>[0] = (tabId) => {
-      chrome.tabs
-        .query({ active: true })
-        .then(tabs => {
-          if (tabs[0].id === tabId) {
-            set({ items: [], selected: '' });
-          }
-        }).catch(console.error);
-    };
-    chrome.tabs.onUpdated.addListener(listener);
-    return () => chrome.tabs.onUpdated.removeListener(listener);
+    const listener= () => set(s => ({ ...s, items: [], selected: '' }));
+    chrome.devtools.network.onNavigated.addListener(listener);
+    return () => chrome.devtools.network.onNavigated.removeListener(listener);
   }, []);
+
+
 }
 
 const getTypeHTML = (action: { type: string, payloadString?: string | null | undefined, stateHasNotChanged: boolean }) => {
@@ -204,7 +211,7 @@ const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNot
   if (action.stateHasNotChanged) {
     return JSON.stringify(action.payload, null, 2);
   }
-  const stringify = (payload: unknown) => typeof (payload) === 'object' ? JSON.stringify(payload) : typeof(payload) === 'string' ? `"${payload}"` : payload!.toString();
+  const stringify = (payload: unknown) => typeof (payload) === 'object' ? JSON.stringify(payload) : typeof (payload) === 'string' ? `"${payload}"` : payload!.toString();
   const payloadStringified = stringify(action.payload);
   if (typeof (action.payload) === 'object' && !Array.isArray(action.payload)) {
     const stateBefore = action.stateBefore === undefined ? {} : action.stateBefore as Record<string, unknown>;

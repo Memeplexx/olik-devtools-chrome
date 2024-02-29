@@ -34,7 +34,7 @@ export const focusId = (props: ReturnType<typeof useHooks>, id: number) => {
     after: stateAfter,
     depth: 1
   });
-  props.set({ selected });
+  props.setState(s => ({ ...s, selected }));
 }
 
 export const scrollTree = (props: ReturnType<typeof useHooks>) => {
