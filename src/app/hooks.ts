@@ -12,7 +12,7 @@ export const useHooks = () => {
 
 const useHooksInitializer = () => {
   const storeRef = React.useRef<Store<Record<string, unknown>> | null>(null);
-  const treeRef = React.useRef<HTMLPreElement | null>(null);
+  const treeRef = React.useRef<HTMLDivElement | null>(null);
   const [state, setState] = useState({
     incomingNum: 0,
     storeStateInitial: null as Record<string, unknown> | null,
@@ -21,11 +21,25 @@ const useHooksInitializer = () => {
     selected: '',
     items: new Array<ItemWrapper>(),
     hideIneffectiveActions: false,
+    query: '',
   });
   initializeStore({ state: state.storeState, storeRef, onInit: () => setState(s => ({
     ...s,
-    items: [{ id: itemId.val++, event: ['🥚 createStore'], items: [{ type: 'init', typeFormatted: 'init', id: itemId.val++, state: storeRef.current!.$state, last: true, payload: null, ineffective: false }] }],
+    items: [{
+      id: itemId.val++,
+      event: ['🥚 createStore'],
+      items: [{
+        type: 'init',
+        typeFormatted: 'init',
+        id: itemId.val++,
+        state: storeRef.current!.$state,
+        last: true,
+        payload: null,
+        ineffective: false,
+      }],
+    }],
     storeState: storeRef.current!.$state,
+    storeStateInitial: storeRef.current!.$state,
     selected: getTreeHTML({
       before: {},
       after: storeRef.current!.$state,
@@ -114,7 +128,7 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
         };
         return {
           ...s,
-          storeState: hooks.storeRef.current!.$state,
+          storeState: stateAfter,
           items: currentEvent.toString() === previousEvent.toString()
             ? [...s.items.slice(0, s.items.length - 1), { ...s.items[s.items.length - 1], items: [...s.items[s.items.length - 1].items, newItem] }]
             : [...s.items, { id: itemId.val++, event: currentEvent, items: [newItem] }],
@@ -132,6 +146,9 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
         }
       });
     }
+
+
+
     const messageListener = (e: MessageEvent<Message>) => {
       if (e.origin !== window.location.origin) { return; }
       if (e.data.source !== 'olik-devtools-extension') { return; }

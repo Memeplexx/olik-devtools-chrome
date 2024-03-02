@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { appStore } from '../store';
 import { useHooks } from './hooks';
 import { AddButton, Container, NestedButton, PatchButton, ToggleButton } from './styles';
@@ -28,6 +29,7 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const onClickToggleModal = () => {
     appStore.modal.$set(appStore.modal.$state ? null : 'confirmDeleteGroup');
   }
+  const num = useRef(0);
   return (
     <Container
       {...props}
@@ -64,6 +66,15 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
               appStore.bool.$set(false)
             }
           }}>TEST</button>
+          <button onClick={() => {
+            appStore.arr.$push({ id: num.current++, text: 'new' });
+          }}>Add</button>
+          <button onClick={() => {
+            appStore.arr.$find.id.$eq(2).$delete();
+          }}>Remove</button>
+          <button onClick={() => {
+            appStore.arr.$find.id.$eq(1).text.$set('changed');
+          }}>Update</button>
         </>
       }
     />

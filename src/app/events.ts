@@ -41,7 +41,10 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
   },
   onClickClear: () => {
     props.setState(s => ({ ...s, items: [] }));
-  }
+  },
+  onQueryChanged: (query: string) => {
+    props.setState(s => ({ ...s, query }));
+  },
 })
 
 const silentlyUpdateAppStoreState = (props: ReturnType<typeof useHooks>, state: Record<string, unknown>) => {

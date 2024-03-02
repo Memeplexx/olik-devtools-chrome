@@ -6,14 +6,15 @@ import { useInputs } from "./inputs";
 
 export const Tree = React.forwardRef(function Tags(
   props: TreeProps,
-  ref: React.ForwardedRef<HTMLPreElement>
+  ref: React.ForwardedRef<HTMLDivElement>
 ) {
   const inputs = useInputs(props, ref);
   return (
     <JsonWrapper
       ref={inputs.containerRef}
       className={props.className}
-      dangerouslySetInnerHTML={{ __html: inputs.data }}
+      // dangerouslySetInnerHTML={{ __html: inputs.data }}
+      children={inputs.data}
     />
   );
 });

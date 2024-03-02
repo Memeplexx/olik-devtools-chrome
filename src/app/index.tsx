@@ -17,6 +17,7 @@ export const App = () => {
           <>
             <EditorPanel
               state={hooks.storeState}
+              onQueryChanged={events.onQueryChanged}
             />
             <PanelGroup
               direction="vertical"
@@ -27,9 +28,10 @@ export const App = () => {
                     children={
                       <TreePanel
                         ref={hooks.treeRef}
-                        state={hooks.storeState}
-                        selected={hooks.selected}
+                        state={hooks.storeState!}
+                        // selected={hooks.selected}
                         storeRef={hooks.storeRef}
+                        query={hooks.query}
                       />
                     }
                   />

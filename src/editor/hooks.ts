@@ -43,15 +43,20 @@ const useAddTypescriptSupportToEditor = () => {
 
 const useUpdateTypeDefinitions = (args: EditorHookArgs) => {
   const editor = args.editorRef.current;
+  const [typeDef, setTypeDef] = React.useState<string>('');
+  React.useEffect(() => {
+    setTypeDef(generateTypeDefinition(args.state!).replace(/\n|\r/g, ""));
+  }, [args.state]);
   React.useEffect(() => {
     if (!editor) { return; }
-    const typeDefString = olikTypeDefsAsString + `; const store: Store<${generateTypeDefinition(args.state!).replace(/\n|\r/g, "")}>;`;
+    const typeDefString = olikTypeDefsAsString + `; const store: Store<${typeDef}>;`;
     editor.setValue([typeDefString, 'store.'].join('\n'));
-  }, [editor, args.state, args.initialized]);
+  }, [editor, typeDef, args.initialized]);
 }
 
 const usePreventCertainEditorActions = (args: EditorHookArgs) => {
   const editorRef = args.editorRef.current;
+  const queryChangedRef = React.useRef(args.onQueryChanged);
   React.useEffect(() => {
     if (!editorRef) { return; }
     editorRef.onDidChangeModelContent(() => {
@@ -60,6 +65,9 @@ const usePreventCertainEditorActions = (args: EditorHookArgs) => {
       if (!lines[1].startsWith('store.')) {
         editorRef.setValue([lines[0], 'store.'].join('\n'));
         editorRef.setPosition({ lineNumber: 2, column: value.length + 1 });
+      } else {
+        const lastLine = editorRef.getModel()!.getLineContent(2);
+        queryChangedRef.current(lastLine.substring('store.'.length));
       }
     })
   }, [editorRef])
