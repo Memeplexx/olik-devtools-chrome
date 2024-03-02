@@ -15,7 +15,7 @@ export const Num = styled.span`
   color: darkorange;
 `;
 
-export const Boolean = styled.span`
+export const Boo = styled.span`
   color: lightblue;
 `;
 

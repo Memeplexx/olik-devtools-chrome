@@ -1,7 +1,8 @@
-import React, { MutableRefObject, useState } from "react";
-import { ItemWrapper, Message, itemId } from "./constants";
 import { OlikAction, StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
+import { MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
 import { getTreeHTML } from "../shared/functions";
+import { Message, initialState, itemId } from "./constants";
+import { getCleanStackTrace } from "./functions";
 
 export const useHooks = () => {
   const hooks = useHooksInitializer();
@@ -11,42 +12,39 @@ export const useHooks = () => {
 }
 
 const useHooksInitializer = () => {
-  const storeRef = React.useRef<Store<Record<string, unknown>> | null>(null);
-  const treeRef = React.useRef<HTMLDivElement | null>(null);
-  const [state, setState] = useState({
-    incomingNum: 0,
-    storeStateInitial: null as Record<string, unknown> | null,
-    storeState: null as Record<string, unknown> | null,
-    selectedId: null as number | null,
-    selected: '',
-    items: new Array<ItemWrapper>(),
-    hideIneffectiveActions: false,
-    query: '',
+  const storeRef = useRef<Store<Record<string, unknown>> | null>(null);
+  const treeRef = useRef<HTMLDivElement | null>(null);
+  const [state, setState] = useState(initialState);
+  initializeStore({
+    state: state.storeState,
+    storeRef,
+    onInit: () => {
+      setState(s => ({
+        ...s,
+        items: [{
+          id: itemId.val++,
+          event: ['🥚 createStore'],
+          items: [{
+            type: 'init',
+            typeFormatted: 'init',
+            id: itemId.val++,
+            state: storeRef.current!.$state,
+            last: true,
+            payload: null,
+            ineffective: false,
+          }],
+        }],
+        storeState: storeRef.current!.$state,
+        storeStateInitial: storeRef.current!.$state,
+        selected: getTreeHTML({
+          before: {},
+          after: storeRef.current!.$state,
+          depth: 1
+        }),
+      }));
+    }
   });
-  initializeStore({ state: state.storeState, storeRef, onInit: () => setState(s => ({
-    ...s,
-    items: [{
-      id: itemId.val++,
-      event: ['🥚 createStore'],
-      items: [{
-        type: 'init',
-        typeFormatted: 'init',
-        id: itemId.val++,
-        state: storeRef.current!.$state,
-        last: true,
-        payload: null,
-        ineffective: false,
-      }],
-    }],
-    storeState: storeRef.current!.$state,
-    storeStateInitial: storeRef.current!.$state,
-    selected: getTreeHTML({
-      before: {},
-      after: storeRef.current!.$state,
-      depth: 1
-    }),
-  })) });
-  const itemsForView = React.useMemo(() => {
+  const itemsForView = useMemo(() => {
     return !state.hideIneffectiveActions ? state.items : state.items.map(ii => ({ ...ii, items: ii.items.filter(i => !i.ineffective) }));
   }, [state.items, state.hideIneffectiveActions]);
   return {
@@ -58,32 +56,7 @@ const useHooksInitializer = () => {
   };
 }
 
-const extractFunctionNamesFromStack = (stack: string) => {
-  return stack
-    .trim()
-    .substring('Error'.length)
-    .trim()
-    .split('\n')
-    .filter(s => !s.includes('node_modules'))
-    .map(s => s.trim().substring('at '.length).trim())
-    .map(s => {
-      const [fn, filePath] = s.split(' (');
-      let url: string;
-      const fun = fn.substring(fn.indexOf('.') + 1);
-      try {
-        url = new URL(filePath.replace('(app-pages-browser)/', '').substring(1, filePath.length - 2)).pathname;
-      } catch (e) {
-        return { fn: fun, filePath: '' };
-      }
-      return { fn: fun, filePath: url };
-    })
-    .filter(s => s.filePath !== '')
-    .map(s => ({ ...s, filePath: s.filePath.includes(':') ? s.filePath.substring(0, s.filePath.indexOf(':')) : s.filePath }))
-    .map(s => ({ ...s, filePath: s.filePath.replace(/\.[^/.]+$/, "") }))
-    .map(s => `${s.filePath}.${s.fn}`)
-    .map(s => s.replace('///', ''))
-    .reverse();
-}
+
 
 const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
   const getInitialState = () => {
@@ -91,11 +64,11 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
     if (!el) { return {}; }
     return JSON.parse(el.innerHTML) as Record<string, unknown>;
   }
-  const setRef = React.useRef(hooks.setState);
+  const setRef = useRef(hooks.setState);
   setRef.current = hooks.setState;
-  const treeRefRef = React.useRef(hooks.treeRef.current);
+  const treeRefRef = useRef(hooks.treeRef.current);
   treeRefRef.current = hooks.treeRef.current;
-  React.useEffect(() => {
+  useEffect(() => {
     const set = setRef.current;
     const processEvent = (incoming: Message) => {
       set(s => {
@@ -115,7 +88,7 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
         const stateHasNotChanged = stateBeforeSelected === stateAfterSelected;
         const payloadString = getPayloadHTML({ type: incoming.action.type, payload: incoming.action.payloadOrig || incoming.action.payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
         const typeFormatted = getTypeHTML({ type: query, payloadString, stateHasNotChanged });
-        const currentEvent = extractFunctionNamesFromStack(incoming.trace);
+        const currentEvent = getCleanStackTrace(incoming.trace);
         const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
         const newItem = {
           type: incoming.action.type,
@@ -179,33 +152,30 @@ const useActionsReceiver = (hooks: ReturnType<typeof useHooksInitializer>) => {
 
 const initializeStore = (props: {
   state: Record<string, unknown> | null,
-  storeRef: MutableRefObject<Store<Record<string, unknown>> | null>,
+  storeRef: MutableRefObject<Store<unknown> | null>,
   onInit: () => void,
 }) => {
   if (!props.state) { return; }
   if (!props.storeRef.current) {
     if (!chrome.runtime) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      props.storeRef.current = getStore() as any; // get store from demo app
+      props.storeRef.current = getStore(); // get store from demo app
     } else {
-      props.storeRef.current = createStore<Record<string, unknown>>({ state: props.state });
+      props.storeRef.current = createStore(props.state);
     }
     props.onInit();
   }
 }
 
 const useResetOnPageReload = (hooks: ReturnType<typeof useHooksInitializer>) => {
-  const setRef = React.useRef(hooks.setState);
-  React.useEffect(() => {
+  const setRef = useRef(hooks.setState);
+  useEffect(() => {
     console.log('effect');
     const set = setRef.current;
     if (!chrome.runtime) { return; }
-    const listener= () => set(s => ({ ...s, items: [], selected: '' }));
+    const listener = () => set(s => ({ ...s, items: [], selected: '' }));
     chrome.devtools.network.onNavigated.addListener(listener);
     return () => chrome.devtools.network.onNavigated.removeListener(listener);
   }, []);
-
-
 }
 
 const getTypeHTML = (action: { type: string, payloadString?: string | null | undefined, stateHasNotChanged: boolean }) => {

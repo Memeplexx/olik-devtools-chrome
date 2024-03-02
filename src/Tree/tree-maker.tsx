@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { Arr, ArrElement, Boolean, ArrClose, ObjClose, Colon, Comma, Dat, ArrEmpty, ObjEmpty, Key, Nul, Num, Obj, ArrOpen, ObjOpen, Row, RowContracted, Str, Value } from "./styles";
+import { Arr, ArrElement, Boo, ArrClose, ObjClose, Colon, Comma, Dat, ArrEmpty, ObjEmpty, Key, Nul, Num, Obj, ArrOpen, ObjOpen, Row, RowContracted, Str, Value } from "./styles";
 import { Frag } from "../html/frag";
 
 
@@ -20,7 +20,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
     } else if (typeof (val) === 'number') {
       return <Num children={val.toString()} />;
     } else if (typeof (val) === 'boolean') {
-      return <Boolean children={val.toString()} />;
+      return <Boo children={val.toString()} />;
     } else if (val instanceof Date) {
       return <Dat children={val.toString()} />;
     } else if (isArray(val)) {

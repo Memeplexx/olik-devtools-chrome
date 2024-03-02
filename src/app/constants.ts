@@ -28,3 +28,14 @@ export type Item = {
 export const itemId = {
   val: 1
 };
+
+export const initialState = {
+  incomingNum: 0,
+  storeStateInitial: null as Record<string, unknown> | null,
+  storeState: null as Record<string, unknown> | null,
+  selectedId: null as number | null,
+  selected: '',
+  items: new Array<ItemWrapper>(),
+  hideIneffectiveActions: false,
+  query: '',
+};
