@@ -5,9 +5,6 @@ import { getTreeHTML } from "../shared/functions";
 export const doReadState = (type: string, state: unknown) => {
   if (type === undefined) { return state; }
   const segments = type.split('.').filter(s => s !== '');
-  // if (type.endsWith(')')) {
-  //   segments.pop();
-  // }
   const stateActions: StateAction[] = segments
     .map(seg => {
       const arg = seg.match(/\(([^)]*)\)/)?.[1];

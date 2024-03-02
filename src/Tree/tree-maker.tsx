@@ -1,6 +1,6 @@
 import { Fragment } from "react";
-import { Arr, ArrElement, Boolean, CloseArray, CloseObject, Colon, Comma, Dat, EmptyArray, EmptyObject, Key, Null, Number, Obj, OpenArray, OpenObject, Row, RowContracted, String, Value } from "./styles";
-import { Frag } from "../html";
+import { Arr, ArrElement, Boolean, ArrClose, ObjClose, Colon, Comma, Dat, ArrEmpty, ObjEmpty, Key, Nul, Num, Obj, ArrOpen, ObjOpen, Row, RowContracted, Str, Value } from "./styles";
+import { Frag } from "../html/frag";
 
 
 const isNonArrayObject = (val: unknown): val is Record<string, unknown> => {
@@ -13,10 +13,17 @@ const isArray = (val: unknown): val is Array<unknown> => {
 
 export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: string) => void, contractedKeys: string[] }): JSX.Element => {
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
-    if (val === undefined) {
-      throw new Error();
-    }
-    if (isArray(val)) {
+    if (val === null) {
+      return <Nul />;
+    } else if (typeof (val) === 'string') {
+      return <Str children={`"${val}"`} />;
+    } else if (typeof (val) === 'number') {
+      return <Num children={val.toString()} />;
+    } else if (typeof (val) === 'boolean') {
+      return <Boolean children={val.toString()} />;
+    } else if (val instanceof Date) {
+      return <Dat children={val.toString()} />;
+    } else if (isArray(val)) {
       return (
         <>
           {val.map((ss, index) => {
@@ -33,7 +40,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                         onClick={() => props.onClickNodeKey(keyConcat)}
                         children={
                           <>
-                            <EmptyArray />
+                            <ArrEmpty />
                             {possibleComma}
                           </>
                         }
@@ -42,9 +49,9 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                         showIf={!props.contractedKeys.includes(keyConcat)}
                         children={
                           <>
-                            <OpenArray onClick={() => props.onClickNodeKey(keyConcat)} />
+                            <ArrOpen onClick={() => props.onClickNodeKey(keyConcat)} />
                             <Value children={recurse(ss, keyConcat)} />
-                            <CloseArray />
+                            <ArrClose />
                             {possibleComma}
                           </>
                         }
@@ -58,7 +65,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                         onClick={() => props.onClickNodeKey(keyConcat)}
                         children={
                           <>
-                            <EmptyObject />
+                            <ObjEmpty />
                             {possibleComma}
                           </>
                         }
@@ -69,13 +76,13 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                           <>
                             <Row
                               onClick={() => props.onClickNodeKey(keyConcat)}
-                              children={<OpenObject />}
+                              children={<ObjOpen />}
                             />
                             <Value children={recurse(ss, keyConcat)} />
                             <Row
                               children={
                                 <>
-                                  <CloseObject />
+                                  <ObjClose />
                                   {possibleComma}
                                 </>
                               }
@@ -122,7 +129,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                               <>
                                 <Key showIf={!!outerKey} children={key.toString()} />
                                 <Colon showIf={!!outerKey} />
-                                <EmptyArray />
+                                <ArrEmpty />
                               </>
                             }
                           />
@@ -136,7 +143,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                                     <>
                                       <Key showIf={!!outerKey} children={key.toString()}/>
                                       <Colon showIf={!!outerKey} />
-                                      <OpenArray />
+                                      <ArrOpen />
                                     </>
                                   }
                                 />
@@ -144,7 +151,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                                 <Row
                                   children={
                                     <>
-                                      <CloseArray />
+                                      <ArrClose />
                                       {possibleComma}
                                     </>
                                   }
@@ -166,7 +173,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                               <>
                                 <Key showIf={!!outerKey} children={key.toString()} />
                                 <Colon showIf={!!outerKey} />
-                                <EmptyObject />
+                                <ObjEmpty />
                                 {possibleComma}
                               </>
                             }
@@ -181,7 +188,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                                     <>
                                       <Key showIf={!!outerKey} children={key.toString()} />
                                       <Colon showIf={!!outerKey} />
-                                      <OpenObject />
+                                      <ObjOpen />
                                     </>
                                   }
                                 />
@@ -189,7 +196,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                                 <Row
                                   children={
                                     <>
-                                      <CloseObject />
+                                      <ObjClose />
                                       {possibleComma}
                                     </>
                                   }
@@ -219,25 +226,8 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
         </>
       );
     } else {
-      return renderPrimitive(val);
+      throw new Error();
     }
   };
-  const sRev = isArray(props.state) ? [ props.state ] : isNonArrayObject(props.state) ? { k: props.state } : props.state;
-  return recurse(sRev, '');
-}
-
-const renderPrimitive = <S extends Record<string, unknown> | unknown>(val: S): JSX.Element => {
-  if (val === null) {
-    return <Null />;
-  } else if (typeof (val) === 'string') {
-    return <String children={`"${val}"`} />;
-  } else if (typeof (val) === 'number') {
-    return <Number children={val.toString()} />;
-  } else if (typeof (val) === 'boolean') {
-    return <Boolean children={val.toString()} />;
-  } else if (val instanceof Date) {
-    return <Dat children={val.toString()} />;
-  } else {
-    throw new Error();
-  }
+  return recurse(isArray(props.state) ? [ props.state ] : isNonArrayObject(props.state) ? { k: props.state } : props.state, '');
 }

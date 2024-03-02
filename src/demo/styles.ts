@@ -1,14 +1,14 @@
 import styled from "styled-components";
-import { Button, Div } from "../html";
+import { possible } from "../html";
 
-export const Container = styled(Div)`
+export const Container = styled(possible.div)`
   display: flex;
   align-items: start;
   gap: 8px;
   padding: 8px;
 `;
 
-const SimplyButton = styled(Button)`
+const SimplyButton = styled(possible.button)`
   padding: 4px;
   border: 1px solid grey;
 `;

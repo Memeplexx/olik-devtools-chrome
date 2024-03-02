@@ -1,7 +1,7 @@
 import styled from "styled-components";
-import { Div } from "../html";
+import { possible } from "../html";
 
-export const Container = styled(Div)`
+export const Container = styled(possible.div)`
 `;
 
 export const EditorPane = styled.div`
