@@ -1,4 +1,4 @@
-import { useHooksInitializer } from './hooks';
+import { useHooksInitializer } from './inputs';
 
 
 export type EditorProps = {

@@ -1,5 +1,5 @@
 import { libState } from "olik";
-import { focusId, scrollTree } from "./functions";
+import { focusId } from "./shared";
 import { getTreeHTML } from "../shared/functions";
 import { useInputs } from "./inputs";
 
@@ -8,7 +8,12 @@ export const useOutputs = (props: ReturnType<typeof useInputs>) => ({
   onMouseEnterItem: (id: number) => () => {
     if (props.selectedId) { return; }
     focusId(props, id);
-    scrollTree(props);
+    setTimeout(() => {
+      const firstTouchedElement = props.treeRef!.current!.querySelector('.touched');
+      if (firstTouchedElement) {
+        firstTouchedElement.scrollIntoView(/*{ behavior: 'smooth' }*/);
+      }
+    });
   },
   onClickShowHiddenArgs: () => {
     props.setState(s => ({ ...s, hideIneffectiveActions: !props.hideIneffectiveActions }));

@@ -4,7 +4,7 @@ import { appStore } from "../store";
 
 
 
-export const useHooks = () => {
+export const useInputs = () => {
   const num = appStore.num.$useState();
   React.useEffect(() => {
     connectOlikDevtoolsToStore({ trace: true });

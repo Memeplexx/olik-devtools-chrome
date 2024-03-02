@@ -1,11 +1,11 @@
 import { useRef } from 'react';
 import { appStore } from '../store';
-import { useHooks } from './hooks';
+import { useInputs } from './inputs';
 import { AddButton, Container, NestedButton, PatchButton, ToggleButton } from './styles';
 
 
 export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
-  const hooks = useHooks();
+  const inputs = useInputs();
   const onClickIncrement = () => {
     appStore.num.$add(1); 
   }
@@ -37,7 +37,7 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
         <>
           <AddButton
             onClick={onClickIncrement}
-            children={`Increment | ${hooks.num}`}
+            children={`Increment | ${inputs.num}`}
           />
           <PatchButton
             onClick={onClickPatch}

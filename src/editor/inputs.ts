@@ -8,7 +8,7 @@ const olikTypeDefsAsString = olikTypeDefsText.default.replace(/\n|\r/g, "");
 
 const lineHeight = 18;
 
-export const useHooks = (props: EditorProps) => {
+export const useInputs = (props: EditorProps) => {
   const hookArgs = useHooksInitializer(props);
   useInitializeTextEditor(hookArgs);
   useAddTypescriptSupportToEditor();
