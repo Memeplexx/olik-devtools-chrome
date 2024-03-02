@@ -62,3 +62,12 @@ export const getTreeHTML = ({ before, after, depth }: { before: unknown, after: 
 		throw new Error();
 	}
 }
+
+export const isNonArrayObject = (val: unknown): val is Record<string, unknown> => {
+  return typeof (val) === 'object' && val !== null && !Array.isArray(val);
+}
+
+export const isArray = (val: unknown): val is Array<unknown> => {
+  return Array.isArray(val);
+}
+

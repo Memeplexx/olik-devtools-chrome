@@ -1,9 +1,9 @@
-import { OlikAction, StateAction } from "olik"
+import { OlikAction, StateAction, Store } from "olik"
+import { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 export type Message = {
   source: string,
   action: OlikAction,
-  // state: Record<string, unknown>,
   stateActions: StateAction[],
   trace: string,
 }
@@ -30,12 +30,18 @@ export const itemId = {
 };
 
 export const initialState = {
+  error: '',
+  storeFullyInitialized: false,
   incomingNum: 0,
   storeStateInitial: null as Record<string, unknown> | null,
   storeState: null as Record<string, unknown> | null,
+  storeRef: null as MutableRefObject<Store<Record<string, unknown>> | null> | null,
+  treeRef: null as MutableRefObject<HTMLDivElement | null> | null,
   selectedId: null as number | null,
   selected: '',
   items: new Array<ItemWrapper>(),
   hideIneffectiveActions: false,
   query: '',
 };
+
+export type LocalState = { state: typeof initialState, setState: Dispatch<SetStateAction<typeof initialState>> };

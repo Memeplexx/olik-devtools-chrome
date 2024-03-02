@@ -1,10 +1,10 @@
 import { libState } from "olik";
 import { focusId, scrollTree } from "./functions";
-import { useHooks } from "./hooks";
 import { getTreeHTML } from "../shared/functions";
+import { useInputs } from "./inputs";
 
 
-export const useEvents = (props: ReturnType<typeof useHooks>) => ({
+export const useOutputs = (props: ReturnType<typeof useInputs>) => ({
   onMouseEnterItem: (id: number) => () => {
     if (props.selectedId) { return; }
     focusId(props, id);
@@ -47,10 +47,10 @@ export const useEvents = (props: ReturnType<typeof useHooks>) => ({
   },
 })
 
-const silentlyUpdateAppStoreState = (props: ReturnType<typeof useHooks>, state: Record<string, unknown>) => {
+const silentlyUpdateAppStoreState = (props: ReturnType<typeof useInputs>, state: Record<string, unknown>) => {
   if (!chrome.runtime) {
     libState.disableDevtoolsDispatch = true;
-    props.storeRef.current!.$set(state);
+    props.storeRef!.current!.$set(state);
     libState.disableDevtoolsDispatch = false;
   } else {
     const updateStateDiv = (state: string) => document.getElementById('olik-state')!.innerHTML = state;

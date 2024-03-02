@@ -13,7 +13,6 @@ export const Tree = React.forwardRef(function Tags(
     <JsonWrapper
       ref={inputs.containerRef}
       className={props.className}
-      // dangerouslySetInnerHTML={{ __html: inputs.data }}
       children={inputs.data}
     />
   );

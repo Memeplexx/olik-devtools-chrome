@@ -5,6 +5,7 @@ import { Tree } from "../tree";
 import { Panel, PanelResizeHandle } from "react-resizable-panels";
 import { CiCircleRemove } from 'react-icons/ci';
 import { BsToggleOff, BsToggleOn } from 'react-icons/bs';
+import { possible } from "../html";
 
 export const ClearButton = styled.button`
 	position: absolute;
@@ -103,6 +104,11 @@ export const DevtoolsPanel = styled.div`
 	background-color: rgb(28 28 28);
   color: white;
 	overflow-x: auto;
+`;
+
+export const Error = styled(possible.div)`
+	color: red;
+	font-size: 14px;
 `;
 
 export const TreePanel = styled(Tree)`

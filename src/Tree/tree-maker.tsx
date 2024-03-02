@@ -1,15 +1,9 @@
 import { Fragment } from "react";
 import { Arr, ArrElement, Boo, ArrClose, ObjClose, Colon, Comma, Dat, ArrEmpty, ObjEmpty, Key, Nul, Num, Obj, ArrOpen, ObjOpen, Row, RowContracted, Str, Value } from "./styles";
 import { Frag } from "../html/frag";
+import { isArray, isNonArrayObject } from "../shared/functions";
 
 
-const isNonArrayObject = (val: unknown): val is Record<string, unknown> => {
-  return typeof (val) === 'object' && val !== null && !Array.isArray(val);
-}
-
-const isArray = (val: unknown): val is Array<unknown> => {
-  return Array.isArray(val);
-}
 
 export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: string) => void, contractedKeys: string[] }): JSX.Element => {
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
@@ -226,7 +220,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
         </>
       );
     } else {
-      throw new Error();
+      throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val.toString()}`);
     }
   };
   return recurse(isArray(props.state) ? [ props.state ] : isNonArrayObject(props.state) ? { k: props.state } : props.state, '');

@@ -2,7 +2,7 @@ import React from "react";
 import { useForwardedRef } from "../shared/functions";
 import { TreeProps } from "./constants";
 import { getStateAsJsx } from "./tree-maker";
-import { doReadState } from "../app/functions";
+import { StateAction, deserialize, readState, updateFunctions } from "olik";
 
 export const useInputs = (props: TreeProps, ref: React.ForwardedRef<HTMLDivElement>) => {
   const containerRef = useForwardedRef<HTMLDivElement>(ref);
@@ -40,3 +40,22 @@ const tryReadState = ({ state, contractedKeys, query, onClickNodeKey }: { query:
     }
   }
 };
+
+export const doReadState = (type: string, state: unknown) => {
+  if (type === undefined) { return state; }
+  const segments = type.split('.').filter(s => s !== '');
+  const stateActions: StateAction[] = segments
+    .map(seg => {
+      const arg = seg.match(/\(([^)]*)\)/)?.[1];
+      const containsParenthesis = arg !== null && arg !== undefined;
+      if (containsParenthesis && !updateFunctions.includes(seg)) {
+        const functionName = seg.split('(')[0];
+        const typedArg = deserialize(arg);
+        return { name: functionName, arg: typedArg };
+      } else {
+        return { name: seg, arg: null };
+      }
+    });
+  stateActions.push({ name: '$state' });
+  return readState({ state, stateActions, cursor: { index: 0 } });
+}
