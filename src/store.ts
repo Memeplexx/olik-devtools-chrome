@@ -1,5 +1,27 @@
 import { createStore } from "olik";
 
+// export const appStore = createStore({
+//   modal: null as 'confirmDeleteGroup' | 'confirmDeleteTag' | 'synonymOptions' | 'groupOptions' | null,
+//   bool: false,
+//   flatObj: {
+//     one: 'hello',
+//     two: 'world',
+//     three: 'another',
+//   },
+//   num: 0,
+//   obj: {
+//     one: {
+//       two: 'hello'
+//     }
+//   },
+//   arr: [
+//     { id: 1, text: 'one' },
+//     { id: 2, text: 'two' },
+//     { id: 3, text: 'three' },
+//   ],
+//   arrNum: [1, 2, 3],
+// })
+
 export const appStore = createStore({
   modal: null as 'confirmDeleteGroup' | 'confirmDeleteTag' | 'synonymOptions' | 'groupOptions' | null,
   bool: false,
@@ -11,7 +33,15 @@ export const appStore = createStore({
   num: 0,
   obj: {
     one: {
-      two: 'hello'
+      two: 'hello',
+      three: false,
+      four: 4
+    },
+    two: {
+      five: 'thing',
+      three: [
+        [1, 2, 3]
+      ]
     }
   },
   arr: [
@@ -20,4 +50,9 @@ export const appStore = createStore({
     { id: 3, text: 'three' },
   ],
   arrNum: [1, 2, 3],
-})
+  arrNested: [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+  ]
+});

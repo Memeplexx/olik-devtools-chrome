@@ -1,5 +1,6 @@
 import { Fragment } from "react";
-import { Arr, ArrElement, Boolean, CloseArray, CloseObject, Colon, Comma, Dat, Key, Null, Number, Obj, OpenArray, OpenObject, Row, String, Value } from "./styles";
+import { Arr, ArrElement, Boolean, CloseArray, CloseObject, Colon, Comma, Dat, EmptyArray, EmptyObject, Key, Null, Number, Obj, OpenArray, OpenObject, Row, RowContracted, String, Value } from "./styles";
+import { Frag } from "../html";
 
 
 const isNonArrayObject = (val: unknown): val is Record<string, unknown> => {
@@ -10,11 +11,8 @@ const isArray = (val: unknown): val is Array<unknown> => {
   return Array.isArray(val);
 }
 
-export const useStateAsJsx = (props: { state: unknown }): JSX.Element => {
-  const onClickObjectKey = () => {
-
-  }
-  const recurse = <S extends Record<string, unknown> | unknown>(val: S): JSX.Element => {
+export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: string) => void, contractedKeys: string[] }): JSX.Element => {
+  const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
     if (val === undefined) {
       throw new Error();
     }
@@ -22,31 +20,66 @@ export const useStateAsJsx = (props: { state: unknown }): JSX.Element => {
       return (
         <>
           {val.map((ss, index) => {
+            const keyConcat = outerKey === '' ? index.toString() : `${outerKey}.${index}`;
             const possibleComma = index === val.length - 1 ? <></> : <Comma />;
             return (
               <ArrElement
                 key={index}
                 children={
-                  Array.isArray(ss) ? (
+                  isArray(ss) ? (
                     <>
-                      <OpenArray />
-                      <Value children={recurse(ss)} />
-                      <CloseArray />
-                      {possibleComma}
-                    </>
-                  ) : (typeof (ss) === 'object' && ss !== null) ? (
-                    <>
-                      <Row
-                        children={<OpenObject />}
-                      />
-                      <Value
-                        children={recurse(ss)}
-                      />
-                      <Row
+                      <RowContracted
+                        showIf={props.contractedKeys.includes(keyConcat)}
+                        onClick={() => props.onClickNodeKey(keyConcat)}
                         children={
                           <>
-                            <CloseObject />
+                            <EmptyArray />
                             {possibleComma}
+                          </>
+                        }
+                      />
+                      <Frag
+                        showIf={!props.contractedKeys.includes(keyConcat)}
+                        children={
+                          <>
+                            <OpenArray onClick={() => props.onClickNodeKey(keyConcat)} />
+                            <Value children={recurse(ss, keyConcat)} />
+                            <CloseArray />
+                            {possibleComma}
+                          </>
+                        }
+                      />
+                    </>
+
+                  ) : isNonArrayObject(ss) ? (
+                    <>
+                      <RowContracted
+                        showIf={props.contractedKeys.includes(keyConcat)}
+                        onClick={() => props.onClickNodeKey(keyConcat)}
+                        children={
+                          <>
+                            <EmptyObject />
+                            {possibleComma}
+                          </>
+                        }
+                      />
+                      <Frag
+                        showIf={!props.contractedKeys.includes(keyConcat)}
+                        children={
+                          <>
+                            <Row
+                              onClick={() => props.onClickNodeKey(keyConcat)}
+                              children={<OpenObject />}
+                            />
+                            <Value children={recurse(ss, keyConcat)} />
+                            <Row
+                              children={
+                                <>
+                                  <CloseObject />
+                                  {possibleComma}
+                                </>
+                              }
+                            />
                           </>
                         }
                       />
@@ -55,7 +88,7 @@ export const useStateAsJsx = (props: { state: unknown }): JSX.Element => {
                     <Row
                       children={
                         <>
-                          {recurse(ss)}
+                          {recurse(ss, keyConcat)}
                           {possibleComma}
                         </>
                       }
@@ -72,60 +105,95 @@ export const useStateAsJsx = (props: { state: unknown }): JSX.Element => {
       return (
         <>
           {objectKeys.map((key, index) => {
+            const keyConcat = outerKey === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`;
             const possibleComma = index === objectKeys.length - 1 ? <></> : <Comma />;
             return (
               <Fragment
                 key={index}
                 children={
-                  Array.isArray(val[key]) ? (
+                  isArray(val[key]) ? (
                     <Arr
                       children={
                         <>
-                          <Row
+                          <RowContracted
+                            showIf={props.contractedKeys.includes(keyConcat)}
+                            onClick={() => props.onClickNodeKey(keyConcat)}
                             children={
                               <>
-                                <Key children={key.toString()} />
-                                <Colon />
-                                <OpenArray />
+                                <Key showIf={!!outerKey} children={key.toString()} />
+                                <Colon showIf={!!outerKey} />
+                                <EmptyArray />
                               </>
                             }
                           />
-                          <Value
-                            children={recurse(val[key])}
-                          />
-                          <Row
+                          <Frag
+                            showIf={!props.contractedKeys.includes(keyConcat)}
                             children={
                               <>
-                                <CloseArray />
-                                {possibleComma}
+                                <Row
+                                  onClick={() => props.onClickNodeKey(keyConcat)}
+                                  children={
+                                    <>
+                                      <Key showIf={!!outerKey} children={key.toString()}/>
+                                      <Colon showIf={!!outerKey} />
+                                      <OpenArray />
+                                    </>
+                                  }
+                                />
+                                <Value children={recurse(val[key], keyConcat)} />
+                                <Row
+                                  children={
+                                    <>
+                                      <CloseArray />
+                                      {possibleComma}
+                                    </>
+                                  }
+                                />
                               </>
                             }
                           />
                         </>
                       }
                     />
-                  ) : (typeof (val[key]) === 'object' && val[key] !== null) ? (
+                  ) : isNonArrayObject(val[key]) ? (
                     <Obj
                       children={
                         <>
-                          <Row
+                          <RowContracted
+                            showIf={props.contractedKeys.includes(keyConcat)}
+                            onClick={() => props.onClickNodeKey(keyConcat)}
                             children={
                               <>
-                                <Key children={key.toString()} onClick={() => onClickObjectKey()} />
-                                <Colon />
-                                <OpenObject />
-                                <div>...</div>
+                                <Key showIf={!!outerKey} children={key.toString()} />
+                                <Colon showIf={!!outerKey} />
+                                <EmptyObject />
+                                {possibleComma}
                               </>
                             }
                           />
-                          <Value
-                            children={recurse(val[key])}
-                          />
-                          <Row
+                          <Frag
+                            showIf={!props.contractedKeys.includes(keyConcat)}
                             children={
                               <>
-                                <CloseObject />
-                                {possibleComma}
+                                <Row
+                                  onClick={() => props.onClickNodeKey(keyConcat)}
+                                  children={
+                                    <>
+                                      <Key showIf={!!outerKey} children={key.toString()} />
+                                      <Colon showIf={!!outerKey} />
+                                      <OpenObject />
+                                    </>
+                                  }
+                                />
+                                <Value children={recurse(val[key], keyConcat)} />
+                                <Row
+                                  children={
+                                    <>
+                                      <CloseObject />
+                                      {possibleComma}
+                                    </>
+                                  }
+                                />
                               </>
                             }
                           />
@@ -138,7 +206,7 @@ export const useStateAsJsx = (props: { state: unknown }): JSX.Element => {
                         <>
                           <Key children={key.toString()} />
                           <Colon />
-                          {recurse(val[key])}
+                          {recurse(val[key], keyConcat)}
                           {possibleComma}
                         </>
                       }
@@ -154,41 +222,8 @@ export const useStateAsJsx = (props: { state: unknown }): JSX.Element => {
       return renderPrimitive(val);
     }
   };
-  if (isArray(props.state)) {
-    return (
-      <Arr
-        children={
-          <>
-            <OpenArray />
-            <Value
-              children={recurse(props.state)}
-            />
-            <CloseArray />
-          </>
-        }
-      />
-    )
-  } else if (isNonArrayObject(props.state)) {
-    return (
-      <Obj
-        children={
-          <>
-            <Row
-              children={<OpenObject />}
-            />
-            <Value
-              children={recurse(props.state)}
-            />
-            <Row
-              children={<CloseObject />}
-            />
-          </>
-        }
-      />
-    )
-  } else {
-    return renderPrimitive(props.state);
-  }
+  const sRev = isArray(props.state) ? [ props.state ] : isNonArrayObject(props.state) ? { k: props.state } : props.state;
+  return recurse(sRev, '');
 }
 
 const renderPrimitive = <S extends Record<string, unknown> | unknown>(val: S): JSX.Element => {

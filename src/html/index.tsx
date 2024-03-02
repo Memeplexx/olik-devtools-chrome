@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment, ReactNode } from "react";
 
 
 export const Div = React.forwardRef(function Div(
@@ -6,6 +6,13 @@ export const Div = React.forwardRef(function Div(
   ref?: React.ForwardedRef<HTMLDivElement>
 ) {
   return showIf === false ? null : <div ref={ref} {...props}>{children}</div>;
+});
+
+export const Span = React.forwardRef(function Span(
+  { children, showIf, ...props }:  React.HTMLAttributes<HTMLSpanElement>,
+  ref?: React.ForwardedRef<HTMLSpanElement>
+) {
+  return showIf === false ? null : <span ref={ref} {...props}>{children}</span>;
 });
 
 export const Button = React.forwardRef(function Button(
@@ -28,3 +35,7 @@ export const Svg = React.forwardRef(function Svg(
 ) {
   return showIf === false ? null : <svg ref={ref} {...props}>{children}</svg>;
 });
+
+export const Frag = ({ showIf, children }: { showIf: boolean, children?: ReactNode }) => {
+  return showIf === false ? null : <Fragment children={children} />
+}
