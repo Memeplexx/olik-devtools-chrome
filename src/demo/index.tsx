@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { appStore } from '../store';
+import { appStore } from './store';
 import { useInputs } from './inputs';
 import { AddButton, Container, NestedButton, PatchButton, ToggleButton } from './styles';
 

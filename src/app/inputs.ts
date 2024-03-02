@@ -29,9 +29,7 @@ export const useInputs = () => {
 }
 
 const instantiateState = (props: LocalState) => {
-
   if (props.state.storeState) { return; }
-
   const initializeLocalState = (state: Record<string, unknown>) => props.setState(s => ({
     ...s,
     storeFullyInitialized: true,
@@ -51,7 +49,6 @@ const instantiateState = (props: LocalState) => {
       }],
     }],
   }))
-
   const readInitialState = (): Record<string, unknown> => {
     const el = document.getElementById('olik-state');
     if (!el) {
@@ -60,7 +57,6 @@ const instantiateState = (props: LocalState) => {
     }
     return JSON.parse(el.innerHTML) as Record<string, unknown>;
   }
-
   if (!chrome.runtime) {
     setTimeout(() => {
       initializeLocalState(readInitialState());
@@ -86,7 +82,6 @@ const instantiateStore = (props: LocalState) => {
 }
 
 const useMessageHandler = (props: LocalState) => {
-
   const { setState } = props;
   const processEvent = useCallback((incoming: Message) => setState(s => {
     const stateBefore = s.items[s.items.length - 1].items[s.items[s.items.length - 1].items.length - 1].state;
@@ -129,9 +124,7 @@ const useMessageHandler = (props: LocalState) => {
   }), [setState]);
 
   useEffect(() => {
-
     if (!props.state.storeFullyInitialized) { return; }
-
     const messageListener = (e: MessageEvent<Message>) => {
       if (e.origin !== window.location.origin) { return; }
       if (e.data.source !== 'olik-devtools-extension') { return; }

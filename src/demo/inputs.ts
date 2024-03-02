@@ -1,6 +1,6 @@
 import { connectOlikDevtoolsToStore } from "olik/devtools";
 import React from "react";
-import { appStore } from "../store";
+import { appStore } from "./store";
 
 
 

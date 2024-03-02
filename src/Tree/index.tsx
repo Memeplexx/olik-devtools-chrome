@@ -4,7 +4,7 @@ import React from "react";
 import { useInputs } from "./inputs";
 
 
-export const Tree = React.forwardRef(function Tags(
+export const Tree = React.forwardRef(function Tree(
   props: TreeProps,
   ref: React.ForwardedRef<HTMLDivElement>
 ) {
