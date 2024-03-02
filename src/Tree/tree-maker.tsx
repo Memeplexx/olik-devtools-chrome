@@ -7,6 +7,7 @@ import { isArray, isNonArrayObject } from "../shared/functions";
 
 export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: string) => void, contractedKeys: string[] }): JSX.Element => {
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
+    const isTopLevel = outerKey === '';
     if (val === null) {
       return <Nul />;
     } else if (typeof (val) === 'string') {
@@ -21,7 +22,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
       return (
         <>
           {val.map((ss, index) => {
-            const keyConcat = outerKey === '' ? index.toString() : `${outerKey}.${index}`;
+            const keyConcat = isTopLevel ? index.toString() : `${outerKey}.${index}`;
             const possibleComma = index === val.length - 1 ? <></> : <Comma />;
             return (
               <ArrElement
@@ -106,7 +107,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
       return (
         <>
           {objectKeys.map((key, index) => {
-            const keyConcat = outerKey === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`;
+            const keyConcat = isTopLevel ? key.toString() : `${outerKey.toString()}.${key.toString()}`;
             const possibleComma = index === objectKeys.length - 1 ? <></> : <Comma />;
             return (
               <Fragment
