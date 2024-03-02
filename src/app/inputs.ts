@@ -71,9 +71,7 @@ const instantiateState = (props: LocalState) => {
 }
 
 const instantiateStore = (props: LocalState) => {
-
   if (props.state.storeRef!.current) { return; }
-
   if (!chrome.runtime) {
     props.state.storeRef!.current = getStore() as Store<Record<string, unknown>>; // get store from demo app
   } else {
