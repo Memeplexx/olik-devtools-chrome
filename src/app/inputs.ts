@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LocalState, Message, initialState, itemId } from "./constants";
+import { Item, LocalState, Message, initialState, itemId } from "./constants";
 import { OlikAction, StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { getCleanStackTrace } from "./functions";
 import { getTreeHTML } from "../shared/functions";
 
 export const useInputs = () => {
 
-  const [state, setState] = useState({
+  const [state, setState] = useState<typeof initialState>({
     ...initialState,
-    storeRef: useRef(null) as typeof initialState['storeRef'],
-    treeRef: useRef(null) as typeof initialState['treeRef'],
+    storeRef: useRef(null),
+    treeRef: useRef(null),
   });
 
   instantiateStore({ state, setState });
@@ -33,38 +33,39 @@ const instantiateState = (props: LocalState) => {
 
   if (props.state.storeState) { return; }
 
-  const initializeLocalState = (state: Record<string, unknown>) => {
-    props.setState(s => ({
-      ...s,
-      ...{
-        storeFullyInitialized: true,
-        storeStateInitial: state,
-        storeState: state,
-        items: [{
-          id: itemId.val++,
-          event: ['🥚 createStore'],
-          items: [{
-            type: 'init',
-            typeFormatted: 'init',
-            id: itemId.val++,
-            state,
-            last: true,
-            payload: null,
-            ineffective: false,
-          }],
-        }],
-      }
-    }))
-  }
+  const initializeLocalState = (state: Record<string, unknown>) => props.setState(s => ({
+    ...s,
+    storeFullyInitialized: true,
+    storeStateInitial: state,
+    storeState: state,
+    items: [{
+      id: itemId.val++,
+      event: ['🥚 createStore'],
+      items: [{
+        type: 'init',
+        typeFormatted: 'init',
+        id: itemId.val++,
+        state,
+        last: true,
+        payload: null,
+        ineffective: false,
+      }],
+    }],
+  }))
 
   const readInitialState = (): Record<string, unknown> => {
     const el = document.getElementById('olik-state');
-    if (!el) { props.setState(s => ({ ...s, error: 'Olik store not found' })); return {}; }
+    if (!el) {
+      props.setState(s => ({ ...s, error: 'Olik store not found' }));
+      return {};
+    }
     return JSON.parse(el.innerHTML) as Record<string, unknown>;
   }
 
   if (!chrome.runtime) {
-    setTimeout(() => initializeLocalState(readInitialState()));
+    setTimeout(() => {
+      initializeLocalState(readInitialState());
+    });
   } else {
     chrome.tabs
       .query({ active: true })
@@ -87,48 +88,46 @@ const instantiateStore = (props: LocalState) => {
 
 const useMessageHandler = (props: LocalState) => {
 
-  const setStateRef = useRef(props.setState);
-  const processEvent = useCallback((incoming: Message) => {
-    setStateRef.current(s => {
-      const stateBefore = s.items[s.items.length - 1].items[s.items[s.items.length - 1].items.length - 1].state;
-      if (chrome.runtime) {
-        libState.disableDevtoolsDispatch = true;
-        setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
-        libState.disableDevtoolsDispatch = false;
-      }
-      const stateAfter = s.storeRef!.current!.$state;
-      const query = incoming.action.type;
-      const stateActions = [...incoming.stateActions.slice(0, incoming.stateActions.length - 1), { name: '$state' }] as StateAction[];
-      const stateBeforeSelected = readState({ state: stateBefore, stateActions, cursor: { index: 0 } });
-      const stateAfterSelected = readState({ state: stateAfter, stateActions, cursor: { index: 0 } });
-      const stateHasNotChanged = stateBeforeSelected === stateAfterSelected;
-      const payloadString = getPayloadHTML({ type: incoming.action.type, payload: incoming.action.payloadOrig || incoming.action.payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
-      const typeFormatted = getTypeHTML({ type: query, payloadString, stateHasNotChanged });
-      const currentEvent = getCleanStackTrace(incoming.trace);
-      const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
-      const newItem = {
-        type: incoming.action.type,
-        typeFormatted,
-        id: itemId.val++,
-        state: stateAfter,
-        last: true,
-        payload: incoming.action.payload,
-        ineffective: !incoming.action.type.includes('<span class="touched">'),
-      };
-      return {
-        ...s,
-        storeState: stateAfter,
-        items: currentEvent.toString() === previousEvent.toString()
-          ? [...s.items.slice(0, s.items.length - 1), { ...s.items[s.items.length - 1], items: [...s.items[s.items.length - 1].items, newItem] }]
-          : [...s.items, { id: itemId.val++, event: currentEvent, items: [newItem] }],
-        selected: getTreeHTML({
-          before: stateBefore,
-          after: stateAfter,
-          depth: 1
-        }),
-      };
-    });
-  }, []);
+  const { setState } = props;
+  const processEvent = useCallback((incoming: Message) => setState(s => {
+    const stateBefore = s.items[s.items.length - 1].items[s.items[s.items.length - 1].items.length - 1].state;
+    if (chrome.runtime) {
+      libState.disableDevtoolsDispatch = true;
+      setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
+      libState.disableDevtoolsDispatch = false;
+    }
+    const stateAfter = s.storeRef!.current!.$state;
+    const query = incoming.action.type;
+    const stateActions = [...incoming.stateActions.slice(0, incoming.stateActions.length - 1), { name: '$state' }] as StateAction[];
+    const stateBeforeSelected = readState({ state: stateBefore, stateActions, cursor: { index: 0 } });
+    const stateAfterSelected = readState({ state: stateAfter, stateActions, cursor: { index: 0 } });
+    const stateHasNotChanged = stateBeforeSelected === stateAfterSelected;
+    const payloadString = getPayloadHTML({ type: incoming.action.type, payload: incoming.action.payloadOrig || incoming.action.payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
+    const typeFormatted = getTypeHTML({ type: query, payloadString, stateHasNotChanged });
+    const currentEvent = getCleanStackTrace(incoming.trace);
+    const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
+    const newItem = {
+      type: incoming.action.type,
+      typeFormatted,
+      id: itemId.val++,
+      state: stateAfter,
+      last: true,
+      payload: incoming.action.payload,
+      ineffective: !incoming.action.type.includes('<span class="touched">'),
+    } satisfies Item;
+    return {
+      ...s,
+      storeState: stateAfter,
+      items: currentEvent.toString() === previousEvent.toString()
+        ? [...s.items.slice(0, s.items.length - 1), { ...s.items[s.items.length - 1], items: [...s.items[s.items.length - 1].items, newItem] }]
+        : [...s.items, { id: itemId.val++, event: currentEvent, items: [newItem] }],
+      selected: getTreeHTML({
+        before: stateBefore,
+        after: stateAfter,
+        depth: 1
+      }),
+    };
+  }), [setState]);
 
   useEffect(() => {
 
