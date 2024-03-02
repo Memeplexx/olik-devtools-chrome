@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Item, LocalState, Message, initialState, itemId } from "./constants";
-import { OlikAction, StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
+import { OlikAction, StateAction, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { getTreeHTML } from "../shared/functions";
 
 export const useInputs = () => {
@@ -73,7 +73,7 @@ const instantiateState = (props: LocalState) => {
 const instantiateStore = (props: LocalState) => {
   if (props.state.storeRef!.current) { return; }
   if (!chrome.runtime) {
-    props.state.storeRef!.current = getStore() as Store<Record<string, unknown>>; // get store from demo app
+    props.state.storeRef!.current = getStore<Record<string, unknown>>(); // get store from demo app
   } else {
     props.state.storeRef!.current = createStore<Record<string, unknown>>(props.state);
   }
