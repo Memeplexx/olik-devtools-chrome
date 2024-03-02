@@ -25,10 +25,6 @@ export type Item = {
   location?: string,
 }
 
-export const itemId = {
-  val: 1
-};
-
 export const initialState = {
   error: '',
   storeFullyInitialized: false,
@@ -37,6 +33,7 @@ export const initialState = {
   storeState: null as Record<string, unknown> | null,
   storeRef: null as MutableRefObject<Store<Record<string, unknown>> | null> | null,
   treeRef: null as MutableRefObject<HTMLDivElement | null> | null,
+  idRef: null as MutableRefObject<number> | null,
   selectedId: null as number | null,
   selected: '',
   items: new Array<ItemWrapper>(),

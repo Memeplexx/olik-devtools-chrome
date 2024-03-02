@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Item, LocalState, Message, initialState, itemId } from "./constants";
+import { Item, LocalState, Message, initialState } from "./constants";
 import { OlikAction, StateAction, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { getTreeHTML } from "../shared/functions";
 
@@ -9,6 +9,7 @@ export const useInputs = () => {
     ...initialState,
     storeRef: useRef(null),
     treeRef: useRef(null),
+    idRef: useRef(0),
   });
 
   instantiateStore({ state, setState });
@@ -36,12 +37,12 @@ const instantiateState = (props: LocalState) => {
     storeStateInitial: state,
     storeState: state,
     items: [{
-      id: itemId.val++,
+      id: s.idRef!.current++,
       event: ['🥚 createStore'],
       items: [{
         type: 'init',
         typeFormatted: 'init',
-        id: itemId.val++,
+        id: s.idRef!.current++,
         state,
         last: true,
         payload: null,
@@ -49,7 +50,7 @@ const instantiateState = (props: LocalState) => {
       }],
     }],
   }))
-  const readInitialState = (): Record<string, unknown> => {
+  const readInitialState = () => {
     const el = document.getElementById('olik-state');
     if (!el) {
       props.setState(s => ({ ...s, error: 'Olik store not found' }));
@@ -101,7 +102,7 @@ const useMessageHandler = (props: LocalState) => {
     const newItem = {
       type: incoming.action.type,
       typeFormatted,
-      id: itemId.val++,
+      id: s.idRef!.current++,
       state: stateAfter,
       last: true,
       payload: incoming.action.payload,
@@ -112,7 +113,7 @@ const useMessageHandler = (props: LocalState) => {
       storeState: stateAfter,
       items: currentEvent.toString() === previousEvent.toString()
         ? [...s.items.slice(0, s.items.length - 1), { ...s.items[s.items.length - 1], items: [...s.items[s.items.length - 1].items, newItem] }]
-        : [...s.items, { id: itemId.val++, event: currentEvent, items: [newItem] }],
+        : [...s.items, { id: s.idRef!.current++, event: currentEvent, items: [newItem] }],
       selected: getTreeHTML({
         before: stateBefore,
         after: stateAfter,
@@ -184,29 +185,27 @@ const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNot
   }
 }
 
-const getCleanStackTrace = (stack: string) => {
-  return stack
-    .trim()
-    .substring('Error'.length)
-    .trim()
-    .split('\n')
-    .filter(s => !s.includes('node_modules'))
-    .map(s => s.trim().substring('at '.length).trim())
-    .map(s => {
-      const [fn, filePath] = s.split(' (');
-      let url: string;
-      const fun = fn.substring(fn.indexOf('.') + 1);
-      try {
-        url = new URL(filePath.replace('(app-pages-browser)/', '').substring(1, filePath.length - 2)).pathname;
-      } catch (e) {
-        return { fn: fun, filePath: '' };
-      }
-      return { fn: fun, filePath: url };
-    })
-    .filter(s => s.filePath !== '')
-    .map(s => ({ ...s, filePath: s.filePath.includes(':') ? s.filePath.substring(0, s.filePath.indexOf(':')) : s.filePath }))
-    .map(s => ({ ...s, filePath: s.filePath.replace(/\.[^/.]+$/, "") }))
-    .map(s => `${s.filePath}.${s.fn}`)
-    .map(s => s.replace('///', ''))
-    .reverse();
-}
+const getCleanStackTrace = (stack: string) => stack
+  .trim()
+  .substring('Error'.length)
+  .trim()
+  .split('\n')
+  .filter(s => !s.includes('node_modules'))
+  .map(s => s.trim().substring('at '.length).trim())
+  .map(s => {
+    const [fn, filePath] = s.split(' (');
+    let url: string;
+    const fun = fn.substring(fn.indexOf('.') + 1);
+    try {
+      url = new URL(filePath.replace('(app-pages-browser)/', '').substring(1, filePath.length - 2)).pathname;
+    } catch (e) {
+      return { fn: fun, filePath: '' };
+    }
+    return { fn: fun, filePath: url };
+  })
+  .filter(s => s.filePath !== '')
+  .map(s => ({ ...s, filePath: s.filePath.includes(':') ? s.filePath.substring(0, s.filePath.indexOf(':')) : s.filePath }))
+  .map(s => ({ ...s, filePath: s.filePath.replace(/\.[^/.]+$/, "") }))
+  .map(s => `${s.filePath}.${s.fn}`)
+  .map(s => s.replace('///', ''))
+  .reverse();
