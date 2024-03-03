@@ -14,7 +14,7 @@ export default function StoreProvider({ children }: { children: React.ReactNode 
 
   augmentOlikForReact() // invoke before initializing store
 
-  const store = useMemo(() => createStore(/*!chrome.runtime ? {} as typeof initialState :*/ initialState), []);
+  const store = useMemo(() => createStore(initialState), []);
 
   if (!libState.olikDevtools && typeof(navigator) !== 'undefined' && !/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
     connectOlikDevtoolsToStore({ trace: true });

@@ -30,7 +30,7 @@ export const useOutputs = (props: ReturnType<typeof useInputs>) => ({
         after: stateAfter,
         depth: 1
       });
-      props.setState(s => ({ ...s, selected  }));
+      props.setState(s => ({ ...s, selected }));
     }
   },
   onClickItem: (selectedId: number) => () => {
@@ -45,7 +45,7 @@ export const useOutputs = (props: ReturnType<typeof useInputs>) => ({
     }
   },
   onClickClear: () => {
-    props.setState(s => ({ ...s, items: [] }));
+    props.setState(s => ({ ...s, items: s.items.map(i => ({ ...i, visible: false } ) ) }));
   },
   onQueryChanged: (query: string) => {
     props.setState(s => ({ ...s, query }));

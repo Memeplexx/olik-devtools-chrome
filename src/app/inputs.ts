@@ -14,7 +14,8 @@ export const useInputs = () => {
   useMessageHandler(localState);
 
   const itemsForView = useMemo(() => {
-    return !localState.hideIneffectiveActions ? localState.items : localState.items.map(ii => ({ ...ii, items: ii.items.filter(i => !i.ineffective) }));
+    return (!localState.hideIneffectiveActions ? localState.items : localState.items.map(ii => ({ ...ii, items: ii.items.filter(i => !i.ineffective) })))
+      .filter(i => i.visible)
   }, [localState.items, localState.hideIneffectiveActions]);
 
   return {
@@ -52,6 +53,7 @@ const instantiateState = (props: ReturnType<typeof useLocalState>) => {
     items: [{
       id: s.idRef.current++,
       event: ['🥚 createStore'],
+      visible: true,
       items: [{
         type: 'init',
         typeFormatted: 'init',
@@ -118,14 +120,14 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
       state: stateAfter,
       last: true,
       payload: incoming.action.payload,
-      ineffective: !incoming.action.type.includes('<span class="touched">'),
+      ineffective: stateHasNotChanged,
     } satisfies Item;
     return {
       ...s,
       storeState: stateAfter,
       items: currentEvent.toString() === previousEvent.toString()
-        ? [...s.items.slice(0, s.items.length - 1), { ...s.items[s.items.length - 1], items: [...s.items[s.items.length - 1].items, newItem] }]
-        : [...s.items, { id: s.idRef.current++, event: currentEvent, items: [newItem] }],
+        ? [...s.items.slice(0, s.items.length - 1), { ...s.items[s.items.length - 1], items: [...s.items[s.items.length - 1].items, newItem], visible: true }]
+        : [...s.items, { id: s.idRef.current++, event: currentEvent, items: [newItem], visible: true }],
       selected: getTreeHTML({
         before: stateBefore,
         after: stateAfter,

@@ -11,6 +11,7 @@ export type ItemWrapper = {
   id: number,
   event: string[],
   items: Item[],
+  visible: boolean,
 }
 
 export type Item = {
