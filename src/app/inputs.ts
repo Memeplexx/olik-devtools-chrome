@@ -14,7 +14,8 @@ export const useInputs = () => {
   useMessageHandler(localState);
 
   const itemsForView = useMemo(() => {
-    return (!localState.hideIneffectiveActions ? localState.items : localState.items.map(ii => ({ ...ii, items: ii.items.filter(i => !i.ineffective) })))
+    return (localState.items
+      .map(ii => ({ ...ii, items: ii.items.filter(i => !localState.hideIneffectiveActions || !i.ineffective) })))
       .filter(i => i.visible)
   }, [localState.items, localState.hideIneffectiveActions]);
 
