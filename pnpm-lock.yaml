@@ -15,8 +15,8 @@ dependencies:
     specifier: 1.0.69
     version: 1.0.69
   olik-react:
-    specifier: 1.0.10
-    version: 1.0.10(olik@1.0.69)(vite@4.5.0)
+    specifier: 1.0.12
+    version: 1.0.12(olik@1.0.69)(vite@4.5.0)
   react:
     specifier: ^18.2.0
     version: 18.2.0
@@ -2079,8 +2079,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: false
 
-  /olik-react@1.0.10(olik@1.0.69)(vite@4.5.0):
-    resolution: {integrity: sha512-IRJt2YuR3StxgEklWGR8ynx5y9oZFMLrfJ5vq7RA4OZOpU0EY+odMgv/psK0jFDuFJ2kDfyzOvR3twibczlXOQ==}
+  /olik-react@1.0.12(olik@1.0.69)(vite@4.5.0):
+    resolution: {integrity: sha512-BMfndrz2UnG1bY/c5jYzj+VbcEQr55LWyp472eB4K58tvaPKWVGy0cbrrb8a+SKze8a/1FCIwnqwbDgjUueGjg==}
     peerDependencies:
       olik: ^1.0.8
     dependencies:

@@ -1,7 +1,4 @@
-import { createStore } from "olik";
-
-
-export const appStore = createStore({
+export const initialState = {
   modal: null as 'confirmDeleteGroup' | 'confirmDeleteTag' | 'synonymOptions' | 'groupOptions' | null,
   bool: false,
   flatObj: {
@@ -34,4 +31,6 @@ export const appStore = createStore({
     [4, 5, 6],
     [7, 8, 9]
   ]
-});
+};
+
+export type AppState = typeof initialState;

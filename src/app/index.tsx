@@ -1,8 +1,9 @@
-import { ClearButton, ClearIcon, DemoApp, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemWrapper, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, TreePanel } from './styles';
+import { ClearButton, ClearIcon, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemWrapper, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, TreePanel } from './styles';
 import { PanelGroup } from 'react-resizable-panels';
 import { useInputs } from './inputs';
 import { Frag } from '../html/frag';
 import { useOutputs } from './outputs';
+import { DemoWrapper } from '../demo/demo-wrapper';
 
 
 export const App = () => {
@@ -10,9 +11,7 @@ export const App = () => {
   const events = useOutputs(inputs);
   return (
     <>
-      <DemoApp
-        showIf={!chrome.runtime}
-      />
+      {!chrome.runtime && <DemoWrapper />}
       <DevtoolsPanel
         children={
           <>
@@ -38,7 +37,7 @@ export const App = () => {
                             <TreePanel
                               ref={inputs.treeRef}
                               state={inputs.storeState!}
-                              storeRef={inputs.storeRef!}
+                              storeRef={inputs.storeRef}
                               query={inputs.query}
                             />
                           }

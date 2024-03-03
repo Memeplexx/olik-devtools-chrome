@@ -1,33 +1,33 @@
 import { useRef } from 'react';
-import { appStore } from './store';
 import { useInputs } from './inputs';
 import { AddButton, Container, NestedButton, PatchButton, ToggleButton } from './styles';
 
 
 export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const inputs = useInputs();
+  const { store } = inputs;
   const onClickIncrement = () => {
-    appStore.num.$add(1); 
+    store.num.$add(1);
   }
   const thing = () => {
-    const one = appStore.arr.$find.id.$eq(3).id;
-    appStore.arr.$find.id.$eq(one).text.$set('changed');
-    appStore.bool.$toggle();
+    const one = store.arr.$find.id.$eq(3).id;
+    store.arr.$find.id.$eq(one).text.$set('changed');
+    store.bool.$toggle();
   }
   const onClickNested = () => {
     thing();
   };
   const onClickPatch = () => {
-    appStore.flatObj.$patch({ one: 'hee', two: '' });
+    store.flatObj.$patch({ one: 'hee', two: '' });
   }
   const onClickPatch2 = () => {
-    appStore.flatObj.$patch({ one: 'hee', two: appStore.arr.$find.id.$eq(3).text });
+    store.flatObj.$patch({ one: 'hee', two: store.arr.$find.id.$eq(3).text });
   }
   const onClickToggle = () => {
-    appStore.bool.$toggle();
+    store.bool.$toggle();
   }
   const onClickToggleModal = () => {
-    appStore.modal.$set(appStore.modal.$state ? null : 'confirmDeleteGroup');
+    store.modal.$set(store.modal.$state ? null : 'confirmDeleteGroup');
   }
   const num = useRef(0);
   return (
@@ -60,20 +60,20 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
             children='nested'
           />
           <button onClick={() => {
-            if (!appStore.bool.$state) {
-              appStore.bool.$set(true)
+            if (!store.bool.$state) {
+              store.bool.$set(true)
             } else {
-              appStore.bool.$set(false)
+              store.bool.$set(false)
             }
           }}>TEST</button>
           <button onClick={() => {
-            appStore.arr.$push({ id: num.current++, text: 'new' });
+            store.arr.$push({ id: num.current++, text: 'new' });
           }}>Add</button>
           <button onClick={() => {
-            appStore.arr.$find.id.$eq(2).$delete();
+            store.arr.$find.id.$eq(2).$delete();
           }}>Remove</button>
           <button onClick={() => {
-            appStore.arr.$find.id.$eq(1).text.$set('changed');
+            store.arr.$find.id.$eq(1).text.$set('changed');
           }}>Update</button>
         </>
       }

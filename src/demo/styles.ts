@@ -6,6 +6,8 @@ export const Container = styled(possible.div)`
   align-items: start;
   gap: 8px;
   padding: 8px;
+  background-color: #dfdfdf;
+	min-width: 300px;
 `;
 
 const SimplyButton = styled(possible.button)`

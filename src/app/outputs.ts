@@ -9,7 +9,7 @@ export const useOutputs = (props: ReturnType<typeof useInputs>) => ({
     if (props.selectedId) { return; }
     focusId(props, id);
     setTimeout(() => {
-      const firstTouchedElement = props.treeRef!.current!.querySelector('.touched');
+      const firstTouchedElement = props.treeRef.current!.querySelector('.touched');
       if (firstTouchedElement) {
         firstTouchedElement.scrollIntoView(/*{ behavior: 'smooth' }*/);
       }
@@ -55,7 +55,7 @@ export const useOutputs = (props: ReturnType<typeof useInputs>) => ({
 const silentlyUpdateAppStoreState = (props: ReturnType<typeof useInputs>, state: Record<string, unknown>) => {
   if (!chrome.runtime) {
     libState.disableDevtoolsDispatch = true;
-    props.storeRef!.current!.$set(state);
+    props.storeRef.current!.$set(state);
     libState.disableDevtoolsDispatch = false;
   } else {
     const updateStateDiv = (state: string) => document.getElementById('olik-state')!.innerHTML = state;

@@ -1,48 +1,61 @@
+import { OlikAction, StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Item, LocalState, Message, initialState } from "./constants";
-import { OlikAction, StateAction, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { getTreeHTML } from "../shared/functions";
+import { Item, ItemWrapper, Message } from "./constants";
 
 export const useInputs = () => {
 
-  const [state, setState] = useState<typeof initialState>({
-    ...initialState,
-    storeRef: useRef(null),
-    treeRef: useRef(null),
-    idRef: useRef(0),
-  });
+  const localState = useLocalState();
 
-  instantiateStore({ state, setState });
+  instantiateState(localState);
 
-  instantiateState({ state, setState });
+  instantiateStore(localState);
 
-  useMessageHandler({ state, setState });
+  useMessageHandler(localState);
 
   const itemsForView = useMemo(() => {
-    return !state.hideIneffectiveActions ? state.items : state.items.map(ii => ({ ...ii, items: ii.items.filter(i => !i.ineffective) }));
-  }, [state.items, state.hideIneffectiveActions]);
+    return !localState.hideIneffectiveActions ? localState.items : localState.items.map(ii => ({ ...ii, items: ii.items.filter(i => !i.ineffective) }));
+  }, [localState.items, localState.hideIneffectiveActions]);
 
   return {
-    ...state,
-    setState,
+    ...localState,
     itemsForView,
   };
 }
 
-const instantiateState = (props: LocalState) => {
-  if (props.state.storeState) { return; }
+const useLocalState = () => {
+  const [state, setState] = useState({
+    error: '',
+    storeFullyInitialized: false,
+    incomingNum: 0,
+    storeStateInitial: null as Record<string, unknown> | null,
+    storeState: null as Record<string, unknown> | null,
+    storeRef: useRef<Store<Record<string, unknown>> | null>(null),
+    treeRef: useRef<HTMLDivElement | null>(null),
+    idRef: useRef(0),
+    selectedId: null as number | null,
+    selected: '',
+    items: new Array<ItemWrapper>(),
+    hideIneffectiveActions: false,
+    query: '',
+  });
+  return { ...state, setState };
+}
+
+const instantiateState = (props: ReturnType<typeof useLocalState>) => {
+  if (props.storeState) { return; }
   const initializeLocalState = (state: Record<string, unknown>) => props.setState(s => ({
     ...s,
     storeFullyInitialized: true,
     storeStateInitial: state,
     storeState: state,
     items: [{
-      id: s.idRef!.current++,
+      id: s.idRef.current++,
       event: ['🥚 createStore'],
       items: [{
         type: 'init',
         typeFormatted: 'init',
-        id: s.idRef!.current++,
+        id: s.idRef.current++,
         state,
         last: true,
         payload: null,
@@ -53,7 +66,6 @@ const instantiateState = (props: LocalState) => {
   const readInitialState = () => {
     const el = document.getElementById('olik-state');
     if (!el) {
-      props.setState(s => ({ ...s, error: 'Olik store not found' }));
       return {};
     }
     return JSON.parse(el.innerHTML) as Record<string, unknown>;
@@ -71,16 +83,16 @@ const instantiateState = (props: LocalState) => {
   }
 }
 
-const instantiateStore = (props: LocalState) => {
-  if (props.state.storeRef!.current) { return; }
+const instantiateStore = (props: ReturnType<typeof useLocalState>) => {
+  if (props.storeRef.current || !props.storeState) { return; }
   if (!chrome.runtime) {
-    props.state.storeRef!.current = getStore<Record<string, unknown>>(); // get store from demo app
+    props.storeRef.current = getStore<Record<string, unknown>>(); // get store from demo app
   } else {
-    props.state.storeRef!.current = createStore<Record<string, unknown>>(props.state);
+    props.storeRef.current = createStore<Record<string, unknown>>(props.storeState);
   }
 }
 
-const useMessageHandler = (props: LocalState) => {
+const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
   const { setState } = props;
   const processEvent = useCallback((incoming: Message) => setState(s => {
     const stateBefore = s.items[s.items.length - 1].items[s.items[s.items.length - 1].items.length - 1].state;
@@ -89,7 +101,7 @@ const useMessageHandler = (props: LocalState) => {
       setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
       libState.disableDevtoolsDispatch = false;
     }
-    const stateAfter = s.storeRef!.current!.$state;
+    const stateAfter = s.storeRef.current!.$state;
     const query = incoming.action.type;
     const stateActions = [...incoming.stateActions.slice(0, incoming.stateActions.length - 1), { name: '$state' }] as StateAction[];
     const stateBeforeSelected = readState({ state: stateBefore, stateActions, cursor: { index: 0 } });
@@ -102,7 +114,7 @@ const useMessageHandler = (props: LocalState) => {
     const newItem = {
       type: incoming.action.type,
       typeFormatted,
-      id: s.idRef!.current++,
+      id: s.idRef.current++,
       state: stateAfter,
       last: true,
       payload: incoming.action.payload,
@@ -113,7 +125,7 @@ const useMessageHandler = (props: LocalState) => {
       storeState: stateAfter,
       items: currentEvent.toString() === previousEvent.toString()
         ? [...s.items.slice(0, s.items.length - 1), { ...s.items[s.items.length - 1], items: [...s.items[s.items.length - 1].items, newItem] }]
-        : [...s.items, { id: s.idRef!.current++, event: currentEvent, items: [newItem] }],
+        : [...s.items, { id: s.idRef.current++, event: currentEvent, items: [newItem] }],
       selected: getTreeHTML({
         before: stateBefore,
         after: stateAfter,
@@ -123,7 +135,7 @@ const useMessageHandler = (props: LocalState) => {
   }), [setState]);
 
   useEffect(() => {
-    if (!props.state.storeFullyInitialized) { return; }
+    if (!props.storeFullyInitialized) { return; }
     const messageListener = (e: MessageEvent<Message>) => {
       if (e.origin !== window.location.origin) { return; }
       if (e.data.source !== 'olik-devtools-extension') { return; }
@@ -142,7 +154,7 @@ const useMessageHandler = (props: LocalState) => {
       window.removeEventListener('message', messageListener);
       chrome.runtime?.onMessage.removeListener(chromeMessageListener);
     }
-  }, [processEvent, props.state.storeFullyInitialized])
+  }, [processEvent, props.storeFullyInitialized])
 }
 
 const getTypeHTML = (action: { type: string, payloadString?: string | null | undefined, stateHasNotChanged: boolean }) => {

@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import { Editor } from "../editor";
-import { Demo } from "../demo";
 import { Tree } from "../tree";
 import { Panel, PanelResizeHandle } from "react-resizable-panels";
 import { CiCircleRemove } from 'react-icons/ci';
@@ -85,11 +84,6 @@ export const ItemContent = styled.div<{ isSelected?: boolean }>`
 	.untouched {
 		color: #5d5d5d;
 	}
-`;
-
-export const DemoApp = styled(Demo)`
-	background-color: #dfdfdf;
-	min-width: 300px;
 `;
 
 export const EditorPanel = styled(Editor)`

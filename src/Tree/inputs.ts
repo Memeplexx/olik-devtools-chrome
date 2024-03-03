@@ -16,7 +16,7 @@ export const useInputs = (props: TreeProps, ref: ForwardedRef<HTMLDivElement>) =
       }
     })
   }
-  const newJsx = tryReadState({...props, contractedKeys, onClickNodeKey});
+  const newJsx = tryReadState({ state: props.state, query: props.query, contractedKeys, onClickNodeKey });
   return {
     containerRef,
     data: newJsx,
