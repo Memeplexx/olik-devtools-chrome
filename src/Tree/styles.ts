@@ -23,6 +23,9 @@ export const Nul = styled.span.attrs({ children: 'null' })`
   color: magenta;
 `;
 
+export const Und = styled.span`
+`;
+
 export const Dat = styled.span`
   color: beige;
 `;
@@ -31,9 +34,12 @@ export const Arr = styled.span`
 `;
 
 export const Obj = styled.span`
+  display: flex;
+  flex-direction: column;
+  align-items: start;
 `;
 
-export const ArrOpen = styled.span.attrs({ children: '[' })<{ $readonly?: boolean }>`
+export const ArrOpen = styled.span.attrs({ children: '[' }) <{ $readonly?: boolean }>`
   ${p => p.$readonly ? '' : `cursor: pointer;`};
   &:hover {
     background-color: rgba(255,255,255,0.2);
@@ -63,8 +69,18 @@ export const ArrElement = styled.span`
   display: block;
 `;
 
-export const Row = styled(possible.span)<{ $readonly?: boolean }>`
+export const Row = styled(possible.span) <{ $readonly?: boolean, $highlight?: boolean }>`
   display: flex;
+  ${p => p.$readonly ? '' : `
+    cursor: pointer;
+    &:hover > * {
+      background-color: rgba(255,255,255,0.2);
+    }
+  `};
+  ${p => p.$highlight ? `text-decoration: underline;` : ''};
+`;
+
+export const ObjOpen = styled.span.attrs({ children: '{' }) <{ $readonly?: boolean }>`
   ${p => p.$readonly ? '' : `
     cursor: pointer;
     &:hover > * {
@@ -73,13 +89,22 @@ export const Row = styled(possible.span)<{ $readonly?: boolean }>`
   `};
 `;
 
-export const ObjOpen = styled.span.attrs({ children: '{' })<{ $readonly?: boolean }>`
-  ${p => p.$readonly ? '' : `
-    cursor: pointer;
-    &:hover > * {
-      background-color: rgba(255,255,255,0.2);
-    }
-  `};
+export const Highlightable = styled.span<{ $highlight?: boolean }>`
+  ${p => p.$highlight ? `&:after { content: '★'; padding: 2px; };` : ''};
+`;
+
+export const ActionTypeOpen = styled.span`
+  cursor: pointer;
+  &:hover > * {
+    background-color: rgba(255,255,255,0.2);
+  }
+`;
+
+export const ActionTypeClose = styled.span`
+`;
+
+export const ActionTypeClosed = styled.span`
+  cursor: pointer;
 `;
 
 export const ObjClose = styled.span.attrs({ children: '}' })`

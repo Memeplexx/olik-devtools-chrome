@@ -10,19 +10,7 @@ export const Container = styled(possible.div)`
 	min-width: 300px;
 `;
 
-const SimplyButton = styled(possible.button)`
+export const SimpleButton = styled(possible.button)`
   padding: 4px;
   border: 1px solid grey;
-`;
-
-export const AddButton = styled(SimplyButton)`
-`;
-
-export const PatchButton = styled(SimplyButton)`
-`
-
-export const ToggleButton = styled(SimplyButton)`
-`;
-
-export const NestedButton = styled(SimplyButton)`
 `;

@@ -15,12 +15,12 @@ export type ItemWrapper = {
 }
 
 export type Item = {
-  type: string,
-  typeFormatted: string,
+  jsxFormatted: JSX.Element,
   payload: unknown,
   id: number,
   state: Record<string, unknown>,
   last: boolean,
   ineffective: boolean,
   location?: string,
+  contractedKeys: string[],
 }

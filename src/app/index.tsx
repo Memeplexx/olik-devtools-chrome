@@ -32,7 +32,7 @@ export const App = () => {
                     children={
                       <>
                         <ResizablePanel
-                          maxSize={75}
+                          minSize={0}
                           children={
                             <TreePanel
                               ref={inputs.treeRef}
@@ -71,7 +71,7 @@ export const App = () => {
                           }
                         />
                         <ItemsWrapper
-                          maxSize={75}
+                          minSize={0}
                           id="itemsWrapper"
                           children={
                             <Items
@@ -99,7 +99,7 @@ export const App = () => {
                                               onMouseLeave={events.onMouseLeaveItem}
                                               onClick={events.onClickItem(item.id)}
                                               isSelected={item.id === inputs.selectedId}
-                                              dangerouslySetInnerHTML={{ __html: item.typeFormatted }}
+                                              children={item.jsxFormatted}
                                             />
                                           ))}
                                         </>

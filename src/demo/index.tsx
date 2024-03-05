@@ -1,80 +1,59 @@
-import { useRef } from 'react';
 import { useInputs } from './inputs';
-import { AddButton, Container, NestedButton, PatchButton, ToggleButton } from './styles';
+import { Container, SimpleButton } from './styles';
+import { useOutputs } from './outputs';
 
 
 export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
   const inputs = useInputs();
-  const { store } = inputs;
-  const onClickIncrement = () => {
-    store.num.$add(1);
-  }
-  const thing = () => {
-    const one = store.arr.$find.id.$eq(3).id;
-    store.arr.$find.id.$eq(one).text.$set('changed');
-    store.bool.$toggle();
-  }
-  const onClickNested = () => {
-    thing();
-  };
-  const onClickPatch = () => {
-    store.flatObj.$patch({ one: 'hee', two: '' });
-  }
-  const onClickPatch2 = () => {
-    store.flatObj.$patch({ one: 'hee', two: store.arr.$find.id.$eq(3).text });
-  }
-  const onClickToggle = () => {
-    store.bool.$toggle();
-  }
-  const onClickToggleModal = () => {
-    store.modal.$set(store.modal.$state ? null : 'confirmDeleteGroup');
-  }
-  const num = useRef(0);
+  const outputs = useOutputs(inputs);
   return (
     <Container
       {...props}
       children={
         <>
-          <AddButton
-            onClick={onClickIncrement}
-            children={`Increment | ${inputs.num}`}
+          <SimpleButton
+            children={`increment | ${inputs.num}`}
+            onClick={outputs.increment}
           />
-          <PatchButton
-            onClick={onClickPatch}
+          <SimpleButton
             children='patch'
+            onClick={outputs.patch}
           />
-          <PatchButton
-            onClick={onClickPatch2}
+          <SimpleButton
             children='patch2'
+            onClick={outputs.patch2}
           />
-          <ToggleButton
-            onClick={onClickToggle}
+          <SimpleButton
+            children='patchDeep'
+            onClick={outputs.patchDeep}
+          />
+          <SimpleButton
             children='toggle'
+            onClick={outputs.toggle}
           />
-          <ToggleButton
-            onClick={onClickToggleModal}
+          <SimpleButton
             children='toggle modal'
+            onClick={outputs.toggleModal}
           />
-          <NestedButton
-            onClick={onClickNested}
-            children='nested'
+          <SimpleButton
+            children='long stacktrace'
+            onClick={outputs.onClickLongStackTrace}
           />
-          <button onClick={() => {
-            if (!store.bool.$state) {
-              store.bool.$set(true)
-            } else {
-              store.bool.$set(false)
-            }
-          }}>TEST</button>
-          <button onClick={() => {
-            store.arr.$push({ id: num.current++, text: 'new' });
-          }}>Add</button>
-          <button onClick={() => {
-            store.arr.$find.id.$eq(2).$delete();
-          }}>Remove</button>
-          <button onClick={() => {
-            store.arr.$find.id.$eq(1).text.$set('changed');
-          }}>Update</button>
+          <SimpleButton
+            children='set'
+            onClick={outputs.set} />
+          <SimpleButton
+            children='push'
+            onClick={outputs.push}
+          />
+          <SimpleButton
+            children='delete'
+            onClick={outputs.delete}
+          />
+          <SimpleButton
+            children='find & set'
+            onClick={outputs.findAndSet}
+          />
         </>
       }
     />

@@ -1,0 +1,42 @@
+import { useInputs } from "./inputs";
+import { useShared } from "./shared";
+
+export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
+  const { store } = inputs;
+  const shared = useShared(inputs);
+  return {
+    increment: () => {
+      store.num.$add(1);
+    },
+    patch: () => {
+      store.flatObj.$patch({ one: 'hee', two: '' });
+    },
+    patch2: () => {
+      store.flatObj.$patch({ one: 'hee', two: store.arr.$find.id.$eq(3).text });
+    },
+    patchDeep: () => {
+      store.obj.$patchDeep({ one: { two: 'hee', three: true, four: 4 }, two: { three: [[9]] } });
+    },
+    toggle: () => {
+      store.bool.$toggle();
+    },
+    toggleModal: () => {
+      store.modal.$set(store.modal.$state ? null : 'confirmDeleteGroup');
+    },
+    set: () => {
+      store.bool.$set(!store.$state.bool);
+    },
+    push: () => {
+      store.arr.$push({ id: Math.max(...store.$state.arr.map(a => a.id)), text: 'new' });
+    },
+    delete: () => {
+      store.arr.$find.id.$eq(store.$state.arr[0].id).$delete();
+    },
+    findAndSet: () => {
+      store.arr.$find.id.$eq(1).text.$set('changed');
+    },
+    onClickLongStackTrace: () => {
+      shared.thing();
+    }
+  };
+};

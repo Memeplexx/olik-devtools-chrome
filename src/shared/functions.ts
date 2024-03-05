@@ -63,11 +63,35 @@ export const getTreeHTML = ({ before, after, depth }: { before: unknown, after: 
 	}
 }
 
-export const isNonArrayObject = (val: unknown): val is Record<string, unknown> => {
-  return typeof (val) === 'object' && val !== null && !Array.isArray(val);
+export const is = {
+	number: (val: unknown): val is number => {
+		return typeof (val) === 'number';
+	},
+	boolean: (val: unknown): val is boolean => {
+		return typeof (val) === 'boolean';
+	},
+	string: (val: unknown): val is string => {
+		return typeof (val) === 'string';
+	},
+	undefined: (val: unknown): val is undefined => {
+		return val === undefined;
+	},
+	null: (val: unknown): val is null => {
+		return val === null;
+	},
+	date: (val: unknown): val is Date => {
+		return val instanceof Date;
+	},
+	nonArrayObject: (val: unknown): val is Record<string, unknown> => {
+		return typeof (val) === 'object' && val !== null && !Array.isArray(val);
+	},
+	array: <T>(val: unknown): val is Array<T> => {
+		return Array.isArray(val);
+	},
+	function: <R, A extends Array<unknown>>(val: unknown): val is (...a: A) => R => {
+		return typeof (val) === 'function';
+	},
+	nullOrUndefined: (val: unknown): val is null | undefined => {
+		return val === null || val === undefined;
+	},
 }
-
-export const isArray = (val: unknown): val is Array<unknown> => {
-  return Array.isArray(val);
-}
-

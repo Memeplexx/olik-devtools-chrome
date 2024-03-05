@@ -1,38 +1,66 @@
-import { Fragment } from "react";
-import { Arr, ArrElement, Boo, ArrClose, ObjClose, Colon, Comma, Dat, ArrEmpty, ObjEmpty, Key, Nul, Num, Obj, ArrOpen, ObjOpen, Row, RowContracted, Str, Value } from "./styles";
+import { Fragment, MouseEvent } from "react";
 import { Frag } from "../html/frag";
-import { isArray, isNonArrayObject } from "../shared/functions";
+import { is } from "../shared/functions";
+import { ActionTypeClose, ActionTypeClosed, ActionTypeOpen, Arr, ArrClose, ArrElement, ArrEmpty, ArrOpen, Boo, Colon, Comma, Dat, Highlightable, Key, Nul, Num, Obj, ObjClose, ObjEmpty, ObjOpen, Row, RowContracted, Str, Und, Value } from "./styles";
 
 
 
-export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: string) => void, contractedKeys: string[] }): JSX.Element => {
+export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: string) => void, contractedKeys: string[], actionType?: string, highlights: string[] }): JSX.Element => {
+  const onClickNodeKey = (key: string) => (event: MouseEvent) => {
+    event.stopPropagation();
+    props.onClickNodeKey(key);
+  }
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
     const isTopLevel = outerKey === '';
-    if (val === null) {
-      return <Nul />;
-    } else if (typeof (val) === 'string') {
-      return <Str children={`"${val}"`} />;
-    } else if (typeof (val) === 'number') {
-      return <Num children={val.toString()} />;
-    } else if (typeof (val) === 'boolean') {
-      return <Boo children={val.toString()} />;
-    } else if (val instanceof Date) {
-      return <Dat children={val.toString()} />;
-    } else if (isArray(val)) {
+    const thing = (el: JSX.Element) => {
+      const element = (
+        <Highlightable
+          $highlight={props.highlights.includes(outerKey)}
+          children={el}
+        />
+      );
+      return (isTopLevel && props.actionType) ? (
+        <ActionTypeOpen
+          children={
+            <>
+              <span children={`${props.actionType}(`} />
+              {element}
+              <span children=')' />
+            </>
+          }
+        />
+      ) : (
+        element
+      );
+    }
+    if (is.undefined(val)) {
+      return thing(<Und />);
+    } else if (is.null(val)) {
+      return thing(<Nul children='null' />);
+    } else if (is.string(val)) {
+      return thing(<Str children={`"${val}"`} />);
+    } else if (is.number(val)) {
+      return thing(<Num children={val.toString()} />);
+    } else if (is.boolean(val)) {
+      return thing(<Boo children={val.toString()} />);
+    } else if (is.date(val)) {
+      return thing(<Dat children={val.toString()} />);
+    } else if (is.array(val)) {
       return (
         <>
           {val.map((ss, index) => {
+            const isTopLevel = false; /////////
             const keyConcat = isTopLevel ? index.toString() : `${outerKey}.${index}`;
             const possibleComma = index === val.length - 1 ? <></> : <Comma />;
             return (
               <ArrElement
                 key={index}
                 children={
-                  isArray(ss) ? (
+                  is.array(ss) ? (
                     <>
                       <RowContracted
                         showIf={props.contractedKeys.includes(keyConcat)}
-                        onClick={() => props.onClickNodeKey(keyConcat)}
+                        onClick={onClickNodeKey(keyConcat)}
                         children={
                           <>
                             <ArrEmpty />
@@ -44,7 +72,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                         showIf={!props.contractedKeys.includes(keyConcat)}
                         children={
                           <>
-                            <ArrOpen onClick={() => props.onClickNodeKey(keyConcat)} />
+                            <ArrOpen onClick={onClickNodeKey(keyConcat)} />
                             <Value children={recurse(ss, keyConcat)} />
                             <ArrClose />
                             {possibleComma}
@@ -53,11 +81,11 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                       />
                     </>
 
-                  ) : isNonArrayObject(ss) ? (
+                  ) : is.nonArrayObject(ss) ? (
                     <>
                       <RowContracted
                         showIf={props.contractedKeys.includes(keyConcat)}
-                        onClick={() => props.onClickNodeKey(keyConcat)}
+                        onClick={onClickNodeKey(keyConcat)}
                         children={
                           <>
                             <ObjEmpty />
@@ -70,7 +98,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                         children={
                           <>
                             <Row
-                              onClick={() => props.onClickNodeKey(keyConcat)}
+                              onClick={onClickNodeKey(keyConcat)}
                               children={<ObjOpen />}
                             />
                             <Value children={recurse(ss, keyConcat)} />
@@ -102,29 +130,30 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
           })}
         </>
       );
-    } else if (isNonArrayObject(val)) {
+    } else if (is.nonArrayObject(val)) {
       const objectKeys = Object.keys(val) as Array<keyof S>;
       return (
         <>
           {objectKeys.map((key, index) => {
+            const isTopLevel = key === ''; /////////
             const keyConcat = isTopLevel ? key.toString() : `${outerKey.toString()}.${key.toString()}`;
             const possibleComma = index === objectKeys.length - 1 ? <></> : <Comma />;
             return (
               <Fragment
                 key={index}
                 children={
-                  isArray(val[key]) ? (
+                  is.array(val[key]) ? (
                     <Arr
                       children={
                         <>
                           <RowContracted
                             showIf={props.contractedKeys.includes(keyConcat)}
-                            onClick={() => props.onClickNodeKey(keyConcat)}
+                            onClick={onClickNodeKey(keyConcat)}
                             children={
                               <>
-                                <Key showIf={!!outerKey} children={key.toString()} />
-                                <Colon showIf={!!outerKey} />
-                                <ArrEmpty />
+                                <Key showIf={!isTopLevel} children={key.toString()} />
+                                <Colon showIf={!isTopLevel} />
+                                {(isTopLevel && props.actionType) ? <ActionTypeOpen children={`${props.actionType}([...])`} /> : <ArrEmpty />}
                               </>
                             }
                           />
@@ -133,12 +162,12 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                             children={
                               <>
                                 <Row
-                                  onClick={() => props.onClickNodeKey(keyConcat)}
+                                  onClick={onClickNodeKey(keyConcat)}
                                   children={
                                     <>
-                                      <Key showIf={!!outerKey} children={key.toString()}/>
-                                      <Colon showIf={!!outerKey} />
-                                      <ArrOpen />
+                                      <Key showIf={!isTopLevel} children={key.toString()} />
+                                      <Colon showIf={!isTopLevel} />
+                                      {(isTopLevel && props.actionType) ? <ActionTypeOpen children={`${props.actionType}([`} /> : <ArrOpen />}
                                     </>
                                   }
                                 />
@@ -146,7 +175,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                                 <Row
                                   children={
                                     <>
-                                      <ArrClose />
+                                      {(isTopLevel && props.actionType) ? <ActionTypeClose children='])' /> : <ArrClose />}
                                       {possibleComma}
                                     </>
                                   }
@@ -157,18 +186,18 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                         </>
                       }
                     />
-                  ) : isNonArrayObject(val[key]) ? (
+                  ) : is.nonArrayObject(val[key]) ? (
                     <Obj
                       children={
                         <>
                           <RowContracted
                             showIf={props.contractedKeys.includes(keyConcat)}
-                            onClick={() => props.onClickNodeKey(keyConcat)}
+                            onClick={onClickNodeKey(keyConcat)}
                             children={
                               <>
-                                <Key showIf={!!outerKey} children={key.toString()} />
-                                <Colon showIf={!!outerKey} />
-                                <ObjEmpty />
+                                <Key showIf={!isTopLevel} children={key.toString()} />
+                                <Colon showIf={!isTopLevel} />
+                                {(isTopLevel && props.actionType) ? <ActionTypeClosed children={`${props.actionType}({...})`} /> : <ObjEmpty />}
                                 {possibleComma}
                               </>
                             }
@@ -178,12 +207,12 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                             children={
                               <>
                                 <Row
-                                  onClick={() => props.onClickNodeKey(keyConcat)}
+                                  onClick={onClickNodeKey(keyConcat)}
                                   children={
                                     <>
-                                      <Key showIf={!!outerKey} children={key.toString()} />
-                                      <Colon showIf={!!outerKey} />
-                                      <ObjOpen />
+                                      <Key showIf={!isTopLevel} children={key.toString()} />
+                                      <Colon showIf={!isTopLevel} />
+                                      {(isTopLevel && props.actionType) ? <ActionTypeOpen children={`${props.actionType}({`} /> : <ObjOpen />}
                                     </>
                                   }
                                 />
@@ -191,7 +220,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                                 <Row
                                   children={
                                     <>
-                                      <ObjClose />
+                                      {(isTopLevel && props.actionType) ? <ActionTypeClose children='})' /> : <ObjClose />}
                                       {possibleComma}
                                     </>
                                   }
@@ -204,6 +233,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                     />
                   ) : (
                     <Row
+                      // $highlight={props.highlights.includes(keyConcat)}
                       children={
                         <>
                           <Key children={key.toString()} />
@@ -221,8 +251,8 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
         </>
       );
     } else {
-      throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val.toString()}`);
+      throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
   };
-  return recurse(isArray(props.state) ? [ props.state ] : isNonArrayObject(props.state) ? { k: props.state } : props.state, '');
+  return recurse(is.array(props.state) ? [props.state] : is.nonArrayObject(props.state) ? { '': props.state } : props.state, '');
 }

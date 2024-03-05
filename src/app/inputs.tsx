@@ -1,6 +1,7 @@
-import { OlikAction, StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
+import { StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getTreeHTML } from "../shared/functions";
+import { getTreeHTML, is } from "../shared/functions";
+import { getStateAsJsx } from "../tree/tree-maker";
 import { Item, ItemWrapper, Message } from "./constants";
 
 export const useInputs = () => {
@@ -34,7 +35,8 @@ const useLocalState = () => {
     storeState: null as Record<string, unknown> | null,
     storeRef: useRef<Store<Record<string, unknown>> | null>(null),
     treeRef: useRef<HTMLDivElement | null>(null),
-    idRef: useRef(0),
+    idRefOuter: useRef(0),
+    idRefInner: useRef(0),
     selectedId: null as number | null,
     selected: '',
     items: new Array<ItemWrapper>(),
@@ -44,21 +46,29 @@ const useLocalState = () => {
   return { ...state, setState };
 }
 
-const instantiateState = (props: ReturnType<typeof useLocalState>) => {
-  if (props.storeState) { return; }
-  const initializeLocalState = (state: Record<string, unknown>) => props.setState(s => ({
+const instantiateState = (arg: ReturnType<typeof useLocalState>) => {
+  if (arg.storeState) { return; }
+  const initializeLocalState = (state: Record<string, unknown>) => arg.setState(s => ({
     ...s,
     storeFullyInitialized: true,
     storeStateInitial: state,
     storeState: state,
     items: [{
-      id: s.idRef.current++,
+      id: ++s.idRefOuter.current,
       event: ['🥚 createStore'],
       visible: true,
       items: [{
-        type: 'init',
-        typeFormatted: 'init',
-        id: s.idRef.current++,
+        contractedKeys: [],
+        id: ++s.idRefInner.current,
+        jsxFormatted: getTypeJsx({
+          type: '$setNew()',
+          payload: state,
+          stateBefore: null,
+          stateAfter: state,
+          setState: arg.setState,
+          idOuter: s.idRefOuter.current,
+          idInner: s.idRefInner.current,
+        }),
         state,
         last: true,
         payload: null,
@@ -69,6 +79,7 @@ const instantiateState = (props: ReturnType<typeof useLocalState>) => {
   const readInitialState = () => {
     const el = document.getElementById('olik-state');
     if (!el) {
+      arg.setState(s => ({ ...s, error: 'No store found' }));
       return {};
     }
     return JSON.parse(el.innerHTML) as Record<string, unknown>;
@@ -86,12 +97,12 @@ const instantiateState = (props: ReturnType<typeof useLocalState>) => {
   }
 }
 
-const instantiateStore = (props: ReturnType<typeof useLocalState>) => {
-  if (props.storeRef.current || !props.storeState) { return; }
+const instantiateStore = (arg: ReturnType<typeof useLocalState>) => {
+  if (arg.storeRef.current || !arg.storeState) { return; }
   if (!chrome.runtime) {
-    props.storeRef.current = getStore<Record<string, unknown>>(); // get store from demo app
+    arg.storeRef.current = getStore<Record<string, unknown>>(); // get store from demo app
   } else {
-    props.storeRef.current = createStore<Record<string, unknown>>(props.storeState);
+    arg.storeRef.current = createStore<Record<string, unknown>>(arg.storeState);
   }
 }
 
@@ -105,30 +116,49 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
       libState.disableDevtoolsDispatch = false;
     }
     const stateAfter = s.storeRef.current!.$state;
-    const query = incoming.action.type;
     const stateActions = [...incoming.stateActions.slice(0, incoming.stateActions.length - 1), { name: '$state' }] as StateAction[];
     const stateBeforeSelected = readState({ state: stateBefore, stateActions, cursor: { index: 0 } });
     const stateAfterSelected = readState({ state: stateAfter, stateActions, cursor: { index: 0 } });
     const stateHasNotChanged = stateBeforeSelected === stateAfterSelected;
-    const payloadString = getPayloadHTML({ type: incoming.action.type, payload: incoming.action.payloadOrig || incoming.action.payload, stateBefore: stateBeforeSelected, stateHasNotChanged });
-    const typeFormatted = getTypeHTML({ type: query, payloadString, stateHasNotChanged });
     const currentEvent = getCleanStackTrace(incoming.trace);
     const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
-    const newItem = {
-      type: incoming.action.type,
-      typeFormatted,
-      id: s.idRef.current++,
+    const getNewItem = () => ({
+      id: ++s.idRefInner.current,
+      jsxFormatted: getTypeJsx({
+        type: incoming.action.type,
+        payload: incoming.action.payloadOrig || incoming.action.payload,
+        stateBefore: stateBeforeSelected,
+        stateAfter: stateAfterSelected,
+        setState,
+        idOuter: s.idRefOuter.current,
+        idInner: s.idRefInner.current
+      }),
       state: stateAfter,
       last: true,
       payload: incoming.action.payload,
       ineffective: stateHasNotChanged,
-    } satisfies Item;
+      contractedKeys: [],
+    } satisfies Item);
     return {
       ...s,
       storeState: stateAfter,
       items: currentEvent.toString() === previousEvent.toString()
-        ? [...s.items.slice(0, s.items.length - 1), { ...s.items[s.items.length - 1], items: [...s.items[s.items.length - 1].items, newItem], visible: true }]
-        : [...s.items, { id: s.idRef.current++, event: currentEvent, items: [newItem], visible: true }],
+        ? [
+          ...s.items.slice(0, s.items.length - 1),
+          {
+            ...s.items[s.items.length - 1],
+            items: [...s.items[s.items.length - 1].items, getNewItem()],
+            visible: true,
+          }
+        ] : [
+          ...s.items,
+          {
+            id: ++s.idRefOuter.current,
+            event: currentEvent,
+            items: [getNewItem()],
+            visible: true
+          }
+        ],
       selected: getTreeHTML({
         before: stateBefore,
         after: stateAfter,
@@ -160,44 +190,67 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
   }, [processEvent, props.storeFullyInitialized])
 }
 
-const getTypeHTML = (action: { type: string, payloadString?: string | null | undefined, stateHasNotChanged: boolean }) => {
-  const payload = action.payloadString === null ? 'null' : action.payloadString === undefined ? '' : action.payloadString;
-  if (action.stateHasNotChanged) {
-    return `<span class="untouched">${action.type.substring(0, action.type.length - 1)}${payload})</span>`;
-  }
-  const typeFormatted = action.type.replace(/\$[A-Za-z0-9]+/g, match => `<span class="action">${match}</span>`);
-  const typeBeforeClosingParenthesis = typeFormatted.substring(0, typeFormatted.length - 1);
-  return `${typeBeforeClosingParenthesis}${payload})`;
-}
-
-const getPayloadHTML = (action: OlikAction & { stateBefore: unknown, stateHasNotChanged: boolean }) => {
-  if (action.payload === undefined) {
-    return undefined;
-  }
-  if (action.payload === null) {
-    return null;
-  }
-  if (action.stateHasNotChanged) {
-    return JSON.stringify(action.payload, null, 2);
-  }
-  const stringify = (payload: unknown) => typeof (payload) === 'object' ? JSON.stringify(payload) : typeof (payload) === 'string' ? `"${payload}"` : payload!.toString();
-  const payloadStringified = stringify(action.payload);
-  if (typeof (action.payload) === 'object' && !Array.isArray(action.payload)) {
-    const stateBefore = action.stateBefore === undefined ? {} : action.stateBefore as Record<string, unknown>;
-    const payload = action.payload as Record<string, unknown>;
-    const keyValuePairsChanged = new Array<string>();
-    const keyValuePairsUnchanged = new Array<string>();
-    Object.keys(payload).forEach(key => {
-      if (stateBefore[key] !== payload[key]) {
-        keyValuePairsChanged.push(`&nbsp;&nbsp;<span class="touched">${key}: ${stringify(payload[key])}</span>`);
-      } else {
-        keyValuePairsUnchanged.push(`&nbsp;&nbsp;<span class="untouched">${key}: ${stringify(payload[key])}</span>`);
+const getTypeJsx = (arg: { type: string, payload: unknown, stateBefore: unknown, stateAfter: unknown, setState: ReturnType<typeof useLocalState>['setState'], idOuter: number, idInner: number }) => {
+  // export const updateFunctionsConst = ['$set', '$setUnique', '$patch', '$patchDeep', '$delete', '$setNew', '$add', '$subtract', '$clear', '$push', '$with', '$toggle', '$merge', '$deDuplicate'] as const;
+  const segments = arg.type.split('.');
+  const func = segments.pop()!.slice(0, -2);
+  const actionType = [...segments, func].join('.')
+  const highlights = new Array<string>();
+  const updateHighlights = (stateBefore: unknown, stateAfter: unknown) => {
+    const recurse = (before: unknown, after: unknown, keyCollector: string) => {
+      if (is.nonArrayObject(after)) {
+        Object.keys(after).forEach(key => recurse(is.nonArrayObject(before) ? before[key] : {}, after[key], `${keyCollector}.${key}`));
+      } else if (is.array(after)) {
+        after.forEach((_, i) => recurse(is.array(before) ? before[i] : [], after[i], `${keyCollector}.${i}`));
+      } else if (before !== after) {
+        highlights.push(keyCollector);
       }
-    });
-    return `{<br/>${[...keyValuePairsChanged, ...keyValuePairsUnchanged].join(',<br/>')}<br/>}`;
-  } else {
-    return `<span class="touched">${payloadStringified}</span>`;
+    }
+    recurse(stateBefore, stateAfter, '');
   }
+  if (['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge'].includes(func)) {
+    updateHighlights(arg.stateBefore, arg.stateAfter);
+  } else if (['$add', '$subtract', '$toggle', '$delete'].includes(func)) {
+    highlights.push('');
+  } else if (['$clear'].includes(func) && is.array(arg.stateBefore)) {
+    highlights.push(...(arg.stateBefore.length ? [''] : []));
+  } else if (['$push'].includes(func)) {
+    updateHighlights(arg.stateBefore, arg.payload);
+  }
+
+  const onClickNodeKey = (key: string) => {
+    arg.setState(s => ({
+      ...s,
+      items: s.items.map(itemOuter => {
+        if (itemOuter.id !== arg.idOuter) { return itemOuter; }
+        return {
+          ...itemOuter,
+          items: itemOuter.items.map(itemInner => {
+            if (itemInner.id !== arg.idInner) { return itemInner; }
+            const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
+            return {
+              ...itemInner,
+              contractedKeys,
+              jsxFormatted: getStateAsJsx({
+                actionType,
+                state: arg.stateAfter,
+                contractedKeys,
+                onClickNodeKey,
+                highlights
+              }),
+            }
+          })
+        }
+      })
+    }));
+  }
+  return getStateAsJsx({
+    actionType,
+    state: arg.payload,
+    contractedKeys: [],
+    highlights,
+    onClickNodeKey,
+  });
 }
 
 const getCleanStackTrace = (stack: string) => stack
@@ -222,5 +275,5 @@ const getCleanStackTrace = (stack: string) => stack
   .map(s => ({ ...s, filePath: s.filePath.includes(':') ? s.filePath.substring(0, s.filePath.indexOf(':')) : s.filePath }))
   .map(s => ({ ...s, filePath: s.filePath.replace(/\.[^/.]+$/, "") }))
   .map(s => `${s.filePath}.${s.fn}`)
-  .map(s => s.replace('///', ''))
+  .map(s => s.replace('///', '').replace('//', '🥚 '))
   .reverse();
