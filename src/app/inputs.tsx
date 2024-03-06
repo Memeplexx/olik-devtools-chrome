@@ -1,4 +1,4 @@
-import { Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
+import { StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getTreeHTML, is } from "../shared/functions";
 import { getStateAsJsx } from "../tree/tree-maker";
@@ -110,50 +110,51 @@ const instantiateStore = (arg: ReturnType<typeof useLocalState>) => {
 const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
   const { setState } = props;
   const processEvent = useCallback((incoming: Message) => setState(s => {
-    const stateBefore = s.items[s.items.length - 1].items[s.items[s.items.length - 1].items.length - 1].state;
+    const fullStateBefore = s.items[s.items.length - 1].items[s.items[s.items.length - 1].items.length - 1].state;
     if (chrome.runtime) {
       libState.disableDevtoolsDispatch = true;
       setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
       libState.disableDevtoolsDispatch = false;
     }
-    const stateAfter = s.storeRef.current!.$state;
-    
+    const fullStateAfter = s.storeRef.current!.$state;
+    const payload = incoming.action.payloadOrig || incoming.action.payload
     const doReadState = (state: Record<string, unknown>) => {
+      let stateActions = new Array<StateAction>();
       const mergeMatchingIndex = incoming.stateActions.findIndex(s => s.name === '$mergeMatching');
       if (mergeMatchingIndex !== -1) {
         const withIndex = incoming.stateActions.findIndex(s => s.name === '$with');
         const matcherPath = incoming.stateActions.slice(mergeMatchingIndex + 1, withIndex);
-        const payload = incoming.action.payloadOrig || incoming.action.payload;
         if (is.array(payload)) {
           const payloadArray = payload as Array<Record<string, unknown>>;
           const payloadSelection = payloadArray.map(p => matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, p))
-          const stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$filter' }, ...matcherPath, { name: '$in', arg: payloadSelection }, { name: '$state' }];
-          return readState({ state, stateActions, cursor: { index: 0 } });
+          stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$filter' }, ...matcherPath, { name: '$in', arg: payloadSelection }];
         } else {
           const payloadSelection = matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, payload as Record<string, unknown>);
-          const stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$find' }, ...matcherPath, { name: '$eq', arg: payloadSelection }, { name: '$state' }];
-          return readState({ state, stateActions, cursor: { index: 0 } });
+          stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$find' }, ...matcherPath, { name: '$eq', arg: payloadSelection }];
         }
+      } else {
+        stateActions = incoming.stateActions.slice(0, incoming.stateActions.length - 1);
       }
-      return readState({ state, stateActions: [...incoming.stateActions.slice(0, incoming.stateActions.length - 1), { name: '$state' }], cursor: { index: 0 } });
+      stateActions.push({ name: '$state' });
+      return readState({ state, stateActions, cursor: { index: 0 } });
     }
-    const stateBeforeSelected = doReadState(stateBefore);
-    const stateAfterSelected = doReadState(stateAfter);
-    const stateHasNotChanged = stateBeforeSelected === stateAfterSelected;
+    const stateBefore = doReadState(fullStateBefore);
+    const stateAfter = doReadState(fullStateAfter);
+    const stateHasNotChanged = stateBefore === stateAfter;
     const currentEvent = getCleanStackTrace(incoming.trace);
     const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
     const getNewItem = () => ({
       id: ++s.idRefInner.current,
       jsxFormatted: getTypeJsx({
         type: incoming.action.type,
-        payload: incoming.action.payloadOrig || incoming.action.payload,
-        stateBefore: stateBeforeSelected,
-        stateAfter: stateAfterSelected,
+        payload,
+        stateBefore,
+        stateAfter,
         setState,
         idOuter: s.idRefOuter.current,
         idInner: s.idRefInner.current
       }),
-      state: stateAfter,
+      state: fullStateAfter,
       last: true,
       payload: incoming.action.payload,
       ineffective: stateHasNotChanged,
@@ -161,7 +162,7 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
     } satisfies Item);
     return {
       ...s,
-      storeState: stateAfter,
+      storeState: fullStateAfter,
       items: currentEvent.toString() === previousEvent.toString()
         ? [
           ...s.items.slice(0, s.items.length - 1),
@@ -180,8 +181,8 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
           }
         ],
       selected: getTreeHTML({
-        before: stateBefore,
-        after: stateAfter,
+        before: fullStateBefore,
+        after: fullStateAfter,
         depth: 1
       }),
     };
