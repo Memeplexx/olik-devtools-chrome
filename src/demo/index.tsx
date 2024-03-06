@@ -55,8 +55,12 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
             onClick={outputs.findAndSet}
           />
           <SimpleButton
-            children='merge matching'
-            onClick={outputs.mergeMatching}
+            children='merge matching arr'
+            onClick={outputs.mergeMatchingArr}
+          />
+          <SimpleButton
+            children='merge matching sing'
+            onClick={outputs.mergeMatchingSing}
           />
         </>
       }

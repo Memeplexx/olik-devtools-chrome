@@ -117,11 +117,25 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
       libState.disableDevtoolsDispatch = false;
     }
     const stateAfter = s.storeRef.current!.$state;
+    
     const doReadState = (state: Record<string, unknown>) => {
       const mergeMatchingIndex = incoming.stateActions.findIndex(s => s.name === '$mergeMatching');
-      const stateActionsWithoutMutator = mergeMatchingIndex !== -1 ? incoming.stateActions.slice(0, mergeMatchingIndex): incoming.stateActions.slice(0, incoming.stateActions.length - 1);
-      const stateActions = [...stateActionsWithoutMutator, { name: '$state' }];
-      return readState({ state, stateActions, cursor: { index: 0 } });
+      if (mergeMatchingIndex !== -1) {
+        const withIndex = incoming.stateActions.findIndex(s => s.name === '$with');
+        const matcherPath = incoming.stateActions.slice(mergeMatchingIndex + 1, withIndex);
+        const payload = incoming.action.payloadOrig || incoming.action.payload;
+        if (is.array(payload)) {
+          const payloadArray = payload as Array<Record<string, unknown>>;
+          const payloadSelection = payloadArray.map(p => matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, p))
+          const stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$filter' }, ...matcherPath, { name: '$in', arg: payloadSelection }, { name: '$state' }];
+          return readState({ state, stateActions, cursor: { index: 0 } });
+        } else {
+          const payloadSelection = matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, payload as Record<string, unknown>);
+          const stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$find' }, ...matcherPath, { name: '$eq', arg: payloadSelection }, { name: '$state' }];
+          return readState({ state, stateActions, cursor: { index: 0 } });
+        }
+      }
+      return readState({ state, stateActions: [...incoming.stateActions.slice(0, incoming.stateActions.length - 1), { name: '$state' }], cursor: { index: 0 } });
     }
     const stateBeforeSelected = doReadState(stateBefore);
     const stateAfterSelected = doReadState(stateAfter);
