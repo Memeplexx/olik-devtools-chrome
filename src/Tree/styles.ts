@@ -69,7 +69,7 @@ export const ArrElement = styled.span`
   display: block;
 `;
 
-export const Row = styled(possible.span) <{ $readonly?: boolean, $highlight?: boolean }>`
+export const Row = styled(possible.span) <{ $readonly?: boolean }>`
   display: flex;
   ${p => p.$readonly ? '' : `
     cursor: pointer;
@@ -77,7 +77,6 @@ export const Row = styled(possible.span) <{ $readonly?: boolean, $highlight?: bo
       background-color: rgba(255,255,255,0.2);
     }
   `};
-  ${p => p.$highlight ? `text-decoration: underline;` : ''};
 `;
 
 export const ObjOpen = styled.span.attrs({ children: '{' }) <{ $readonly?: boolean }>`

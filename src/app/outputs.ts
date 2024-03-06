@@ -39,7 +39,7 @@ export const useOutputs = (props: ReturnType<typeof useInputs>) => ({
       props.setState(s => ({ ...s, selectedId: null }));
       silentlyUpdateAppStoreState(props, itemsFlattened[itemsFlattened.length - 1].state);
     } else {
-      props.setState(s => ({ ...s, selectedId }));
+      props.setState(s => ({ ...s, selectedId, storeStateVersion: itemsFlattened.find(i => i.id === selectedId)!.state }));
       focusId(props, selectedId);
       silentlyUpdateAppStoreState(props, itemsFlattened.find(i => i.id === selectedId)!.state);
     }

@@ -64,6 +64,9 @@ export const getTreeHTML = ({ before, after, depth }: { before: unknown, after: 
 }
 
 export const is = {
+	objectOrArray: (val: unknown): val is object => {
+		return typeof (val) === 'object' && val !== null;
+	},
 	number: (val: unknown): val is number => {
 		return typeof (val) === 'number';
 	},

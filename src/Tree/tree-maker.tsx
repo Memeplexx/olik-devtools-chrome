@@ -233,7 +233,6 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
                     />
                   ) : (
                     <Row
-                      // $highlight={props.highlights.includes(keyConcat)}
                       children={
                         <>
                           <Key children={key.toString()} />
@@ -254,5 +253,5 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
       throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
   };
-  return recurse(is.array(props.state) ? [props.state] : is.nonArrayObject(props.state) ? { '': props.state } : props.state, '');
+  return recurse( is.objectOrArray(props.state) ? { '': props.state } : props.state, '');
 }

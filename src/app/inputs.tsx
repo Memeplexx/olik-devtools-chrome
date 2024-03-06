@@ -1,4 +1,4 @@
-import { StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
+import { Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getTreeHTML, is } from "../shared/functions";
 import { getStateAsJsx } from "../tree/tree-maker";
@@ -33,6 +33,7 @@ const useLocalState = () => {
     incomingNum: 0,
     storeStateInitial: null as Record<string, unknown> | null,
     storeState: null as Record<string, unknown> | null,
+    storeStateVersion: null as Record<string, unknown> | null,
     storeRef: useRef<Store<Record<string, unknown>> | null>(null),
     treeRef: useRef<HTMLDivElement | null>(null),
     idRefOuter: useRef(0),
@@ -116,9 +117,14 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
       libState.disableDevtoolsDispatch = false;
     }
     const stateAfter = s.storeRef.current!.$state;
-    const stateActions = [...incoming.stateActions.slice(0, incoming.stateActions.length - 1), { name: '$state' }] as StateAction[];
-    const stateBeforeSelected = readState({ state: stateBefore, stateActions, cursor: { index: 0 } });
-    const stateAfterSelected = readState({ state: stateAfter, stateActions, cursor: { index: 0 } });
+    const doReadState = (state: Record<string, unknown>) => {
+      const mergeMatchingIndex = incoming.stateActions.findIndex(s => s.name === '$mergeMatching');
+      const stateActionsWithoutMutator = mergeMatchingIndex !== -1 ? incoming.stateActions.slice(0, mergeMatchingIndex): incoming.stateActions.slice(0, incoming.stateActions.length - 1);
+      const stateActions = [...stateActionsWithoutMutator, { name: '$state' }];
+      return readState({ state, stateActions, cursor: { index: 0 } });
+    }
+    const stateBeforeSelected = doReadState(stateBefore);
+    const stateAfterSelected = doReadState(stateAfter);
     const stateHasNotChanged = stateBeforeSelected === stateAfterSelected;
     const currentEvent = getCleanStackTrace(incoming.trace);
     const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;

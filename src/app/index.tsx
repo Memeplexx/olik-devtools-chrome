@@ -9,6 +9,7 @@ import { DemoWrapper } from '../demo/demo-wrapper';
 export const App = () => {
   const inputs = useInputs();
   const events = useOutputs(inputs);
+  const storeStateVersion = inputs.storeStateVersion as Record<string, unknown>;
   return (
     <>
       {!chrome.runtime && <DemoWrapper />}
@@ -36,7 +37,7 @@ export const App = () => {
                           children={
                             <TreePanel
                               ref={inputs.treeRef}
-                              state={inputs.storeState!}
+                              state={storeStateVersion ?? inputs.storeState!}
                               storeRef={inputs.storeRef}
                               query={inputs.query}
                             />

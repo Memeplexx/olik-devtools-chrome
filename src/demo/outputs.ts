@@ -37,6 +37,9 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
     },
     onClickLongStackTrace: () => {
       shared.thing();
-    }
+    },
+    mergeMatching: () => {
+      store.arr.$mergeMatching.id.$with([{ id: 1, text: 'changed'}])
+    },
   };
 };
