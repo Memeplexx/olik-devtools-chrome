@@ -8,7 +8,7 @@ export const useInputs = () => {
 
   const localState = useLocalState();
 
-  instantiateState(localState);
+  // instantiateState(localState);
 
   instantiateStore(localState);
 
@@ -47,71 +47,82 @@ const useLocalState = () => {
   return { ...state, setState };
 }
 
-const instantiateState = (arg: ReturnType<typeof useLocalState>) => {
-  if (arg.storeState) { return; }
-  const initializeLocalState = (state: Record<string, unknown>) => arg.setState(s => ({
-    ...s,
-    storeFullyInitialized: true,
-    storeStateInitial: state,
-    storeState: state,
-    items: [{
-      id: ++s.idRefOuter.current,
-      event: ['🥚 createStore'],
-      visible: true,
-      items: [{
-        contractedKeys: [],
-        id: ++s.idRefInner.current,
-        jsxFormatted: getTypeJsx({
-          type: '$setNew()',
-          payload: state,
-          stateBefore: null,
-          stateAfter: state,
-          setState: arg.setState,
-          idOuter: s.idRefOuter.current,
-          idInner: s.idRefInner.current,
-        }),
-        state,
-        last: true,
-        payload: null,
-        ineffective: false,
-      }],
-    }],
-  }))
-  const readInitialState = () => {
-    const el = document.getElementById('olik-state');
-    if (!el) {
-      arg.setState(s => ({ ...s, error: 'No store found' }));
-      return {};
-    }
-    return JSON.parse(el.innerHTML) as Record<string, unknown>;
-  }
-  if (!chrome.runtime) {
-    setTimeout(() => {
-      initializeLocalState(readInitialState());
-    });
-  } else {
-    chrome.tabs
-      .query({ active: true })
-      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: readInitialState }))
-      .then(r => initializeLocalState(r[0].result))
-      .catch(console.error);
-  }
-}
+// const instantiateState = (arg: ReturnType<typeof useLocalState>) => {
+//   if (arg.storeState) { return; }
+//   const initializeLocalState = (state: Record<string, unknown>) => arg.setState(s => ({
+//     ...s,
+//     storeFullyInitialized: true,
+//     storeStateInitial: state,
+//     storeState: state,
+//     items: [{
+//       id: ++s.idRefOuter.current,
+//       event: ['🥚 createStore'],
+//       visible: true,
+//       items: [{
+//         contractedKeys: [],
+//         id: ++s.idRefInner.current,
+//         jsxFormatted: getTypeJsx({
+//           type: '$setNew()',
+//           payload: state,
+//           stateBefore: null,
+//           stateAfter: state,
+//           setState: arg.setState,
+//           idOuter: s.idRefOuter.current,
+//           idInner: s.idRefInner.current,
+//         }),
+//         state,
+//         last: true,
+//         payload: null,
+//         ineffective: false,
+//       }],
+//     }],
+//   }))
+//   const readInitialState = () => {
+//     const el = document.getElementById('olik-state');
+//     if (!el) {
+//       arg.setState(s => ({ ...s, error: 'No store found' }));
+//       return {};
+//     }
+//     return JSON.parse(el.innerHTML) as Record<string, unknown>;
+//   }
+//   if (!chrome.runtime) {
+//     setTimeout(() => {
+//       initializeLocalState(readInitialState());
+//     });
+//   } else {
+//     chrome.tabs
+//       .query({ active: true })
+//       .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: readInitialState }))
+//       .then(r => initializeLocalState(r[0].result))
+//       .catch(console.error);
+//   }
+// }
 
 const instantiateStore = (arg: ReturnType<typeof useLocalState>) => {
-  if (arg.storeRef.current || !arg.storeState) { return; }
+  if (arg.storeRef.current) { return; }
   if (!chrome.runtime) {
     arg.storeRef.current = getStore<Record<string, unknown>>(); // get store from demo app
   } else {
-    arg.storeRef.current = createStore<Record<string, unknown>>(arg.storeState);
+    arg.storeRef.current = createStore<Record<string, unknown>>({});
   }
+  arg.setState(s => ({ ...s, storeFullyInitialized: true }));
+  const notifyAppOfInitialization = () => {
+    const el = document.getElementById('olik-init');
+    el!.innerHTML = 'done';
+  }
+  chrome.tabs
+    .query({ active: true })
+    .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: notifyAppOfInitialization }))
+    .catch(console.error);
 }
 
 const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
   const { setState } = props;
   const processEvent = useCallback((incoming: Message) => setState(s => {
-    const fullStateBefore = s.items[s.items.length - 1].items[s.items[s.items.length - 1].items.length - 1].state;
+    const itemsFlattened = s.items.flatMap(ss => ss.items);
+    const fullStateBefore = !itemsFlattened.length ? {} : itemsFlattened[itemsFlattened.length - 1].state;
     if (chrome.runtime) {
+      console.log(incoming);
       libState.disableDevtoolsDispatch = true;
       setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
       libState.disableDevtoolsDispatch = false;
@@ -239,32 +250,30 @@ const getTypeJsx = (arg: { type: string, payload: unknown, stateBefore: unknown,
     updateHighlights(arg.stateBefore, arg.payload);
   }
 
-  const onClickNodeKey = (key: string) => {
-    arg.setState(s => ({
-      ...s,
-      items: s.items.map(itemOuter => {
-        if (itemOuter.id !== arg.idOuter) { return itemOuter; }
-        return {
-          ...itemOuter,
-          items: itemOuter.items.map(itemInner => {
-            if (itemInner.id !== arg.idInner) { return itemInner; }
-            const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
-            return {
-              ...itemInner,
+  const onClickNodeKey = (key: string) => arg.setState(s => ({
+    ...s,
+    items: s.items.map(itemOuter => {
+      if (itemOuter.id !== arg.idOuter) { return itemOuter; }
+      return {
+        ...itemOuter,
+        items: itemOuter.items.map(itemInner => {
+          if (itemInner.id !== arg.idInner) { return itemInner; }
+          const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
+          return {
+            ...itemInner,
+            contractedKeys,
+            jsxFormatted: getStateAsJsx({
+              actionType,
+              state: arg.stateAfter,
               contractedKeys,
-              jsxFormatted: getStateAsJsx({
-                actionType,
-                state: arg.stateAfter,
-                contractedKeys,
-                onClickNodeKey,
-                highlights
-              }),
-            }
-          })
-        }
-      })
-    }));
-  }
+              onClickNodeKey,
+              highlights
+            }),
+          }
+        })
+      }
+    })
+  }));
   return getStateAsJsx({
     actionType,
     state: arg.payload,
