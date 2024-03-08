@@ -12,11 +12,11 @@ dependencies:
     specifier: ^0.40.0
     version: 0.40.0
   olik:
-    specifier: 1.0.76
-    version: 1.0.76
+    specifier: 1.0.77
+    version: 1.0.77
   olik-react:
     specifier: 1.0.12
-    version: 1.0.12(olik@1.0.76)(vite@4.5.0)
+    version: 1.0.12(olik@1.0.77)(vite@4.5.0)
   react:
     specifier: ^18.2.0
     version: 18.2.0
@@ -2079,21 +2079,21 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: false
 
-  /olik-react@1.0.12(olik@1.0.76)(vite@4.5.0):
+  /olik-react@1.0.12(olik@1.0.77)(vite@4.5.0):
     resolution: {integrity: sha512-BMfndrz2UnG1bY/c5jYzj+VbcEQr55LWyp472eB4K58tvaPKWVGy0cbrrb8a+SKze8a/1FCIwnqwbDgjUueGjg==}
     peerDependencies:
       olik: ^1.0.8
     dependencies:
       '@testing-library/jest-dom': 5.17.0
       '@vitejs/plugin-react': 4.2.0(vite@4.5.0)
-      olik: 1.0.76
+      olik: 1.0.77
     transitivePeerDependencies:
       - supports-color
       - vite
     dev: false
 
-  /olik@1.0.76:
-    resolution: {integrity: sha512-KixDclAzhBKA8TxVap3f/l1hVmRLKXm1hsI3l0RSs+mT1mnC+BIJEgYehuu0xbJvGrcrTkX5IjpDIc7hS3nu+Q==}
+  /olik@1.0.77:
+    resolution: {integrity: sha512-LZUsrgks+KL/bxGcu7XeJBsH1nZmNCvw4dNgQnohXiJCPPrkLHJj8Cz+b2LEDReN11gcI+zNa0gl1E/g/J++AA==}
     dev: false
 
   /once@1.4.0:

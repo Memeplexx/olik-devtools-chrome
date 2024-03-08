@@ -18,4 +18,5 @@ chrome.devtools.panels.create('Olik', 'icon.png', 'index.html', () => {
     window.postMessage(
       { type: "FROM_PAGE", message }, "*");
   });
+
 });

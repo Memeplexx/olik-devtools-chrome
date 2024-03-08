@@ -96,8 +96,6 @@ export const App = () => {
                                             <ItemContent
                                               id={item.id.toString()}
                                               key={item.id}
-                                              onMouseEnter={events.onMouseEnterItem(item.id)}
-                                              onMouseLeave={events.onMouseLeaveItem}
                                               onClick={events.onClickItem(item.id)}
                                               isSelected={item.id === inputs.selectedId}
                                               children={item.jsxFormatted}

@@ -1,14 +1,12 @@
 import { StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getTreeHTML, is } from "../shared/functions";
+import { is } from "../shared/functions";
 import { getStateAsJsx } from "../tree/tree-maker";
 import { Item, ItemWrapper, Message } from "./constants";
 
 export const useInputs = () => {
 
   const localState = useLocalState();
-
-  // instantiateState(localState);
 
   instantiateStore(localState);
 
@@ -39,64 +37,12 @@ const useLocalState = () => {
     idRefOuter: useRef(0),
     idRefInner: useRef(0),
     selectedId: null as number | null,
-    selected: '',
     items: new Array<ItemWrapper>(),
     hideIneffectiveActions: false,
     query: '',
   });
   return { ...state, setState };
 }
-
-// const instantiateState = (arg: ReturnType<typeof useLocalState>) => {
-//   if (arg.storeState) { return; }
-//   const initializeLocalState = (state: Record<string, unknown>) => arg.setState(s => ({
-//     ...s,
-//     storeFullyInitialized: true,
-//     storeStateInitial: state,
-//     storeState: state,
-//     items: [{
-//       id: ++s.idRefOuter.current,
-//       event: ['🥚 createStore'],
-//       visible: true,
-//       items: [{
-//         contractedKeys: [],
-//         id: ++s.idRefInner.current,
-//         jsxFormatted: getTypeJsx({
-//           type: '$setNew()',
-//           payload: state,
-//           stateBefore: null,
-//           stateAfter: state,
-//           setState: arg.setState,
-//           idOuter: s.idRefOuter.current,
-//           idInner: s.idRefInner.current,
-//         }),
-//         state,
-//         last: true,
-//         payload: null,
-//         ineffective: false,
-//       }],
-//     }],
-//   }))
-//   const readInitialState = () => {
-//     const el = document.getElementById('olik-state');
-//     if (!el) {
-//       arg.setState(s => ({ ...s, error: 'No store found' }));
-//       return {};
-//     }
-//     return JSON.parse(el.innerHTML) as Record<string, unknown>;
-//   }
-//   if (!chrome.runtime) {
-//     setTimeout(() => {
-//       initializeLocalState(readInitialState());
-//     });
-//   } else {
-//     chrome.tabs
-//       .query({ active: true })
-//       .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: readInitialState }))
-//       .then(r => initializeLocalState(r[0].result))
-//       .catch(console.error);
-//   }
-// }
 
 const instantiateStore = (arg: ReturnType<typeof useLocalState>) => {
   if (arg.storeRef.current) { return; }
@@ -119,10 +65,13 @@ const instantiateStore = (arg: ReturnType<typeof useLocalState>) => {
 const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
   const { setState } = props;
   const processEvent = useCallback((incoming: Message) => setState(s => {
+    if (incoming.action.type === '$load()') {
+      s.storeRef.current = null;
+      return { ...s, storeFullyInitialized: false, items: [] };
+    }
     const itemsFlattened = s.items.flatMap(ss => ss.items);
     const fullStateBefore = !itemsFlattened.length ? {} : itemsFlattened[itemsFlattened.length - 1].state;
     if (chrome.runtime) {
-      console.log(incoming);
       libState.disableDevtoolsDispatch = true;
       setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
       libState.disableDevtoolsDispatch = false;
@@ -191,11 +140,6 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
             visible: true
           }
         ],
-      selected: getTreeHTML({
-        before: fullStateBefore,
-        after: fullStateAfter,
-        depth: 1
-      }),
     };
   }), [setState]);
 

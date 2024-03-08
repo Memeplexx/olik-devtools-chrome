@@ -4,7 +4,7 @@
   "version": "1.0",
   "manifest_version": 3,
   "devtools_page": "devtools.html",
-  "permissions": [ "management", "scripting", "tabs" ] ,
+  "permissions": [ "management", "scripting", "tabs", "webNavigation", "activeTab" ] ,
   "host_permissions": [
     "*://*/*",
     "<all_urls>"
