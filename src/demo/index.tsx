@@ -62,6 +62,10 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
             children='merge matching sing'
             onClick={outputs.mergeMatchingSing}
           />
+          <SimpleButton
+            children='set new'
+            onClick={outputs.setNew}
+          />
         </>
       }
     />

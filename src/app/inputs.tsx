@@ -13,10 +13,11 @@ export const useInputs = () => {
   useMessageHandler(localState);
 
   const itemsForView = useMemo(() => {
-    return (localState.items
-      .map(ii => ({ ...ii, items: ii.items.filter(i => !localState.hideIneffectiveActions || !i.ineffective) })))
+    return localState.items
       .filter(i => i.visible)
-  }, [localState.items, localState.hideIneffectiveActions]);
+  }, [localState.items]);
+
+  // console.log(itemsForView.map(i => i.items.flatMap(ii => ii.jsxFormatted)));
 
   return {
     ...localState,
@@ -28,7 +29,6 @@ const useLocalState = () => {
   const [state, setState] = useState({
     error: '',
     storeFullyInitialized: false,
-    incomingNum: 0,
     storeStateInitial: null as Record<string, unknown> | null,
     storeState: null as Record<string, unknown> | null,
     storeStateVersion: null as Record<string, unknown> | null,
@@ -48,18 +48,22 @@ const instantiateStore = (arg: ReturnType<typeof useLocalState>) => {
   if (arg.storeRef.current) { return; }
   if (!chrome.runtime) {
     arg.storeRef.current = getStore<Record<string, unknown>>(); // get store from demo app
+    setTimeout(() => {
+      arg.setState(s => ({ ...s, storeFullyInitialized: true }))
+      document.getElementById('olik-init')!.innerHTML = 'done';
+    });
   } else {
+    libState.initialState = undefined;
     arg.storeRef.current = createStore<Record<string, unknown>>({});
+    arg.setState(s => {
+      return { ...s, storeFullyInitialized: true };
+    });
+    const notifyAppOfInitialization = () => document.getElementById('olik-init')!.innerHTML = 'done';
+    chrome.tabs
+      .query({ active: true })
+      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: notifyAppOfInitialization }))
+      .catch(console.error);
   }
-  arg.setState(s => ({ ...s, storeFullyInitialized: true }));
-  const notifyAppOfInitialization = () => {
-    const el = document.getElementById('olik-init');
-    el!.innerHTML = 'done';
-  }
-  chrome.tabs
-    .query({ active: true })
-    .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: notifyAppOfInitialization }))
-    .catch(console.error);
 }
 
 const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
@@ -100,7 +104,13 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
     }
     const stateBefore = doReadState(fullStateBefore);
     const stateAfter = doReadState(fullStateAfter);
-    const stateHasNotChanged = stateBefore === stateAfter;
+
+
+    // const payloadRev = !s.hideIneffectiveActions ? payload : processPayload(stateBefore, payload);
+    // const str = JSON.stringify(payloadRev);
+    // if (str === '{}' || str === '[]') { return s; }
+
+
     const currentEvent = getCleanStackTrace(incoming.trace);
     const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
     const getNewItem = () => ({
@@ -115,9 +125,7 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
         idInner: s.idRefInner.current
       }),
       state: fullStateAfter,
-      last: true,
       payload: incoming.action.payload,
-      ineffective: stateHasNotChanged,
       contractedKeys: [],
     } satisfies Item);
     return {
@@ -166,7 +174,15 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
   }, [processEvent, props.storeFullyInitialized])
 }
 
-const getTypeJsx = (arg: { type: string, payload: unknown, stateBefore: unknown, stateAfter: unknown, setState: ReturnType<typeof useLocalState>['setState'], idOuter: number, idInner: number }) => {
+const getTypeJsx = (arg: {
+  type: string,
+  payload: unknown,
+  stateBefore: unknown,
+  stateAfter: unknown,
+  setState: ReturnType<typeof useLocalState>['setState'],
+  idOuter: number,
+  idInner: number
+}) => {
   // export const updateFunctionsConst = ['$set', '$setUnique', '$patch', '$patchDeep', '$delete', '$setNew', '$add', '$subtract', '$clear', '$push', '$with', '$toggle', '$merge', '$deDuplicate'] as const;
   const segments = arg.type.split('.');
   const func = segments.pop()!.slice(0, -2);
@@ -211,7 +227,7 @@ const getTypeJsx = (arg: { type: string, payload: unknown, stateBefore: unknown,
               state: arg.stateAfter,
               contractedKeys,
               onClickNodeKey,
-              highlights
+              highlights,
             }),
           }
         })
@@ -251,3 +267,47 @@ const getCleanStackTrace = (stack: string) => stack
   .map(s => `${s.filePath}.${s.fn}`)
   .map(s => s.replace('///', '').replace('//', '🥚 '))
   .reverse();
+
+// const processPayload = (stateBefore: unknown, payload: unknown) => {
+
+//   const pruneStateAfterRecursively = (stateBefore: unknown, stateAfter: unknown): unknown => {
+//     if (is.nonArrayObject(stateBefore) && is.nonArrayObject(stateAfter)) {
+//       return Object.keys(stateAfter).reduce((prev, curr) => {
+//         if (stateBefore[curr] === stateAfter[curr]) { return prev; }
+//         return { ...prev, [curr]: pruneStateAfterRecursively(stateBefore[curr], stateAfter[curr]) };
+//       }, {});
+//     } else if (is.array(stateBefore) && is.array(stateAfter)) {
+//       return stateAfter.map((_, i) => {
+//         if (stateBefore[i] === stateAfter[i]) { return undefined; }
+//         return pruneStateAfterRecursively(stateBefore[i], stateAfter[i]);
+//       }).filter(s => s !== undefined);
+//     } else {
+//       return stateAfter;
+//     }
+//   }
+//   const filterEmpty = (obj: unknown): unknown => {
+
+//     // Base case: If obj is not an object or is null, return as is
+//     if (typeof obj !== 'object' || obj === null) {
+//       return obj;
+//     }
+
+//     // If obj is an array, filter out empty arrays and apply the filter recursively
+//     if (is.array(obj)) {
+//       const filteredArray = obj.map((item) => filterEmpty(item));
+//       return filteredArray.filter((item) => !(Array.isArray(item) && item.length === 0));
+//     }
+
+//     // If obj is an object, filter out empty objects and apply the filter recursively
+//     const filteredObject: Record<string, unknown> = {};
+//     (Object.keys(obj) as Array<keyof typeof obj>).forEach(key => {
+//       const filteredValue = filterEmpty(obj[key]);
+//       if (filteredValue !== null && !(typeof filteredValue === 'object' && Object.keys(filteredValue).length === 0)) {
+//         filteredObject[key] = filteredValue;
+//       }
+//     });
+//     return filteredObject;
+//   }
+
+//   return filterEmpty(pruneStateAfterRecursively(stateBefore, payload));
+// }

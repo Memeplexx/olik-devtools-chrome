@@ -3,7 +3,7 @@ import { useInputs } from "./inputs";
 
 
 export const useOutputs = (props: ReturnType<typeof useInputs>) => ({
-  onClickShowHiddenArgs: () => {
+  onClickHideIneffectiveActions: () => {
     props.setState(s => ({ ...s, hideIneffectiveActions: !props.hideIneffectiveActions }));
   },
   onClickItem: (selectedId: number) => () => {

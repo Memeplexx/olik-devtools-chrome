@@ -19,8 +19,6 @@ export type Item = {
   payload: unknown,
   id: number,
   state: Record<string, unknown>,
-  last: boolean,
-  ineffective: boolean,
   location?: string,
   contractedKeys: string[],
 }

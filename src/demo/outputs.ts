@@ -44,5 +44,8 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
     mergeMatchingSing: () => {
       store.arr.$mergeMatching.id.$with({ id: 3, text: 'changed'})
     },
+    setNew: () => {
+      store.$setNew({ hello: { one: 'world' } });
+    },
   };
 };

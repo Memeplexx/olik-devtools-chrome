@@ -8,7 +8,7 @@ import { DemoWrapper } from '../demo/demo-wrapper';
 
 export const App = () => {
   const inputs = useInputs();
-  const events = useOutputs(inputs);
+  const outputs = useOutputs(inputs);
   const storeStateVersion = inputs.storeStateVersion as Record<string, unknown>;
   return (
     <>
@@ -26,7 +26,7 @@ export const App = () => {
                 <>
                   <EditorPanel
                     state={inputs.storeState}
-                    onQueryChanged={events.onQueryChanged}
+                    onQueryChanged={outputs.onQueryChanged}
                   />
                   <PanelGroup
                     direction="vertical"
@@ -59,12 +59,12 @@ export const App = () => {
                                   />
                                   <ShowUnchangedToggle
                                     title="Hide ineffective actions"
-                                    onClick={events.onClickShowHiddenArgs}
+                                    onClick={outputs.onClickHideIneffectiveActions}
                                     children={inputs.hideIneffectiveActions ? <ToggleOnIcon /> : <ToggleOffIcon />}
                                   />
                                   <ClearButton
                                     children={<ClearIcon />}
-                                    onClick={events.onClickClear}
+                                    onClick={outputs.onClickClear}
                                   />
                                 </>
                               }
@@ -96,7 +96,7 @@ export const App = () => {
                                             <ItemContent
                                               id={item.id.toString()}
                                               key={item.id}
-                                              onClick={events.onClickItem(item.id)}
+                                              onClick={outputs.onClickItem(item.id)}
                                               isSelected={item.id === inputs.selectedId}
                                               children={item.jsxFormatted}
                                             />
