@@ -1,3 +1,4 @@
+import { PossiblyBrandedPrimitive } from "olik";
 import React from "react";
 
 export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(props: P) => {
@@ -62,4 +63,7 @@ export const is = {
 	nullOrUndefined: (val: unknown): val is null | undefined => {
 		return val === null || val === undefined;
 	},
+	possibleBrandedPrimitive: (val: unknown): val is PossiblyBrandedPrimitive => {
+		return typeof (val) === 'string' || typeof (val) === 'number' || typeof (val) === 'boolean';
+	}
 }

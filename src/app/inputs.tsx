@@ -12,12 +12,7 @@ export const useInputs = () => {
 
   useMessageHandler(localState);
 
-  const itemsForView = useMemo(() => {
-    return localState.items
-      .filter(i => i.visible)
-  }, [localState.items]);
-
-  // console.log(itemsForView.map(i => i.items.flatMap(ii => ii.jsxFormatted)));
+  const itemsForView = useMemo(() => localState.items.filter(i => i.visible), [localState.items]);
 
   return {
     ...localState,
@@ -81,16 +76,15 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
       libState.disableDevtoolsDispatch = false;
     }
     const fullStateAfter = s.storeRef.current!.$state;
-    const payload = incoming.action.payloadOrig || incoming.action.payload
+    const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
     const doReadState = (state: Record<string, unknown>) => {
       let stateActions = new Array<StateAction>();
       const mergeMatchingIndex = incoming.stateActions.findIndex(s => s.name === '$mergeMatching');
       if (mergeMatchingIndex !== -1) {
         const withIndex = incoming.stateActions.findIndex(s => s.name === '$with');
         const matcherPath = incoming.stateActions.slice(mergeMatchingIndex + 1, withIndex);
-        if (is.array(payload)) {
-          const payloadArray = payload as Array<Record<string, unknown>>;
-          const payloadSelection = payloadArray.map(p => matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, p))
+        if (is.array<Record<string, unknown>>(payload)) {
+          const payloadSelection = payload.map(p => matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, p))
           stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$filter' }, ...matcherPath, { name: '$in', arg: payloadSelection }];
         } else {
           const payloadSelection = matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, payload as Record<string, unknown>);
@@ -104,13 +98,6 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
     }
     const stateBefore = doReadState(fullStateBefore);
     const stateAfter = doReadState(fullStateAfter);
-
-
-    // const payloadRev = !s.hideIneffectiveActions ? payload : processPayload(stateBefore, payload);
-    // const str = JSON.stringify(payloadRev);
-    // if (str === '{}' || str === '[]') { return s; }
-
-
     const currentEvent = getCleanStackTrace(incoming.trace);
     const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
     const getNewItem = () => ({
@@ -118,6 +105,15 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
       jsxFormatted: getTypeJsx({
         type: incoming.action.type,
         payload,
+        stateBefore,
+        stateAfter,
+        setState,
+        idOuter: s.idRefOuter.current,
+        idInner: s.idRefInner.current
+      }),
+      jsxSummarized: getTypeJsx({
+        type: incoming.action.type,
+        payload: processPayload(stateBefore, incoming.action.payload),
         stateBefore,
         stateAfter,
         setState,
@@ -268,46 +264,52 @@ const getCleanStackTrace = (stack: string) => stack
   .map(s => s.replace('///', '').replace('//', '🥚 '))
   .reverse();
 
-// const processPayload = (stateBefore: unknown, payload: unknown) => {
+const processPayload = (stateBefore: unknown, payload: unknown) => {
 
-//   const pruneStateAfterRecursively = (stateBefore: unknown, stateAfter: unknown): unknown => {
-//     if (is.nonArrayObject(stateBefore) && is.nonArrayObject(stateAfter)) {
-//       return Object.keys(stateAfter).reduce((prev, curr) => {
-//         if (stateBefore[curr] === stateAfter[curr]) { return prev; }
-//         return { ...prev, [curr]: pruneStateAfterRecursively(stateBefore[curr], stateAfter[curr]) };
-//       }, {});
-//     } else if (is.array(stateBefore) && is.array(stateAfter)) {
-//       return stateAfter.map((_, i) => {
-//         if (stateBefore[i] === stateAfter[i]) { return undefined; }
-//         return pruneStateAfterRecursively(stateBefore[i], stateAfter[i]);
-//       }).filter(s => s !== undefined);
-//     } else {
-//       return stateAfter;
-//     }
-//   }
-//   const filterEmpty = (obj: unknown): unknown => {
+  if (stateBefore === payload && is.possibleBrandedPrimitive(payload)) {
+    return undefined;
+  }
 
-//     // Base case: If obj is not an object or is null, return as is
-//     if (typeof obj !== 'object' || obj === null) {
-//       return obj;
-//     }
+  const pruneStateAfterRecursively = (stateBefore: unknown, stateAfter: unknown): unknown => {
+    if (is.nonArrayObject(stateBefore) && is.nonArrayObject(stateAfter)) {
+      return Object.keys(stateAfter).reduce((prev, curr) => {
+        if (stateBefore[curr] === stateAfter[curr]) { return prev; }
+        return { ...prev, [curr]: pruneStateAfterRecursively(stateBefore[curr], stateAfter[curr]) };
+      }, {});
+    } else if (is.array(stateBefore) && is.array(stateAfter)) {
+      return stateAfter.map((_, i) => {
+        if (stateBefore[i] === stateAfter[i]) { return undefined; }
+        return pruneStateAfterRecursively(stateBefore[i], stateAfter[i]);
+      }).filter(s => s !== undefined);
+    } else {
+      return stateAfter;
+    }
+  }
+  const filterEmpty = (obj: unknown): unknown => {
 
-//     // If obj is an array, filter out empty arrays and apply the filter recursively
-//     if (is.array(obj)) {
-//       const filteredArray = obj.map((item) => filterEmpty(item));
-//       return filteredArray.filter((item) => !(Array.isArray(item) && item.length === 0));
-//     }
+    // Base case: If obj is not an object or is null, return as is
+    if (typeof obj !== 'object' || obj === null) {
+      return obj;
+    }
 
-//     // If obj is an object, filter out empty objects and apply the filter recursively
-//     const filteredObject: Record<string, unknown> = {};
-//     (Object.keys(obj) as Array<keyof typeof obj>).forEach(key => {
-//       const filteredValue = filterEmpty(obj[key]);
-//       if (filteredValue !== null && !(typeof filteredValue === 'object' && Object.keys(filteredValue).length === 0)) {
-//         filteredObject[key] = filteredValue;
-//       }
-//     });
-//     return filteredObject;
-//   }
+    // If obj is an array, filter out empty arrays and apply the filter recursively
+    if (is.array(obj)) {
+      const filteredArray = obj.map((item) => filterEmpty(item));
+      return filteredArray.filter((item) => !(Array.isArray(item) && item.length === 0));
+    }
 
-//   return filterEmpty(pruneStateAfterRecursively(stateBefore, payload));
-// }
+    // If obj is an object, filter out empty objects and apply the filter recursively
+    const filteredObject: Record<string, unknown> = {};
+    (Object.keys(obj) as Array<keyof typeof obj>).forEach(key => {
+      const filteredValue = filterEmpty(obj[key]);
+      if (filteredValue !== null && !(typeof filteredValue === 'object' && Object.keys(filteredValue).length === 0)) {
+        filteredObject[key] = filteredValue;
+      }
+    });
+    return filteredObject;
+  }
+
+  const result = filterEmpty(pruneStateAfterRecursively(stateBefore, payload));
+  const str = JSON.stringify(result);
+  return str === '{}' || str === '[]' ? undefined : result;
+}

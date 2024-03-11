@@ -98,7 +98,7 @@ export const App = () => {
                                               key={item.id}
                                               onClick={outputs.onClickItem(item.id)}
                                               isSelected={item.id === inputs.selectedId}
-                                              children={item.jsxFormatted}
+                                              children={inputs.hideIneffectiveActions ? item.jsxSummarized : item.jsxFormatted}
                                             />
                                           ))}
                                         </>
