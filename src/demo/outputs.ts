@@ -52,6 +52,6 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
     },
     setEmptyArray: () => {
       store.arr.$set([]);
-    }
+    },
   };
 };

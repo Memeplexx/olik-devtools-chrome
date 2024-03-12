@@ -1,7 +1,7 @@
 import { Fragment, MouseEvent } from "react";
 import { Frag } from "../html/frag";
 import { is } from "../shared/functions";
-import { ActionTypeClose, ActionTypeClosed, ActionTypeOpen, Arr, ArrClose, ArrElement, ArrEmpty, ArrOpen, Boo, Colon, Comma, Dat, Prim, Key, Nul, Num, Obj, ObjClose, ObjEmpty, ObjOpen, Row, RowContracted, Str, Und, Value, RowEmpty } from "./styles";
+import { ActionTypeClose, ActionTypeClosed, ActionTypeOpen, Arr, ArrClose, ArrElement, ArrEmpty, ArrOpen, Boo, Colon, Comma, Dat, Prim, Key, Nul, Num, Obj, ObjClose, ObjEmpty, ObjOpen, Row, RowContracted, Str, Und, Value, RowUnchanged, RowEmpty } from "./styles";
 import { TreeProps } from "./constants";
 
 
@@ -15,20 +15,21 @@ export const getStateAsJsx = (
   }
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
     const isTopLevel = outerKey === '';
+    const unchanged = props.unchanged.includes(outerKey);
     const primitive = (el: JSX.Element) => {
       const element = (
         <Prim
-          $unchanged={props.unchanged.includes(outerKey)}
+          $unchanged={unchanged}
           children={el}
         />
       );
       return (isTopLevel && props.actionType) ? (
         <Prim
-          $unchanged={props.unchanged.includes(outerKey)}
+          $unchanged={unchanged}
           children={
             <>
               <span children={`${props.actionType}(`} />
-              {element}
+              {props.hideUnchanged && unchanged ? '' : element}
               <span children=')' />
             </>
           }
@@ -63,7 +64,7 @@ export const getStateAsJsx = (
                 children={
                   is.array(ss) ? (
                     <>
-                      <RowEmpty
+                      <RowUnchanged
                         showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
                         children={`${props.actionType!}([])`}
                       />
@@ -79,8 +80,15 @@ export const getStateAsJsx = (
                           </>
                         }
                       />
+                      <RowEmpty
+                        showIf={isTopLevel && !!props.actionType && !props.contractedKeys.includes(keyConcat) && !ss.length}
+                        children={`${props.actionType!}([])`}
+                      />
+                      <ArrEmpty
+                        showIf={!isTopLevel && !props.actionType && !props.contractedKeys.includes(keyConcat) && !ss.length}
+                      />
                       <Frag
-                        showIf={!props.contractedKeys.includes(keyConcat)}
+                        showIf={!props.contractedKeys.includes(keyConcat) && !!ss.length}
                         children={
                           <>
                             <ArrOpen
@@ -101,7 +109,7 @@ export const getStateAsJsx = (
 
                   ) : is.nonArrayObject(ss) ? (
                     <>
-                      <RowEmpty
+                      <RowUnchanged
                         showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
                         children={`${props.actionType!}({})`}
                       />
@@ -117,8 +125,15 @@ export const getStateAsJsx = (
                           </>
                         }
                       />
+                      <RowEmpty
+                        showIf={isTopLevel && !!props.actionType && !props.contractedKeys.includes(keyConcat) && !Object.keys(ss).length}
+                        children={`${props.actionType!}({})`}
+                      />
+                      <ObjEmpty
+                        showIf={!isTopLevel && !props.actionType && !props.contractedKeys.includes(keyConcat) && !Object.keys(ss).length}
+                      />
                       <Frag
-                        showIf={!props.contractedKeys.includes(keyConcat)}
+                        showIf={!props.contractedKeys.includes(keyConcat) && !!Object.keys(ss).length}
                         children={
                           <>
                             <Row
@@ -169,15 +184,16 @@ export const getStateAsJsx = (
             const keyConcat = isTopLevel ? key.toString() : `${outerKey.toString()}.${key.toString()}`;
             const possibleComma = index === objectKeys.length - 1 ? <></> : <Comma />;
             const unchanged = props.unchanged.includes(keyConcat);
+            const ss = val[key];
             return (
               <Fragment
                 key={index}
                 children={
-                  is.array(val[key]) ? (
+                  is.array(ss) ? (
                     <Arr
                       children={
                         <>
-                          <RowEmpty
+                          <RowUnchanged
                             showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
                             children={`${props.actionType!}([])`}
                           />
@@ -194,8 +210,15 @@ export const getStateAsJsx = (
                               </>
                             }
                           />
+                          <RowEmpty
+                            showIf={isTopLevel && !!props.actionType && !props.contractedKeys.includes(keyConcat) && !ss.length}
+                            children={`${props.actionType!}([])`}
+                          />
+                          <ArrEmpty
+                            showIf={!isTopLevel && !props.actionType && !props.contractedKeys.includes(keyConcat) && !ss.length}
+                          />
                           <Frag
-                            showIf={!props.contractedKeys.includes(keyConcat)}
+                            showIf={!props.contractedKeys.includes(keyConcat) && !!ss.length}
                             children={
                               <>
                                 <Row
@@ -210,7 +233,7 @@ export const getStateAsJsx = (
                                     </>
                                   }
                                 />
-                                <Value children={recurse(val[key], keyConcat)} />
+                                <Value children={recurse(ss, keyConcat)} />
                                 <Row
                                   $unchanged={unchanged}
                                   $hideUnchanged={props.hideUnchanged}
@@ -227,11 +250,11 @@ export const getStateAsJsx = (
                         </>
                       }
                     />
-                  ) : is.nonArrayObject(val[key]) ? (
+                  ) : is.nonArrayObject(ss) ? (
                     <Obj
                       children={
                         <>
-                          <RowEmpty
+                          <RowUnchanged
                             showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
                             children={`${props.actionType!}({})`}
                           />
@@ -249,8 +272,15 @@ export const getStateAsJsx = (
                               </>
                             }
                           />
+                          <RowEmpty
+                            showIf={isTopLevel && !!props.actionType && !props.contractedKeys.includes(keyConcat) && !Object.keys(ss).length}
+                            children={`${props.actionType!}({})`}
+                          />
+                          <ObjEmpty
+                            showIf={!isTopLevel && !props.actionType && !props.contractedKeys.includes(keyConcat) && !Object.keys(ss).length}
+                          />
                           <Frag
-                            showIf={!props.contractedKeys.includes(keyConcat)}
+                            showIf={!props.contractedKeys.includes(keyConcat) && !!Object.keys(ss).length}
                             children={
                               <>
                                 <Row
