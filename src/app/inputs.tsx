@@ -223,7 +223,7 @@ const getTypeJsx = (arg: {
               onClickNodeKey,
               unchanged,
             }),
-          }
+          } satisfies Item
         })
       }
     })
