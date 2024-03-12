@@ -62,6 +62,7 @@ export const getStateAsJsx = (
             const itemIsNonArrayObject = is.nonArrayObject(item);
             const isContracted = props.contractedKeys.includes(keyConcat);
             const hasValues = itemIsArray ? !!item.length : itemIsNonArrayObject ? !!Object.keys(item).length : false;
+            const topLevelActionType = isTopLevel && !!props.actionType;
             return (
               <ArrElement
                 key={index}
@@ -69,7 +70,7 @@ export const getStateAsJsx = (
                   itemIsArray ? (
                     <>
                       <RowUnchanged
-                        showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
+                        showIf={topLevelActionType && props.hideUnchanged && unchanged}
                         children={`${props.actionType!}([])`}
                       />
                       <RowContracted
@@ -85,11 +86,16 @@ export const getStateAsJsx = (
                         }
                       />
                       <RowEmpty
-                        showIf={isTopLevel && !!props.actionType && !isContracted && !hasValues}
+                        showIf={topLevelActionType && !isContracted && !hasValues}
                         children={`${props.actionType!}([])`}
                       />
                       <ArrEmpty
                         showIf={!isTopLevel && !props.actionType && !isContracted && !hasValues}
+                      />
+                      <Row
+                        showIf={!hasValues && !props.hideUnchanged}
+                        $unchanged={unchanged}
+                        children='[]'
                       />
                       <Frag
                         showIf={!isContracted && hasValues}
@@ -114,7 +120,7 @@ export const getStateAsJsx = (
                   ) : itemIsNonArrayObject ? (
                     <>
                       <RowUnchanged
-                        showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
+                        showIf={topLevelActionType && props.hideUnchanged && unchanged}
                         children={`${props.actionType!}({})`}
                       />
                       <RowContracted
@@ -130,11 +136,16 @@ export const getStateAsJsx = (
                         }
                       />
                       <RowEmpty
-                        showIf={isTopLevel && !!props.actionType && !isContracted && !hasValues}
+                        showIf={topLevelActionType && !isContracted && !hasValues}
                         children={`${props.actionType!}({})`}
                       />
                       <ObjEmpty
                         showIf={!isTopLevel && !props.actionType && !isContracted && !hasValues}
+                      />
+                      <Row
+                        showIf={!hasValues && !props.hideUnchanged}
+                        $unchanged={unchanged}
+                        children='{}'
                       />
                       <Frag
                         showIf={!isContracted && hasValues}
@@ -193,6 +204,7 @@ export const getStateAsJsx = (
             const itemIsNonArrayObject = is.nonArrayObject(item);
             const isContracted = props.contractedKeys.includes(keyConcat);
             const hasValues = itemIsArray ? !!item.length : itemIsNonArrayObject ? !!Object.keys(item).length : false;
+            const topLevelActionType = isTopLevel && !!props.actionType;
             return (
               <Fragment
                 key={index}
@@ -202,7 +214,7 @@ export const getStateAsJsx = (
                       children={
                         <>
                           <RowUnchanged
-                            showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
+                            showIf={topLevelActionType && props.hideUnchanged && unchanged}
                             children={`${props.actionType!}([])`}
                           />
                           <RowContracted
@@ -214,16 +226,28 @@ export const getStateAsJsx = (
                               <>
                                 <Key showIf={!isTopLevel} children={key.toString()} />
                                 <Colon showIf={!isTopLevel} />
-                                {(isTopLevel && props.actionType) ? <ActionTypeOpen children={`${props.actionType}([...])`} /> : <ArrEmpty />}
+                                <ActionTypeOpen showIf={topLevelActionType} children={`${props.actionType!}([...])`} />
+                                <ArrEmpty showIf={!topLevelActionType} />
                               </>
                             }
                           />
                           <RowEmpty
-                            showIf={isTopLevel && !!props.actionType && !isContracted && !hasValues}
+                            showIf={topLevelActionType && !isContracted && !hasValues}
                             children={`${props.actionType!}([])`}
                           />
                           <ArrEmpty
-                            showIf={!isTopLevel && !props.actionType && !isContracted && !hasValues}
+                            showIf={!topLevelActionType && !isContracted && !hasValues}
+                          />
+                          <Row
+                            showIf={!hasValues && !props.hideUnchanged}
+                            $unchanged={unchanged}
+                            children={
+                              <>
+                                <Key children={key.toString()} />
+                                <Colon />
+                                <Arr children='[]' />
+                              </>
+                            }
                           />
                           <Frag
                             showIf={!isContracted && hasValues}
@@ -237,7 +261,8 @@ export const getStateAsJsx = (
                                     <>
                                       <Key showIf={!isTopLevel} children={key.toString()} />
                                       <Colon showIf={!isTopLevel} />
-                                      {(isTopLevel && props.actionType) ? <ActionTypeOpen children={`${props.actionType}([`} /> : <ArrOpen />}
+                                      <ActionTypeOpen showIf={topLevelActionType} children={`${props.actionType!}([`} />
+                                      <ArrOpen showIf={!topLevelActionType} />
                                     </>
                                   }
                                 />
@@ -247,7 +272,8 @@ export const getStateAsJsx = (
                                   $hideUnchanged={props.hideUnchanged}
                                   children={
                                     <>
-                                      {(isTopLevel && props.actionType) ? <ActionTypeClose children='])' /> : <ArrClose />}
+                                      <ActionTypeClose showIf={topLevelActionType} children='])' />
+                                      <ArrClose showIf={!topLevelActionType} />
                                       {possibleComma}
                                     </>
                                   }
@@ -263,7 +289,7 @@ export const getStateAsJsx = (
                       children={
                         <>
                           <RowUnchanged
-                            showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
+                            showIf={topLevelActionType && props.hideUnchanged && unchanged}
                             children={`${props.actionType!}({})`}
                           />
                           <RowContracted
@@ -275,17 +301,29 @@ export const getStateAsJsx = (
                               <>
                                 <Key showIf={!isTopLevel} children={key.toString()} />
                                 <Colon showIf={!isTopLevel} />
-                                {(isTopLevel && props.actionType) ? <ActionTypeClosed children={`${props.actionType}({...})`} /> : <ObjEmpty />}
+                                <ActionTypeClosed showIf={topLevelActionType} children={`${props.actionType!}({...})`} />
+                                <ObjEmpty showIf={!topLevelActionType} />
                                 {possibleComma}
                               </>
                             }
                           />
                           <RowEmpty
-                            showIf={isTopLevel && !!props.actionType && !isContracted && !hasValues}
+                            showIf={topLevelActionType && !isContracted && !hasValues}
                             children={`${props.actionType!}({})`}
                           />
                           <ObjEmpty
-                            showIf={!isTopLevel && !props.actionType && !isContracted && !hasValues}
+                            showIf={!topLevelActionType && !isContracted && !hasValues}
+                          />
+                          <Row
+                            showIf={!hasValues && !props.hideUnchanged}
+                            $unchanged={unchanged}
+                            children={
+                              <>
+                                <Key children={key.toString()} />
+                                <Colon />
+                                <Obj children='{}' />
+                              </>
+                            }
                           />
                           <Frag
                             showIf={!isContracted && hasValues}
@@ -299,7 +337,8 @@ export const getStateAsJsx = (
                                     <>
                                       <Key showIf={!isTopLevel} children={key.toString()} />
                                       <Colon showIf={!isTopLevel} />
-                                      {(isTopLevel && props.actionType) ? <ActionTypeOpen children={`${props.actionType}({`} /> : <ObjOpen />}
+                                      <ActionTypeOpen showIf={topLevelActionType} children={`${props.actionType!}({`} />
+                                      <ObjOpen showIf={!topLevelActionType} />
                                     </>
                                   }
                                 />
@@ -309,7 +348,8 @@ export const getStateAsJsx = (
                                   $hideUnchanged={props.hideUnchanged}
                                   children={
                                     <>
-                                      {(isTopLevel && props.actionType) ? <ActionTypeClose children='})' /> : <ObjClose />}
+                                      <ActionTypeClose showIf={topLevelActionType} children={`})`} />
+                                      <ObjClose showIf={!topLevelActionType} />
                                       {possibleComma}
                                     </>
                                   }

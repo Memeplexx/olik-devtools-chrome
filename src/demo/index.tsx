@@ -74,6 +74,14 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
             children='set empty array'
             onClick={outputs.setEmptyArray}
           />
+          <SimpleButton
+            children='set empty array deep'
+            onClick={outputs.setEmptyArrayDeep}
+          />
+          <SimpleButton
+            children='set empty array deep 2'
+            onClick={outputs.setEmptyArrayDeep2}
+          />
         </>
       }
     />
