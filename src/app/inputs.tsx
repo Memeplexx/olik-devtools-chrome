@@ -111,15 +111,6 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
         idOuter: s.idRefOuter.current,
         idInner: s.idRefInner.current
       }),
-      jsxSummarized: getTypeJsx({
-        type: incoming.action.type,
-        payload: processPayload(stateBefore, incoming.action.payload),
-        stateBefore,
-        stateAfter,
-        setState,
-        idOuter: s.idRefOuter.current,
-        idInner: s.idRefInner.current
-      }),
       state: fullStateAfter,
       payload: incoming.action.payload,
       contractedKeys: [],
@@ -263,53 +254,3 @@ const getCleanStackTrace = (stack: string) => stack
   .map(s => `${s.filePath}.${s.fn}`)
   .map(s => s.replace('///', '').replace('//', '🥚 '))
   .reverse();
-
-const processPayload = (stateBefore: unknown, payload: unknown) => {
-
-  if (stateBefore === payload && is.possibleBrandedPrimitive(payload)) {
-    return undefined;
-  }
-
-  const pruneStateAfterRecursively = (stateBefore: unknown, stateAfter: unknown): unknown => {
-    if (is.nonArrayObject(stateBefore) && is.nonArrayObject(stateAfter)) {
-      return Object.keys(stateAfter).reduce((prev, curr) => {
-        if (stateBefore[curr] === stateAfter[curr]) { return prev; }
-        return { ...prev, [curr]: pruneStateAfterRecursively(stateBefore[curr], stateAfter[curr]) };
-      }, {});
-    } else if (is.array(stateBefore) && is.array(stateAfter)) {
-      return stateAfter.map((_, i) => {
-        if (stateBefore[i] === stateAfter[i]) { return undefined; }
-        return pruneStateAfterRecursively(stateBefore[i], stateAfter[i]);
-      }).filter(s => s !== undefined);
-    } else {
-      return stateAfter;
-    }
-  }
-  const filterEmpty = (obj: unknown): unknown => {
-
-    // Base case: If obj is not an object or is null, return as is
-    if (typeof obj !== 'object' || obj === null) {
-      return obj;
-    }
-
-    // If obj is an array, filter out empty arrays and apply the filter recursively
-    if (is.array(obj)) {
-      const filteredArray = obj.map((item) => filterEmpty(item));
-      return filteredArray.filter((item) => !(Array.isArray(item) && item.length === 0));
-    }
-
-    // If obj is an object, filter out empty objects and apply the filter recursively
-    const filteredObject: Record<string, unknown> = {};
-    (Object.keys(obj) as Array<keyof typeof obj>).forEach(key => {
-      const filteredValue = filterEmpty(obj[key]);
-      if (filteredValue !== null && !(typeof filteredValue === 'object' && Object.keys(filteredValue).length === 0)) {
-        filteredObject[key] = filteredValue;
-      }
-    });
-    return filteredObject;
-  }
-
-  const result = filterEmpty(pruneStateAfterRecursively(stateBefore, payload));
-  const str = JSON.stringify(result);
-  return str === '{}' || str === '[]' ? undefined : result;
-}

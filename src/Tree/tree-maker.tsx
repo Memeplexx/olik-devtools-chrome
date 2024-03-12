@@ -10,6 +10,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
     event.stopPropagation();
     props.onClickNodeKey(key);
   }
+  // console.log(props.highlights);
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
     const isTopLevel = outerKey === '';
     const thing = (el: JSX.Element) => {
@@ -138,6 +139,8 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
             const isTopLevel = key === ''; /////////
             const keyConcat = isTopLevel ? key.toString() : `${outerKey.toString()}.${key.toString()}`;
             const possibleComma = index === objectKeys.length - 1 ? <></> : <Comma />;
+            console.log(props.highlights, keyConcat);
+            // console.log(props.highlights.con§)
             return (
               <Fragment
                 key={index}
