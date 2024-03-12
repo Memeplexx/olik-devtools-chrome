@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { is } from "../shared/functions";
 import { getStateAsJsx } from "../tree/tree-maker";
 import { Item, ItemWrapper, Message } from "./constants";
+import { differenceInMilliseconds, differenceInSeconds, differenceInMinutes, differenceInHours } from 'date-fns';
 
 export const useInputs = () => {
 
@@ -70,6 +71,8 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
     }
     const itemsFlattened = s.items.flatMap(ss => ss.items);
     const fullStateBefore = !itemsFlattened.length ? {} : itemsFlattened[itemsFlattened.length - 1].state;
+    const date = new Date();
+    const time = !itemsFlattened.length ? '0ms' : getTimeDiff(date, itemsFlattened[itemsFlattened.length - 1].date);
     if (chrome.runtime) {
       libState.disableDevtoolsDispatch = true;
       setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
@@ -109,11 +112,13 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
         stateAfter,
         setState,
         idOuter: s.idRefOuter.current,
-        idInner: s.idRefInner.current
+        idInner: s.idRefInner.current,
       }),
       state: fullStateAfter,
       payload: incoming.action.payload,
       contractedKeys: [],
+      time,
+      date,
     } satisfies Item);
     return {
       ...s,
@@ -228,6 +233,21 @@ const getTypeJsx = (arg: {
     highlights,
     onClickNodeKey,
   });
+}
+
+const getTimeDiff = (from: Date, to: Date) => {
+  const milliseconds = differenceInMilliseconds(from, to);
+  if (milliseconds < 10 * 1000) {
+    return `${milliseconds} ms`;
+  } else if (milliseconds < 60 * 60 * 1000) {
+    return `${differenceInSeconds(from, to )} s`;
+  } else if (milliseconds < 24 * 60 * 60 * 1000) {
+    return `${differenceInMinutes(from, to )} m`;
+  } else if (milliseconds < 365 * 24 * 60 * 60 * 1000) {
+    return `${differenceInHours(from, to )} h`;
+  } else {
+    return to.toLocaleDateString();
+  }
 }
 
 const getCleanStackTrace = (stack: string) => stack

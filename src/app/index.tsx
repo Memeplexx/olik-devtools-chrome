@@ -1,4 +1,4 @@
-import { ClearButton, ClearIcon, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemWrapper, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, TreePanel } from './styles';
+import { ClearButton, ClearIcon, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, TreePanel } from './styles';
 import { PanelGroup } from 'react-resizable-panels';
 import { useInputs } from './inputs';
 import { Frag } from '../html/frag';
@@ -98,7 +98,12 @@ export const App = () => {
                                               key={item.id}
                                               onClick={outputs.onClickItem(item.id)}
                                               isSelected={item.id === inputs.selectedId}
-                                              children={item.jsxFormatted}
+                                              children={
+                                                <>
+                                                  <ItemJsx children={item.jsxFormatted} />
+                                                  <ItemTime children={item.time} />
+                                                </>
+                                              }
                                             />
                                           ))}
                                         </>

@@ -3,7 +3,8 @@ import { possible } from "../html";
 
 export const Container = styled(possible.div)`
   display: flex;
-  align-items: start;
+  align-content: start;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 8px;
   background-color: #dfdfdf;

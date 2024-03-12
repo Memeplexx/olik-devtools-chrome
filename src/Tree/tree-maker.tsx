@@ -139,7 +139,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
             const isTopLevel = key === ''; /////////
             const keyConcat = isTopLevel ? key.toString() : `${outerKey.toString()}.${key.toString()}`;
             const possibleComma = index === objectKeys.length - 1 ? <></> : <Comma />;
-            console.log(props.highlights, keyConcat);
+            // console.log(props.highlights, keyConcat);
             // console.log(props.highlights.con§)
             return (
               <Fragment

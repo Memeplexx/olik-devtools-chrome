@@ -21,4 +21,6 @@ export type Item = {
   state: Record<string, unknown>,
   location?: string,
   contractedKeys: string[],
+  time: string,
+  date: Date,
 }

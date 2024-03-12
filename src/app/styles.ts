@@ -66,24 +66,30 @@ export const ItemHead = styled.div`
 `;
 
 export const ItemContent = styled.div<{ isSelected?: boolean }>`
-	padding: 4px 8px;
 	background-color: ${p => p.isSelected ? 'white!important' : '#1C1C1C'};
 	color: ${p => p.isSelected ? 'black' : ''};
 	cursor: pointer;
   margin-left: 4px;
-	white-space: nowrap;
+	position: relative;
+	padding: 4px;
 	&:hover {
 		background-color: black;
 	}
-	.action {
-		color: #00aaff;
-	}
-	.touched {
-		color: #00b63d;
-	}
-	.untouched {
-		color: #5d5d5d;
-	}
+`;
+
+export const ItemJsx = styled.div`
+	white-space: nowrap;
+`;
+
+export const ItemTime = styled.div`
+	position: absolute;
+	right: 0;
+	top: 0;
+	padding: 2px;
+	background: #9d9d9d;
+	width: 60px;
+	text-align: end;
+	border-bottom-left-radius: 8px;
 `;
 
 export const EditorPanel = styled(Editor)`
@@ -94,10 +100,10 @@ export const DevtoolsPanel = styled.div`
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	padding: 8px;
 	background-color: rgb(28 28 28);
   color: white;
 	overflow-x: auto;
+	min-width: 300px;
 `;
 
 export const Error = styled(possible.div)`
