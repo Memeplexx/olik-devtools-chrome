@@ -45,7 +45,7 @@ export const getStateAsJsx = (props: { state: unknown, onClickNodeKey: (key: str
     } else if (is.boolean(val)) {
       return primitive(<Boo children={val.toString()} />);
     } else if (is.date(val)) {
-      return primitive(<Dat children={val.toString()} />);
+      return primitive(<Dat children={val.toISOString()} />);
     } else if (is.array(val)) {
       return (
         <>

@@ -47,5 +47,8 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
     setNew: () => {
       store.$setNew({ hello: { one: 'world' } });
     },
+    setDate: () => {
+      store.dat.$set(new Date());
+    },
   };
 };

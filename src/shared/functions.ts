@@ -31,7 +31,7 @@ export const useForwardedRef = <T>(forwardedRef: React.ForwardedRef<T>) => {
 
 export const is = {
 	objectOrArray: (val: unknown): val is object => {
-		return typeof (val) === 'object' && val !== null;
+		return typeof (val) === 'object' && val !== null && !(val instanceof Date);
 	},
 	number: (val: unknown): val is number => {
 		return typeof (val) === 'number';
@@ -52,7 +52,7 @@ export const is = {
 		return val instanceof Date;
 	},
 	nonArrayObject: (val: unknown): val is Record<string, unknown> => {
-		return typeof (val) === 'object' && val !== null && !Array.isArray(val);
+		return typeof (val) === 'object' && val !== null && !Array.isArray(val) && !(val instanceof Date);
 	},
 	array: <T>(val: unknown): val is Array<T> => {
 		return Array.isArray(val);
