@@ -4,7 +4,7 @@ import { useInputs } from "./inputs";
 
 export const useOutputs = (props: ReturnType<typeof useInputs>) => ({
   onClickHideIneffectiveActions: () => {
-    props.setState(s => ({ ...s, hideIneffectiveActions: !props.hideIneffectiveActions }));
+    props.setState(s => ({ ...s, hideUnchanged: !props.hideUnchanged }));
   },
   onClickItem: (selectedId: number) => () => {
     const itemsFlattened = props.items.flatMap(i => i.items);

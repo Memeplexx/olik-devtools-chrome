@@ -4,6 +4,7 @@ export interface TreeProps {
   onClickNodeKey: (key: string) => void,
   contractedKeys: string[],
   actionType?: string,
-  unchanged: string[]
+  unchanged: string[],
+  hideUnchanged?: boolean,
 }
 

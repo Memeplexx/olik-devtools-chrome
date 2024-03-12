@@ -16,6 +16,7 @@ export type ItemWrapper = {
 
 export type Item = {
   jsx: JSX.Element,
+  jsxPruned: JSX.Element,
   payload: unknown,
   id: number,
   state: Record<string, unknown>,

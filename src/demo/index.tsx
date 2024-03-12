@@ -70,6 +70,10 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
             children='set date'
             onClick={outputs.setDate}
           />
+          <SimpleButton
+            children='set empty array'
+            onClick={outputs.setEmptyArray}
+          />
         </>
       }
     />

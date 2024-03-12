@@ -58,9 +58,9 @@ export const App = () => {
                                     }
                                   />
                                   <ShowUnchangedToggle
-                                    title="Hide ineffective actions"
+                                    title="Hide ineffective updates"
                                     onClick={outputs.onClickHideIneffectiveActions}
-                                    children={inputs.hideIneffectiveActions ? <ToggleOnIcon /> : <ToggleOffIcon />}
+                                    children={inputs.hideUnchanged ? <ToggleOnIcon /> : <ToggleOffIcon />}
                                   />
                                   <ClearButton
                                     children={<ClearIcon />}
@@ -100,7 +100,7 @@ export const App = () => {
                                               isSelected={item.id === inputs.selectedId}
                                               children={
                                                 <>
-                                                  <ItemJsx children={item.jsx} />
+                                                  <ItemJsx children={inputs.hideUnchanged ? item.jsxPruned : item.jsx} />
                                                   <ItemTime children={item.time} />
                                                 </>
                                               }

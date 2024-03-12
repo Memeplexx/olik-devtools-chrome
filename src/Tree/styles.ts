@@ -34,25 +34,27 @@ export const Obj = styled.span`
   align-items: start;
 `;
 
-export const ArrOpen = styled.span.attrs({ children: '[' }) <{ $unchanged?: boolean }>`
+const unchangedOverride = (p: { $unchanged?: boolean, $hideUnchanged?: boolean }) => `
+  ${p.$hideUnchanged && p.$unchanged ? `
+    display: none;
+  ` : p.$unchanged ? `
+    color: gray!important;
+    * {
+      color: gray!important;
+    }
+  ` : `
+  `};
+`;
+
+export const ArrOpen = styled.span.attrs({ children: '[' }) <{ $unchanged?: boolean, $hideUnchanged?: boolean }>`
   &:hover {
     background-color: rgba(255,255,255,0.2);
   }
-  ${p => p.$unchanged ? `
-    color: gray!important;
-    * {
-      color: gray!important;
-    }
-  ` : ''};
+  ${unchangedOverride};
 `;
 
-export const ArrClose = styled.span.attrs({ children: ']' }) <{ $unchanged?: boolean }>`
-${p => p.$unchanged ? `
-    color: gray!important;
-    * {
-      color: gray!important;
-    }
-  ` : ''};
+export const ArrClose = styled.span.attrs({ children: ']' }) <{ $unchanged?: boolean, $hideUnchanged?: boolean }>`
+  ${unchangedOverride};
 `;
 
 export const Colon = styled(possible.span).attrs({ children: ':' })`
@@ -75,30 +77,20 @@ export const ArrElement = styled.span`
   display: block;
 `;
 
-export const Row = styled(possible.span) <{ $unchanged?: boolean }>`
+export const Row = styled(possible.span) <{ $unchanged?: boolean, $hideUnchanged?: boolean }>`
   display: flex;
-  ${p => p.$unchanged ? `
-    color: gray!important;
-    * {
-      color: gray!important;
-    }
-  ` : ''};
+  ${unchangedOverride};
 `;
 
-export const ObjOpen = styled.span.attrs({ children: '{' }) `
+export const ObjOpen = styled.span.attrs({ children: '{' })`
   cursor: pointer;
   &:hover > * {
     background-color: rgba(255,255,255,0.2);
   }
 `;
 
-export const Prim = styled.span<{ $unchanged?: boolean }>`
-  ${p => p.$unchanged ? `
-    color: gray!important;
-    * {
-      color: gray!important;
-    }
-  ` : ''};
+export const Prim = styled.span<{ $unchanged?: boolean, $hideUnchanged?: boolean }>`
+  ${unchangedOverride};
 `;
 
 export const ActionTypeOpen = styled.span`
@@ -125,5 +117,12 @@ export const RowContracted = styled(Row)`
   cursor: pointer;
   &:hover > * {
     background-color: rgba(255,255,255,0.2);
+  }
+`;
+
+export const RowEmpty = styled(Row)`
+  color: gray;
+  * {
+    color: gray;
   }
 `;

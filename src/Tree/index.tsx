@@ -1,7 +1,7 @@
 import { Fragment, MouseEvent } from "react";
 import { Frag } from "../html/frag";
 import { is } from "../shared/functions";
-import { ActionTypeClose, ActionTypeClosed, ActionTypeOpen, Arr, ArrClose, ArrElement, ArrEmpty, ArrOpen, Boo, Colon, Comma, Dat, Prim, Key, Nul, Num, Obj, ObjClose, ObjEmpty, ObjOpen, Row, RowContracted, Str, Und, Value } from "./styles";
+import { ActionTypeClose, ActionTypeClosed, ActionTypeOpen, Arr, ArrClose, ArrElement, ArrEmpty, ArrOpen, Boo, Colon, Comma, Dat, Prim, Key, Nul, Num, Obj, ObjClose, ObjEmpty, ObjOpen, Row, RowContracted, Str, Und, Value, RowEmpty } from "./styles";
 import { TreeProps } from "./constants";
 
 
@@ -63,8 +63,13 @@ export const getStateAsJsx = (
                 children={
                   is.array(ss) ? (
                     <>
+                      <RowEmpty
+                        showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
+                        children={`${props.actionType!}([])`}
+                      />
                       <RowContracted
                         $unchanged={unchanged}
+                        $hideUnchanged={props.hideUnchanged}
                         showIf={props.contractedKeys.includes(keyConcat)}
                         onClick={onClickNodeKey(keyConcat)}
                         children={
@@ -78,9 +83,16 @@ export const getStateAsJsx = (
                         showIf={!props.contractedKeys.includes(keyConcat)}
                         children={
                           <>
-                            <ArrOpen $unchanged={unchanged} onClick={onClickNodeKey(keyConcat)} />
+                            <ArrOpen
+                              $unchanged={unchanged}
+                              $hideUnchanged={props.hideUnchanged}
+                              onClick={onClickNodeKey(keyConcat)}
+                            />
                             <Value children={recurse(ss, keyConcat)} />
-                            <ArrClose $unchanged={unchanged} />
+                            <ArrClose
+                              $unchanged={unchanged}
+                              $hideUnchanged={props.hideUnchanged}
+                            />
                             {possibleComma}
                           </>
                         }
@@ -89,8 +101,13 @@ export const getStateAsJsx = (
 
                   ) : is.nonArrayObject(ss) ? (
                     <>
+                      <RowEmpty
+                        showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
+                        children={`${props.actionType!}({})`}
+                      />
                       <RowContracted
                         $unchanged={unchanged}
+                        $hideUnchanged={props.hideUnchanged}
                         showIf={props.contractedKeys.includes(keyConcat)}
                         onClick={onClickNodeKey(keyConcat)}
                         children={
@@ -106,12 +123,14 @@ export const getStateAsJsx = (
                           <>
                             <Row
                               $unchanged={unchanged}
+                              $hideUnchanged={props.hideUnchanged}
                               onClick={onClickNodeKey(keyConcat)}
                               children={<ObjOpen />}
                             />
                             <Value children={recurse(ss, keyConcat)} />
                             <Row
                               $unchanged={unchanged}
+                              $hideUnchanged={props.hideUnchanged}
                               children={
                                 <>
                                   <ObjClose />
@@ -126,6 +145,7 @@ export const getStateAsJsx = (
                   ) : (
                     <Row
                       $unchanged={unchanged}
+                      $hideUnchanged={props.hideUnchanged}
                       children={
                         <>
                           {recurse(ss, keyConcat)}
@@ -157,8 +177,13 @@ export const getStateAsJsx = (
                     <Arr
                       children={
                         <>
+                          <RowEmpty
+                            showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
+                            children={`${props.actionType!}([])`}
+                          />
                           <RowContracted
                             $unchanged={unchanged}
+                            $hideUnchanged={props.hideUnchanged}
                             showIf={props.contractedKeys.includes(keyConcat)}
                             onClick={onClickNodeKey(keyConcat)}
                             children={
@@ -175,6 +200,7 @@ export const getStateAsJsx = (
                               <>
                                 <Row
                                   $unchanged={unchanged}
+                                  $hideUnchanged={props.hideUnchanged}
                                   onClick={onClickNodeKey(keyConcat)}
                                   children={
                                     <>
@@ -187,6 +213,7 @@ export const getStateAsJsx = (
                                 <Value children={recurse(val[key], keyConcat)} />
                                 <Row
                                   $unchanged={unchanged}
+                                  $hideUnchanged={props.hideUnchanged}
                                   children={
                                     <>
                                       {(isTopLevel && props.actionType) ? <ActionTypeClose children='])' /> : <ArrClose />}
@@ -204,8 +231,13 @@ export const getStateAsJsx = (
                     <Obj
                       children={
                         <>
+                          <RowEmpty
+                            showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
+                            children={`${props.actionType!}({})`}
+                          />
                           <RowContracted
                             $unchanged={unchanged}
+                            $hideUnchanged={props.hideUnchanged}
                             showIf={props.contractedKeys.includes(keyConcat)}
                             onClick={onClickNodeKey(keyConcat)}
                             children={
@@ -223,6 +255,7 @@ export const getStateAsJsx = (
                               <>
                                 <Row
                                   $unchanged={unchanged}
+                                  $hideUnchanged={props.hideUnchanged}
                                   onClick={onClickNodeKey(keyConcat)}
                                   children={
                                     <>
@@ -235,6 +268,7 @@ export const getStateAsJsx = (
                                 <Value children={recurse(val[key], keyConcat)} />
                                 <Row
                                   $unchanged={unchanged}
+                                  $hideUnchanged={props.hideUnchanged}
                                   children={
                                     <>
                                       {(isTopLevel && props.actionType) ? <ActionTypeClose children='})' /> : <ObjClose />}
@@ -251,6 +285,7 @@ export const getStateAsJsx = (
                   ) : (
                     <Row
                       $unchanged={unchanged}
+                      $hideUnchanged={props.hideUnchanged}
                       children={
                         <>
                           <Key children={key.toString()} />

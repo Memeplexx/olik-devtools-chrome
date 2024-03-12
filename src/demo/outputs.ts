@@ -50,5 +50,8 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
     setDate: () => {
       store.dat.$set(new Date());
     },
+    setEmptyArray: () => {
+      store.arr.$set([]);
+    }
   };
 };

@@ -34,7 +34,7 @@ const useLocalState = () => {
     idRefInner: useRef(0),
     selectedId: null as number | null,
     items: new Array<ItemWrapper>(),
-    hideIneffectiveActions: false,
+    hideUnchanged: false,
     query: '',
   });
   return { ...state, setState };
@@ -113,6 +113,17 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
         setState,
         idOuter: s.idRefOuter.current,
         idInner: s.idRefInner.current,
+        hideUnchanged: false,
+      }),
+      jsxPruned: getTypeJsx({
+        type: incoming.action.type,
+        payload,
+        stateBefore,
+        stateAfter,
+        setState,
+        idOuter: s.idRefOuter.current,
+        idInner: s.idRefInner.current,
+        hideUnchanged: true,
       }),
       state: fullStateAfter,
       payload: incoming.action.payload,
@@ -173,7 +184,8 @@ const getTypeJsx = (arg: {
   stateAfter: unknown,
   setState: ReturnType<typeof useLocalState>['setState'],
   idOuter: number,
-  idInner: number
+  idInner: number,
+  hideUnchanged: boolean,
 }) => {
   // export const updateFunctionsConst = ['$set', '$setUnique', '$patch', '$patchDeep', '$delete', '$setNew', '$add', '$subtract', '$clear', '$push', '$with', '$toggle', '$merge', '$deDuplicate'] as const;
   const segments = arg.type.split('.');
@@ -222,6 +234,15 @@ const getTypeJsx = (arg: {
               contractedKeys,
               onClickNodeKey,
               unchanged,
+              hideUnchanged: false,
+            }),
+            jsxPruned: getStateAsJsx({
+              actionType,
+              state: arg.stateAfter,
+              contractedKeys,
+              onClickNodeKey,
+              unchanged,
+              hideUnchanged: true,
             }),
           } satisfies Item
         })
@@ -234,6 +255,7 @@ const getTypeJsx = (arg: {
     contractedKeys: [],
     unchanged,
     onClickNodeKey,
+    hideUnchanged: arg.hideUnchanged,
   });
 }
 
