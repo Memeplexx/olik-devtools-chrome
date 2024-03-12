@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { Editor } from "../editor";
-import { Tree } from "../tree";
+import { State } from "../state";
 import { Panel, PanelResizeHandle } from "react-resizable-panels";
 import { CiCircleRemove } from 'react-icons/ci';
 import { BsToggleOff, BsToggleOn } from 'react-icons/bs';
@@ -111,7 +111,7 @@ export const Error = styled(possible.div)`
 	font-size: 14px;
 `;
 
-export const TreePanel = styled(Tree)`
+export const StatePanel = styled(State)`
 	flex: 1;
 `;
 

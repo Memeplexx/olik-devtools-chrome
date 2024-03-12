@@ -2,11 +2,6 @@ import styled from "styled-components/macro";
 import { possible } from "../html";
 
 
-export const JsonWrapper = styled(possible.div)`
-  overflow: auto;
-  font-family: 'Source Code Pro', monospace;
-`;
-
 export const Str = styled.span`
   color: green;
 `;

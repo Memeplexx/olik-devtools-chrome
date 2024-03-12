@@ -1,9 +1,9 @@
+import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { is } from "../shared/functions";
-import { getStateAsJsx } from "../tree/tree-maker";
+import { getStateAsJsx } from "../tree";
 import { Item, ItemWrapper, Message } from "./constants";
-import { differenceInMilliseconds, differenceInSeconds, differenceInMinutes, differenceInHours } from 'date-fns';
 
 export const useInputs = () => {
 

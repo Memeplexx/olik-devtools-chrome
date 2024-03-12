@@ -1,10 +1,10 @@
 import { ForwardedRef, useState } from "react";
 import { useForwardedRef } from "../shared/functions";
-import { TreeProps } from "./constants";
-import { getStateAsJsx } from "./tree-maker";
+import { StateProps } from "./constants";
 import { StateAction, deserialize, readState, updateFunctions } from "olik";
+import { getStateAsJsx } from "../tree";
 
-export const useInputs = (props: TreeProps, ref: ForwardedRef<HTMLDivElement>) => {
+export const useInputs = (props: StateProps, ref: ForwardedRef<HTMLDivElement>) => {
   const containerRef = useForwardedRef<HTMLDivElement>(ref);
   const [contractedKeys, setContractedKeys] = useState(new Array<string>());
   const onClickNodeKey = (key: string) => {

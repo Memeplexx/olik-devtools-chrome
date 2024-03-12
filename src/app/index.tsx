@@ -1,4 +1,4 @@
-import { ClearButton, ClearIcon, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, TreePanel } from './styles';
+import { ClearButton, ClearIcon, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, StatePanel } from './styles';
 import { PanelGroup } from 'react-resizable-panels';
 import { useInputs } from './inputs';
 import { Frag } from '../html/frag';
@@ -35,7 +35,7 @@ export const App = () => {
                         <ResizablePanel
                           minSize={0}
                           children={
-                            <TreePanel
+                            <StatePanel
                               ref={inputs.treeRef}
                               state={storeStateVersion ?? inputs.storeState!}
                               storeRef={inputs.storeRef}
