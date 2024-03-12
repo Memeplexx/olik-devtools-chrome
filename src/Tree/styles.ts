@@ -34,8 +34,7 @@ export const Obj = styled.span`
   align-items: start;
 `;
 
-export const ArrOpen = styled.span.attrs({ children: '[' }) <{ $readonly?: boolean, $unchanged?: boolean }>`
-  ${p => p.$readonly ? '' : `cursor: pointer;`};
+export const ArrOpen = styled.span.attrs({ children: '[' }) <{ $unchanged?: boolean }>`
   &:hover {
     background-color: rgba(255,255,255,0.2);
   }
@@ -76,14 +75,8 @@ export const ArrElement = styled.span`
   display: block;
 `;
 
-export const Row = styled(possible.span) <{ $readonly?: boolean, $unchanged?: boolean }>`
+export const Row = styled(possible.span) <{ $unchanged?: boolean }>`
   display: flex;
-  ${p => p.$readonly ? '' : `
-    cursor: pointer;
-    &:hover > * {
-      background-color: rgba(255,255,255,0.2);
-    }
-  `};
   ${p => p.$unchanged ? `
     color: gray!important;
     * {
@@ -92,13 +85,11 @@ export const Row = styled(possible.span) <{ $readonly?: boolean, $unchanged?: bo
   ` : ''};
 `;
 
-export const ObjOpen = styled.span.attrs({ children: '{' }) <{ $readonly?: boolean }>`
-  ${p => p.$readonly ? '' : `
-    cursor: pointer;
-    &:hover > * {
-      background-color: rgba(255,255,255,0.2);
-    }
-  `};
+export const ObjOpen = styled.span.attrs({ children: '{' }) `
+  cursor: pointer;
+  &:hover > * {
+    background-color: rgba(255,255,255,0.2);
+  }
 `;
 
 export const Prim = styled.span<{ $unchanged?: boolean }>`

@@ -180,7 +180,7 @@ const getTypeJsx = (arg: {
   const func = segments.pop()!.slice(0, -2);
   const actionType = [...segments, func].join('.')
   const unchanged = new Array<string>();
-  const updateHighlights = (stateBefore: unknown, stateAfter: unknown) => {
+  const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
       if (is.nonArrayObject(after)) {
         if (JSON.stringify(after) === JSON.stringify(before)) {
@@ -199,7 +199,7 @@ const getTypeJsx = (arg: {
     recurse(stateBefore, stateAfter, '');
   }
   if (['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge'].includes(func)) {
-    updateHighlights(arg.stateBefore, arg.stateAfter);
+    updateUnchanged(arg.stateBefore, arg.stateAfter);
   } else if (['$clear'].includes(func) && is.array(arg.stateBefore) && !arg.stateBefore.length) {
     unchanged.push('');
   }
@@ -216,7 +216,7 @@ const getTypeJsx = (arg: {
           return {
             ...itemInner,
             contractedKeys,
-            jsxFormatted: getStateAsJsx({
+            jsx: getStateAsJsx({
               actionType,
               state: arg.stateAfter,
               contractedKeys,
@@ -242,11 +242,11 @@ const getTimeDiff = (from: Date, to: Date) => {
   if (milliseconds < 10 * 1000) {
     return `${milliseconds} ms`;
   } else if (milliseconds < 60 * 1000) {
-    return `${differenceInSeconds(from, to )} s`;
+    return `${differenceInSeconds(from, to)} s`;
   } else if (milliseconds < 60 * 60 * 1000) {
-    return `${differenceInMinutes(from, to )} m`;
+    return `${differenceInMinutes(from, to)} m`;
   } else if (milliseconds < 24 * 60 * 60 * 1000) {
-    return `${differenceInHours(from, to )} h`;
+    return `${differenceInHours(from, to)} h`;
   } else {
     return to.toLocaleDateString();
   }
