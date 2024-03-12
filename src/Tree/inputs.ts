@@ -29,12 +29,12 @@ const tryReadState = ({ state, contractedKeys, query, onClickNodeKey }: { query:
     if (stateRev === undefined) {
       throw new Error();
     }
-    return getStateAsJsx({ state: stateRev, onClickNodeKey, contractedKeys, highlights: [] });
+    return getStateAsJsx({ state: stateRev, onClickNodeKey, contractedKeys, unchanged: [] });
   } catch (e) {
     const segments = query.split('.').filter(e => !!e);
     segments.pop();
     if (segments.length === 0) {
-      return getStateAsJsx({ state, onClickNodeKey, contractedKeys, highlights: [] });
+      return getStateAsJsx({ state, onClickNodeKey, contractedKeys, unchanged: [] });
     } else {
       return tryReadState({ query: segments.join('.'), state, onClickNodeKey, contractedKeys });
     }

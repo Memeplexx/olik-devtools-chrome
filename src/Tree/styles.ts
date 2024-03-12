@@ -19,7 +19,7 @@ export const Boo = styled.span`
   color: lightblue;
 `;
 
-export const Nul = styled.span.attrs({ children: 'null' })`
+export const Nul = styled.span`
   color: magenta;
 `;
 
@@ -39,14 +39,26 @@ export const Obj = styled.span`
   align-items: start;
 `;
 
-export const ArrOpen = styled.span.attrs({ children: '[' }) <{ $readonly?: boolean }>`
+export const ArrOpen = styled.span.attrs({ children: '[' }) <{ $readonly?: boolean, $unchanged?: boolean }>`
   ${p => p.$readonly ? '' : `cursor: pointer;`};
   &:hover {
     background-color: rgba(255,255,255,0.2);
   }
+  ${p => p.$unchanged ? `
+    color: gray!important;
+    * {
+      color: gray!important;
+    }
+  ` : ''};
 `;
 
-export const ArrClose = styled.span.attrs({ children: ']' })`
+export const ArrClose = styled.span.attrs({ children: ']' }) <{ $unchanged?: boolean }>`
+${p => p.$unchanged ? `
+    color: gray!important;
+    * {
+      color: gray!important;
+    }
+  ` : ''};
 `;
 
 export const Colon = styled(possible.span).attrs({ children: ':' })`
@@ -69,7 +81,7 @@ export const ArrElement = styled.span`
   display: block;
 `;
 
-export const Row = styled(possible.span) <{ $readonly?: boolean }>`
+export const Row = styled(possible.span) <{ $readonly?: boolean, $unchanged?: boolean }>`
   display: flex;
   ${p => p.$readonly ? '' : `
     cursor: pointer;
@@ -77,6 +89,12 @@ export const Row = styled(possible.span) <{ $readonly?: boolean }>`
       background-color: rgba(255,255,255,0.2);
     }
   `};
+  ${p => p.$unchanged ? `
+    color: gray!important;
+    * {
+      color: gray!important;
+    }
+  ` : ''};
 `;
 
 export const ObjOpen = styled.span.attrs({ children: '{' }) <{ $readonly?: boolean }>`
@@ -88,8 +106,13 @@ export const ObjOpen = styled.span.attrs({ children: '{' }) <{ $readonly?: boole
   `};
 `;
 
-export const Highlightable = styled.span<{ $highlight?: boolean }>`
-  ${p => p.$highlight ? `&:after { content: '★'; padding: 2px; };` : ''};
+export const Prim = styled.span<{ $unchanged?: boolean }>`
+  ${p => p.$unchanged ? `
+    color: gray!important;
+    * {
+      color: gray!important;
+    }
+  ` : ''};
 `;
 
 export const ActionTypeOpen = styled.span`

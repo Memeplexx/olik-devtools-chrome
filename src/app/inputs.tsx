@@ -179,27 +179,29 @@ const getTypeJsx = (arg: {
   const segments = arg.type.split('.');
   const func = segments.pop()!.slice(0, -2);
   const actionType = [...segments, func].join('.')
-  const highlights = new Array<string>();
+  const unchanged = new Array<string>();
   const updateHighlights = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
       if (is.nonArrayObject(after)) {
+        if (JSON.stringify(after) === JSON.stringify(before)) {
+          unchanged.push(keyCollector);
+        }
         Object.keys(after).forEach(key => recurse(is.nonArrayObject(before) ? before[key] : {}, after[key], `${keyCollector}.${key}`));
       } else if (is.array(after)) {
+        if (JSON.stringify(after) === JSON.stringify(before)) {
+          unchanged.push(keyCollector);
+        }
         after.forEach((_, i) => recurse(is.array(before) ? before[i] : [], after[i], `${keyCollector}.${i}`));
-      } else if (before !== after) {
-        highlights.push(keyCollector);
+      } else if (before === after) {
+        unchanged.push(keyCollector);
       }
     }
     recurse(stateBefore, stateAfter, '');
   }
   if (['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge'].includes(func)) {
     updateHighlights(arg.stateBefore, arg.stateAfter);
-  } else if (['$add', '$subtract', '$toggle', '$delete'].includes(func)) {
-    highlights.push('');
-  } else if (['$clear'].includes(func) && is.array(arg.stateBefore)) {
-    highlights.push(...(arg.stateBefore.length ? [''] : []));
-  } else if (['$push'].includes(func)) {
-    updateHighlights(arg.stateBefore, arg.payload);
+  } else if (['$clear'].includes(func) && is.array(arg.stateBefore) && !arg.stateBefore.length) {
+    unchanged.push('');
   }
 
   const onClickNodeKey = (key: string) => arg.setState(s => ({
@@ -219,7 +221,7 @@ const getTypeJsx = (arg: {
               state: arg.stateAfter,
               contractedKeys,
               onClickNodeKey,
-              highlights,
+              unchanged,
             }),
           }
         })
@@ -230,7 +232,7 @@ const getTypeJsx = (arg: {
     actionType,
     state: arg.payload,
     contractedKeys: [],
-    highlights,
+    unchanged,
     onClickNodeKey,
   });
 }
