@@ -53,16 +53,20 @@ export const getStateAsJsx = (
     } else if (is.array(val)) {
       return (
         <>
-          {val.map((ss, index) => {
+          {val.map((item, index) => {
             const isTopLevel = false;
             const keyConcat = isTopLevel ? index.toString() : `${outerKey}.${index}`;
             const possibleComma = index === val.length - 1 ? <></> : <Comma />;
             const unchanged = props.unchanged.includes(keyConcat);
+            const itemIsArray = is.array(item);
+            const itemIsNonArrayObject = is.nonArrayObject(item);
+            const isContracted = props.contractedKeys.includes(keyConcat);
+            const hasValues = itemIsArray ? !!item.length : itemIsNonArrayObject ? !!Object.keys(item).length : false;
             return (
               <ArrElement
                 key={index}
                 children={
-                  is.array(ss) ? (
+                  itemIsArray ? (
                     <>
                       <RowUnchanged
                         showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
@@ -71,7 +75,7 @@ export const getStateAsJsx = (
                       <RowContracted
                         $unchanged={unchanged}
                         $hideUnchanged={props.hideUnchanged}
-                        showIf={props.contractedKeys.includes(keyConcat)}
+                        showIf={isContracted}
                         onClick={onClickNodeKey(keyConcat)}
                         children={
                           <>
@@ -81,14 +85,14 @@ export const getStateAsJsx = (
                         }
                       />
                       <RowEmpty
-                        showIf={isTopLevel && !!props.actionType && !props.contractedKeys.includes(keyConcat) && !ss.length}
+                        showIf={isTopLevel && !!props.actionType && !isContracted && !hasValues}
                         children={`${props.actionType!}([])`}
                       />
                       <ArrEmpty
-                        showIf={!isTopLevel && !props.actionType && !props.contractedKeys.includes(keyConcat) && !ss.length}
+                        showIf={!isTopLevel && !props.actionType && !isContracted && !hasValues}
                       />
                       <Frag
-                        showIf={!props.contractedKeys.includes(keyConcat) && !!ss.length}
+                        showIf={!isContracted && hasValues}
                         children={
                           <>
                             <ArrOpen
@@ -96,7 +100,7 @@ export const getStateAsJsx = (
                               $hideUnchanged={props.hideUnchanged}
                               onClick={onClickNodeKey(keyConcat)}
                             />
-                            <Value children={recurse(ss, keyConcat)} />
+                            <Value children={recurse(item, keyConcat)} />
                             <ArrClose
                               $unchanged={unchanged}
                               $hideUnchanged={props.hideUnchanged}
@@ -107,7 +111,7 @@ export const getStateAsJsx = (
                       />
                     </>
 
-                  ) : is.nonArrayObject(ss) ? (
+                  ) : itemIsNonArrayObject ? (
                     <>
                       <RowUnchanged
                         showIf={isTopLevel && !!props.actionType && props.hideUnchanged && unchanged}
@@ -116,7 +120,7 @@ export const getStateAsJsx = (
                       <RowContracted
                         $unchanged={unchanged}
                         $hideUnchanged={props.hideUnchanged}
-                        showIf={props.contractedKeys.includes(keyConcat)}
+                        showIf={isContracted}
                         onClick={onClickNodeKey(keyConcat)}
                         children={
                           <>
@@ -126,14 +130,14 @@ export const getStateAsJsx = (
                         }
                       />
                       <RowEmpty
-                        showIf={isTopLevel && !!props.actionType && !props.contractedKeys.includes(keyConcat) && !Object.keys(ss).length}
+                        showIf={isTopLevel && !!props.actionType && !isContracted && !hasValues}
                         children={`${props.actionType!}({})`}
                       />
                       <ObjEmpty
-                        showIf={!isTopLevel && !props.actionType && !props.contractedKeys.includes(keyConcat) && !Object.keys(ss).length}
+                        showIf={!isTopLevel && !props.actionType && !isContracted && !hasValues}
                       />
                       <Frag
-                        showIf={!props.contractedKeys.includes(keyConcat) && !!Object.keys(ss).length}
+                        showIf={!isContracted && hasValues}
                         children={
                           <>
                             <Row
@@ -142,7 +146,7 @@ export const getStateAsJsx = (
                               onClick={onClickNodeKey(keyConcat)}
                               children={<ObjOpen />}
                             />
-                            <Value children={recurse(ss, keyConcat)} />
+                            <Value children={recurse(item, keyConcat)} />
                             <Row
                               $unchanged={unchanged}
                               $hideUnchanged={props.hideUnchanged}
@@ -163,7 +167,7 @@ export const getStateAsJsx = (
                       $hideUnchanged={props.hideUnchanged}
                       children={
                         <>
-                          {recurse(ss, keyConcat)}
+                          {recurse(item, keyConcat)}
                           {possibleComma}
                         </>
                       }
@@ -184,12 +188,16 @@ export const getStateAsJsx = (
             const keyConcat = isTopLevel ? key.toString() : `${outerKey.toString()}.${key.toString()}`;
             const possibleComma = index === objectKeys.length - 1 ? <></> : <Comma />;
             const unchanged = props.unchanged.includes(keyConcat);
-            const ss = val[key];
+            const item = val[key];
+            const itemIsArray = is.array(item);
+            const itemIsNonArrayObject = is.nonArrayObject(item);
+            const isContracted = props.contractedKeys.includes(keyConcat);
+            const hasValues = itemIsArray ? !!item.length : itemIsNonArrayObject ? !!Object.keys(item).length : false;
             return (
               <Fragment
                 key={index}
                 children={
-                  is.array(ss) ? (
+                  itemIsArray ? (
                     <Arr
                       children={
                         <>
@@ -200,7 +208,7 @@ export const getStateAsJsx = (
                           <RowContracted
                             $unchanged={unchanged}
                             $hideUnchanged={props.hideUnchanged}
-                            showIf={props.contractedKeys.includes(keyConcat)}
+                            showIf={isContracted}
                             onClick={onClickNodeKey(keyConcat)}
                             children={
                               <>
@@ -211,14 +219,14 @@ export const getStateAsJsx = (
                             }
                           />
                           <RowEmpty
-                            showIf={isTopLevel && !!props.actionType && !props.contractedKeys.includes(keyConcat) && !ss.length}
+                            showIf={isTopLevel && !!props.actionType && !isContracted && !hasValues}
                             children={`${props.actionType!}([])`}
                           />
                           <ArrEmpty
-                            showIf={!isTopLevel && !props.actionType && !props.contractedKeys.includes(keyConcat) && !ss.length}
+                            showIf={!isTopLevel && !props.actionType && !isContracted && !hasValues}
                           />
                           <Frag
-                            showIf={!props.contractedKeys.includes(keyConcat) && !!ss.length}
+                            showIf={!isContracted && hasValues}
                             children={
                               <>
                                 <Row
@@ -233,7 +241,7 @@ export const getStateAsJsx = (
                                     </>
                                   }
                                 />
-                                <Value children={recurse(ss, keyConcat)} />
+                                <Value children={recurse(item, keyConcat)} />
                                 <Row
                                   $unchanged={unchanged}
                                   $hideUnchanged={props.hideUnchanged}
@@ -250,7 +258,7 @@ export const getStateAsJsx = (
                         </>
                       }
                     />
-                  ) : is.nonArrayObject(ss) ? (
+                  ) : is.nonArrayObject(item) ? (
                     <Obj
                       children={
                         <>
@@ -261,7 +269,7 @@ export const getStateAsJsx = (
                           <RowContracted
                             $unchanged={unchanged}
                             $hideUnchanged={props.hideUnchanged}
-                            showIf={props.contractedKeys.includes(keyConcat)}
+                            showIf={isContracted}
                             onClick={onClickNodeKey(keyConcat)}
                             children={
                               <>
@@ -273,14 +281,14 @@ export const getStateAsJsx = (
                             }
                           />
                           <RowEmpty
-                            showIf={isTopLevel && !!props.actionType && !props.contractedKeys.includes(keyConcat) && !Object.keys(ss).length}
+                            showIf={isTopLevel && !!props.actionType && !isContracted && !hasValues}
                             children={`${props.actionType!}({})`}
                           />
                           <ObjEmpty
-                            showIf={!isTopLevel && !props.actionType && !props.contractedKeys.includes(keyConcat) && !Object.keys(ss).length}
+                            showIf={!isTopLevel && !props.actionType && !isContracted && !hasValues}
                           />
                           <Frag
-                            showIf={!props.contractedKeys.includes(keyConcat) && !!Object.keys(ss).length}
+                            showIf={!isContracted && hasValues}
                             children={
                               <>
                                 <Row
