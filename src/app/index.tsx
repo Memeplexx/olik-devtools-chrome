@@ -100,7 +100,7 @@ export const App = () => {
                                               isSelected={item.id === inputs.selectedId}
                                               children={
                                                 <>
-                                                  <ItemJsx children={item.jsxFormatted} />
+                                                  <ItemJsx children={item.jsx} />
                                                   <ItemTime children={item.time} />
                                                 </>
                                               }

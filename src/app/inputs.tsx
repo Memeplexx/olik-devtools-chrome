@@ -105,7 +105,7 @@ const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
     const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
     const getNewItem = () => ({
       id: ++s.idRefInner.current,
-      jsxFormatted: getTypeJsx({
+      jsx: getTypeJsx({
         type: incoming.action.type,
         payload,
         stateBefore,
@@ -239,11 +239,11 @@ const getTimeDiff = (from: Date, to: Date) => {
   const milliseconds = differenceInMilliseconds(from, to);
   if (milliseconds < 10 * 1000) {
     return `${milliseconds} ms`;
-  } else if (milliseconds < 60 * 60 * 1000) {
+  } else if (milliseconds < 60 * 1000) {
     return `${differenceInSeconds(from, to )} s`;
-  } else if (milliseconds < 24 * 60 * 60 * 1000) {
+  } else if (milliseconds < 60 * 60 * 1000) {
     return `${differenceInMinutes(from, to )} m`;
-  } else if (milliseconds < 365 * 24 * 60 * 60 * 1000) {
+  } else if (milliseconds < 24 * 60 * 60 * 1000) {
     return `${differenceInHours(from, to )} h`;
   } else {
     return to.toLocaleDateString();
