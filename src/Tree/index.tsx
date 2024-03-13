@@ -15,19 +15,19 @@ export const getStateAsJsx = (
   }
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
     const unchanged = props.unchanged.includes(outerKey);
-    const remainingProps = { props, unchanged, outerKey };
+    const doRenderPrimitive = (el: JSX.Element) => renderPrimitive({ props, unchanged, outerKey, el });
     if (is.undefined(val)) {
-      return primitive({ ...remainingProps, el: <Und /> });
+      return doRenderPrimitive(<Und />);
     } else if (is.null(val)) {
-      return primitive({ ...remainingProps, el: <Nul children='null' /> });
+      return doRenderPrimitive(<Nul children='null' />);
     } else if (is.string(val)) {
-      return primitive({ ...remainingProps, el: <Str children={`"${val}"`} /> });
+      return doRenderPrimitive(<Str children={`"${val}"`} />);
     } else if (is.number(val)) {
-      return primitive({ ...remainingProps, el: <Num children={val.toString()} /> });
+      return doRenderPrimitive(<Num children={val} />);
     } else if (is.boolean(val)) {
-      return primitive({ ...remainingProps, el: <Boo children={val.toString()} /> });
+      return doRenderPrimitive(<Boo children={val} />);
     } else if (is.date(val)) {
-      return primitive({ ...remainingProps, el: <Dat children={val.toISOString()} /> });
+      return doRenderPrimitive(<Dat children={val.toISOString()} />);
     } else if (is.array(val)) {
       return (
         <>
@@ -91,6 +91,7 @@ const renderObjectOrArray = (
   const isContracted = props.contractedKeys.includes(keyConcat);
   const isEmpty = itemIsArray ? !item.length : itemIsNonArrayObject ? !Object.keys(item).length : false;
   const hideUnchanged = isUnchanged && props.hideUnchanged;
+  const showActionType = isTopLevel && !!props.actionType;
   return (
     <Frag
       key={index}
@@ -99,20 +100,20 @@ const renderObjectOrArray = (
           <>
             <Act
               children={props.actionType}
-              showIf={isTopLevel && !!props.actionType}
+              showIf={showActionType}
               $unchanged={isUnchanged}
               $clickable={true}
               onClick={onClickNodeKey(keyConcat)}
             />
             <Par
               children={`(`}
-              showIf={isTopLevel && !!props.actionType}
+              showIf={showActionType}
               $unchanged={isUnchanged}
               $clickable={true}
               onClick={onClickNodeKey(keyConcat)}
             />
             <Key
-              children={key?.toString()}
+              children={key}
               $unchanged={isUnchanged}
               showIf={isObject && !isTopLevel && !hideUnchanged}
               $clickable={true}
@@ -154,7 +155,7 @@ const renderObjectOrArray = (
             />
             <Par
               children={`)`}
-              showIf={isTopLevel && !!props.actionType}
+              showIf={showActionType}
               $unchanged={isUnchanged}
             />
             <Com
@@ -171,7 +172,7 @@ const renderObjectOrArray = (
             children={
               <>
                 <Key
-                  children={key?.toString()}
+                  children={key}
                   showIf={isObject && !isTopLevel && !hideUnchanged}
                   $unchanged={isUnchanged}
                   $clickable={true}
@@ -197,7 +198,7 @@ const renderObjectOrArray = (
   )
 }
 
-const primitive = (
+const renderPrimitive = (
   {
     props,
     el,
