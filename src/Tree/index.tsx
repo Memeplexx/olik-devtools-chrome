@@ -234,6 +234,7 @@ const renderPrimitive = (
       children={
         <>
           <Node
+            $type={`actionType`}
             children={props.actionType}
           />
           <Node
