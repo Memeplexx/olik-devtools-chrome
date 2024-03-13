@@ -1,7 +1,7 @@
-import { Fragment, MouseEvent } from "react";
+import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
 import { is } from "../shared/functions";
-import { ActionTypeClose, ActionTypeClosed, ActionTypeOpen, Arr, ArrClose, ArrElement, ArrEmpty, ArrOpen, Boo, Colon, Comma, Dat, Prim, Key, Nul, Num, Obj, ObjClose, ObjEmpty, ObjOpen, Row, RowContracted, Str, Und, Value, RowUnchanged, RowEmpty } from "./styles";
+import { Arr, Boo, Dat, Nul, Num, Obj, Con, Str, Und, Act, Key, Col, Par, Com, ArrObj } from "./styles";
 import { TreeProps } from "./constants";
 
 
@@ -16,21 +16,32 @@ export const getStateAsJsx = (
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
     const isTopLevel = outerKey === '';
     const unchanged = props.unchanged.includes(outerKey);
+    const isUnChangedAndHidden = unchanged && props.hideUnchanged;
     const primitive = (el: JSX.Element) => {
       const element = (
-        <Prim
+        <Con
           $unchanged={unchanged}
           children={el}
         />
       );
       return (isTopLevel && props.actionType) ? (
-        <Prim
+        <Con
           $unchanged={unchanged}
           children={
             <>
-              <span children={`${props.actionType}(`} />
-              {props.hideUnchanged && unchanged ? '' : element}
-              <span children=')' />
+              <Act
+                children={props.actionType}
+              />
+              <Par
+                children={`(`}
+              />
+              <Frag
+                showIf={!isUnChangedAndHidden}
+                children={element}
+              />
+              <Par
+                children={`)`}
+              />
             </>
           }
         />
@@ -56,132 +67,79 @@ export const getStateAsJsx = (
           {val.map((item, index) => {
             const isTopLevel = false;
             const keyConcat = isTopLevel ? index.toString() : `${outerKey}.${index}`;
-            const possibleComma = index === val.length - 1 ? <></> : <Comma />;
+            const notLast = index !== val.length - 1;
             const unchanged = props.unchanged.includes(keyConcat);
             const itemIsArray = is.array(item);
             const itemIsNonArrayObject = is.nonArrayObject(item);
             const isContracted = props.contractedKeys.includes(keyConcat);
             const hasValues = itemIsArray ? !!item.length : itemIsNonArrayObject ? !!Object.keys(item).length : false;
             const topLevelActionType = isTopLevel && !!props.actionType;
+            const isExpandedWithValues = !isContracted && hasValues;
+            const isUnChangedAndHidden = unchanged && props.hideUnchanged;
             return (
-              <ArrElement
+              <Con
                 key={index}
+                $unchanged={unchanged}
                 children={
-                  itemIsArray ? (
+                  (itemIsArray || itemIsNonArrayObject) ? (
                     <>
-                      <RowUnchanged
-                        showIf={topLevelActionType && props.hideUnchanged && unchanged}
-                        children={`${props.actionType!}([])`}
-                      />
-                      <RowContracted
+                      <Act
+                        children={props.actionType}
+                        showIf={topLevelActionType}
                         $unchanged={unchanged}
-                        $hideUnchanged={props.hideUnchanged}
-                        showIf={isContracted}
+                        $clickable={true}
                         onClick={onClickNodeKey(keyConcat)}
-                        children={
-                          <>
-                            <ArrEmpty />
-                            {possibleComma}
-                          </>
-                        }
                       />
-                      <RowEmpty
-                        showIf={topLevelActionType && !isContracted && !hasValues}
-                        children={`${props.actionType!}([])`}
-                      />
-                      <ArrEmpty
-                        showIf={!isTopLevel && !props.actionType && !isContracted && !hasValues}
-                      />
-                      <Row
-                        showIf={!hasValues && !props.hideUnchanged}
+                      <Par
+                        children={`(`}
+                        showIf={topLevelActionType}
                         $unchanged={unchanged}
-                        children='[]'
-                      />
-                      <Frag
-                        showIf={!isContracted && hasValues}
-                        children={
-                          <>
-                            <ArrOpen
-                              $unchanged={unchanged}
-                              $hideUnchanged={props.hideUnchanged}
-                              onClick={onClickNodeKey(keyConcat)}
-                            />
-                            <Value children={recurse(item, keyConcat)} />
-                            <ArrClose
-                              $unchanged={unchanged}
-                              $hideUnchanged={props.hideUnchanged}
-                            />
-                            {possibleComma}
-                          </>
-                        }
-                      />
-                    </>
-
-                  ) : itemIsNonArrayObject ? (
-                    <>
-                      <RowUnchanged
-                        showIf={topLevelActionType && props.hideUnchanged && unchanged}
-                        children={`${props.actionType!}({})`}
-                      />
-                      <RowContracted
-                        $unchanged={unchanged}
-                        $hideUnchanged={props.hideUnchanged}
-                        showIf={isContracted}
+                        $clickable={true}
                         onClick={onClickNodeKey(keyConcat)}
-                        children={
-                          <>
-                            <ObjEmpty />
-                            {possibleComma}
-                          </>
-                        }
                       />
-                      <RowEmpty
-                        showIf={topLevelActionType && !isContracted && !hasValues}
-                        children={`${props.actionType!}({})`}
-                      />
-                      <ObjEmpty
-                        showIf={!isTopLevel && !props.actionType && !isContracted && !hasValues}
-                      />
-                      <Row
-                        showIf={!hasValues && !props.hideUnchanged}
+                      <ArrObj
+                        children={itemIsArray ? `[` : `{`}
+                        $type={itemIsArray ? 'array' : 'object'}
                         $unchanged={unchanged}
-                        children='{}'
+                        $clickable={true}
+                        onClick={onClickNodeKey(keyConcat)}
                       />
-                      <Frag
-                        showIf={!isContracted && hasValues}
-                        children={
-                          <>
-                            <Row
-                              $unchanged={unchanged}
-                              $hideUnchanged={props.hideUnchanged}
-                              onClick={onClickNodeKey(keyConcat)}
-                              children={<ObjOpen />}
-                            />
-                            <Value children={recurse(item, keyConcat)} />
-                            <Row
-                              $unchanged={unchanged}
-                              $hideUnchanged={props.hideUnchanged}
-                              children={
-                                <>
-                                  <ObjClose />
-                                  {possibleComma}
-                                </>
-                              }
-                            />
-                          </>
-                        }
+                      <ArrObj
+                        children={`...`}
+                        $type={itemIsArray ? 'array' : 'object'}
+                        showIf={isContracted}
+                        $unchanged={unchanged}
+                        $clickable={true}
+                        onClick={onClickNodeKey(keyConcat)}
+                      />
+                      <Con
+                        children={recurse(item, keyConcat)}
+                        showIf={!isContracted}
+                        $unchanged={unchanged}
+                        $block={true}
+                        $indent={true}
+                      />
+                      <ArrObj
+                        children={itemIsArray ? `]` : `}`}
+                        $type={itemIsArray ? 'array' : 'object'}
+                        $unchanged={unchanged}
+                      />
+                      <Par
+                        children={`)`}
+                        showIf={topLevelActionType}
+                        $unchanged={unchanged}
+                      />
+                      <Com
+                        children={`,`}
+                        showIf={notLast}
                       />
                     </>
                   ) : (
-                    <Row
+                    <Con
+                      $block={true}
                       $unchanged={unchanged}
-                      $hideUnchanged={props.hideUnchanged}
-                      children={
-                        <>
-                          {recurse(item, keyConcat)}
-                          {possibleComma}
-                        </>
-                      }
+                      showIf={!isUnChangedAndHidden}
+                      children={recurse(item, keyConcat)}
                     />
                   )
                 }
@@ -197,7 +155,7 @@ export const getStateAsJsx = (
           {objectKeys.map((key, index) => {
             const isTopLevel = key === '';
             const keyConcat = isTopLevel ? key.toString() : `${outerKey.toString()}.${key.toString()}`;
-            const possibleComma = index === objectKeys.length - 1 ? <></> : <Comma />;
+            const notLast = index !== objectKeys.length - 1;
             const unchanged = props.unchanged.includes(keyConcat);
             const item = val[key];
             const itemIsArray = is.array(item);
@@ -205,171 +163,319 @@ export const getStateAsJsx = (
             const isContracted = props.contractedKeys.includes(keyConcat);
             const hasValues = itemIsArray ? !!item.length : itemIsNonArrayObject ? !!Object.keys(item).length : false;
             const topLevelActionType = isTopLevel && !!props.actionType;
+            const isExpandedWithValues = !isContracted && hasValues;
+            const isUnChangedAndHidden = unchanged && props.hideUnchanged;
             return (
-              <Fragment
+              <Frag
                 key={index}
                 children={
                   itemIsArray ? (
-                    <Arr
-                      children={
-                        <>
-                          <RowUnchanged
-                            showIf={topLevelActionType && props.hideUnchanged && unchanged}
-                            children={`${props.actionType!}([])`}
-                          />
-                          <RowContracted
-                            $unchanged={unchanged}
-                            $hideUnchanged={props.hideUnchanged}
-                            showIf={isContracted}
-                            onClick={onClickNodeKey(keyConcat)}
-                            children={
-                              <>
-                                <Key showIf={!isTopLevel} children={key.toString()} />
-                                <Colon showIf={!isTopLevel} />
-                                <ActionTypeOpen showIf={topLevelActionType} children={`${props.actionType!}([...])`} />
-                                <ArrEmpty showIf={!topLevelActionType} />
-                              </>
-                            }
-                          />
-                          <RowEmpty
-                            showIf={topLevelActionType && !isContracted && !hasValues}
-                            children={`${props.actionType!}([])`}
-                          />
-                          <ArrEmpty
-                            showIf={!topLevelActionType && !isContracted && !hasValues}
-                          />
-                          <Row
-                            showIf={!hasValues && !props.hideUnchanged}
-                            $unchanged={unchanged}
-                            children={
-                              <>
-                                <Key children={key.toString()} />
-                                <Colon />
-                                <Arr children='[]' />
-                              </>
-                            }
-                          />
-                          <Frag
-                            showIf={!isContracted && hasValues}
-                            children={
-                              <>
-                                <Row
-                                  $unchanged={unchanged}
-                                  $hideUnchanged={props.hideUnchanged}
-                                  onClick={onClickNodeKey(keyConcat)}
-                                  children={
-                                    <>
-                                      <Key showIf={!isTopLevel} children={key.toString()} />
-                                      <Colon showIf={!isTopLevel} />
-                                      <ActionTypeOpen showIf={topLevelActionType} children={`${props.actionType!}([`} />
-                                      <ArrOpen showIf={!topLevelActionType} />
-                                    </>
-                                  }
-                                />
-                                <Value children={recurse(item, keyConcat)} />
-                                <Row
-                                  $unchanged={unchanged}
-                                  $hideUnchanged={props.hideUnchanged}
-                                  children={
-                                    <>
-                                      <ActionTypeClose showIf={topLevelActionType} children='])' />
-                                      <ArrClose showIf={!topLevelActionType} />
-                                      {possibleComma}
-                                    </>
-                                  }
-                                />
-                              </>
-                            }
-                          />
-                        </>
-                      }
-                    />
+                    <>
+                      <Con
+                        showIf={topLevelActionType && isUnChangedAndHidden}
+                        $unchanged={true}
+                        children={
+                          <>
+                            <Act
+                              children={props.actionType}
+                            />
+                            <Par
+                              children={`(`}
+                            />
+                            <Arr
+                              children={`[]`}
+                            />
+                            <Par
+                              children={`)`}
+                            />
+                            <Com
+                              showIf={notLast}
+                              children={`,`}
+                            />
+                          </>
+                        }
+                      />
+                      <Con
+                        showIf={isContracted}
+                        $unchanged={unchanged}
+                        $clickable={true}
+                        onClick={onClickNodeKey(keyConcat)}
+                        children={
+                          <>
+                            <Key
+                              showIf={!isTopLevel}
+                              children={key.toString()}
+                            />
+                            <Col
+                              showIf={!isTopLevel}
+                              children={`:`}
+                            />
+                            <Act
+                              showIf={topLevelActionType}
+                              children={props.actionType}
+                            />
+                            <Par
+                              showIf={topLevelActionType}
+                              children={`(`}
+                            />
+                            <Arr
+                              children={`[...]`}
+                            />
+                            <Par
+                              showIf={topLevelActionType}
+                              children={`)`}
+                            />
+                            <Com
+                              showIf={notLast}
+                              children={`,`}
+                            />
+                          </>
+                        }
+                      />
+                      <Con
+                        showIf={topLevelActionType && !isContracted && !hasValues}
+                        $unchanged={unchanged}
+                        children={
+                          <>
+                            <Act
+                              children={props.actionType}
+                            />
+                            <Par
+                              children={`(`}
+                            />
+                            <Arr
+                              children={`[]`}
+                            />
+                            <Par
+                              children={`)`}
+                            />
+                            <Com
+                              showIf={notLast}
+                              children={`,`}
+                            />
+                          </>
+                        }
+                      />
+                      <Con
+                        showIf={!topLevelActionType && !isContracted && !hasValues}
+                        children={
+                          <>
+                            <Key
+                              children={key.toString()}
+                            />
+                            <Col
+                              children={`:`}
+                            />
+                            <Arr
+                              children={`[]`}
+                            />
+                            <Com
+                              showIf={notLast}
+                              children={`,`}
+                            />
+                          </>
+                        }
+                      />
+                      <Frag
+                        showIf={isExpandedWithValues}
+                        children={
+                          <>
+                            <Con
+                              showIf={!isUnChangedAndHidden}
+                              $unchanged={unchanged}
+                              $clickable={true}
+                              onClick={onClickNodeKey(keyConcat)}
+                              children={
+                                <>
+                                  <Key
+                                    showIf={!isTopLevel}
+                                    children={key.toString()}
+                                  />
+                                  <Col
+                                    showIf={!isTopLevel}
+                                    children={`:`}
+                                  />
+                                  <Act
+                                    showIf={topLevelActionType}
+                                    children={props.actionType}
+                                  />
+                                  <Par
+                                    showIf={topLevelActionType}
+                                    children={`(`}
+                                  />
+                                  <Arr
+                                    children={`[`}
+                                  />
+                                </>
+                              }
+                            />
+                            <Con
+                              $block={true}
+                              $indent={true}
+                              $unchanged={unchanged}
+                              children={recurse(item, keyConcat)}
+                            />
+                            <Arr
+                              $unchanged={unchanged}
+                              showIf={!isUnChangedAndHidden}
+                              children={`]`}
+                            />
+                            <Com
+                              showIf={notLast}
+                              children={`,`}
+                            />
+                          </>
+                        }
+                      />
+                    </>
                   ) : is.nonArrayObject(item) ? (
-                    <Obj
-                      children={
-                        <>
-                          <RowUnchanged
-                            showIf={topLevelActionType && props.hideUnchanged && unchanged}
-                            children={`${props.actionType!}({})`}
-                          />
-                          <RowContracted
-                            $unchanged={unchanged}
-                            $hideUnchanged={props.hideUnchanged}
-                            showIf={isContracted}
-                            onClick={onClickNodeKey(keyConcat)}
-                            children={
-                              <>
-                                <Key showIf={!isTopLevel} children={key.toString()} />
-                                <Colon showIf={!isTopLevel} />
-                                <ActionTypeClosed showIf={topLevelActionType} children={`${props.actionType!}({...})`} />
-                                <ObjEmpty showIf={!topLevelActionType} />
-                                {possibleComma}
-                              </>
-                            }
-                          />
-                          <RowEmpty
-                            showIf={topLevelActionType && !isContracted && !hasValues}
-                            children={`${props.actionType!}({})`}
-                          />
-                          <ObjEmpty
-                            showIf={!topLevelActionType && !isContracted && !hasValues}
-                          />
-                          <Row
-                            showIf={!hasValues && !props.hideUnchanged}
-                            $unchanged={unchanged}
-                            children={
-                              <>
-                                <Key children={key.toString()} />
-                                <Colon />
-                                <Obj children='{}' />
-                              </>
-                            }
-                          />
-                          <Frag
-                            showIf={!isContracted && hasValues}
-                            children={
-                              <>
-                                <Row
-                                  $unchanged={unchanged}
-                                  $hideUnchanged={props.hideUnchanged}
-                                  onClick={onClickNodeKey(keyConcat)}
-                                  children={
-                                    <>
-                                      <Key showIf={!isTopLevel} children={key.toString()} />
-                                      <Colon showIf={!isTopLevel} />
-                                      <ActionTypeOpen showIf={topLevelActionType} children={`${props.actionType!}({`} />
-                                      <ObjOpen showIf={!topLevelActionType} />
-                                    </>
-                                  }
-                                />
-                                <Value children={recurse(val[key], keyConcat)} />
-                                <Row
-                                  $unchanged={unchanged}
-                                  $hideUnchanged={props.hideUnchanged}
-                                  children={
-                                    <>
-                                      <ActionTypeClose showIf={topLevelActionType} children={`})`} />
-                                      <ObjClose showIf={!topLevelActionType} />
-                                      {possibleComma}
-                                    </>
-                                  }
-                                />
-                              </>
-                            }
-                          />
-                        </>
-                      }
-                    />
+                    <>
+                      <Frag
+                        showIf={topLevelActionType && isUnChangedAndHidden}
+                        children={
+                          <>
+                            <Act children={props.actionType} />
+                            <Par children={`(`} />
+                            <Obj children={`{}`} />
+                            <Par children={`)`} />
+                          </>
+                        }
+                      />
+                      <Con
+                        showIf={isContracted}
+                        $unchanged={unchanged}
+                        $clickable={true}
+                        onClick={onClickNodeKey(keyConcat)}
+                        children={
+                          <>
+                            <Key
+                              showIf={!isTopLevel}
+                              children={`${key.toString()}: `}
+                            />
+                            <Act
+                              showIf={topLevelActionType}
+                              children={props.actionType}
+                            />
+                            <Par
+                              showIf={topLevelActionType}
+                              children={`(`}
+                            />
+                            <Obj
+                              children={`{...}`}
+                            />
+                            <Par
+                              showIf={topLevelActionType}
+                              children={`)`}
+                            />
+                          </>
+                        }
+                      />
+                      <Con
+                        showIf={topLevelActionType && !isContracted && !hasValues}
+                        $unchanged={unchanged}
+                        children={
+                          <>
+                            <Act children={props.actionType} />
+                            <Par children={`(`} />
+                            <Obj children={`{}`} />
+                            <Par children={`)`} />
+                          </>
+                        }
+                      />
+                      <Obj
+                        showIf={!topLevelActionType && !isContracted && !hasValues}
+                        children={`{...}`}
+                      />
+                      <Con
+                        showIf={!hasValues && !props.hideUnchanged}
+                        $unchanged={unchanged}
+                        children={
+                          <>
+                            <Key children={key.toString()} />
+                            <Col children={`:`} />
+                            <Obj children={`{}`} />
+                          </>
+                        }
+                      />
+                      <Frag
+                        showIf={isExpandedWithValues}
+                        children={
+                          <>
+                            <Con
+                              showIf={!isUnChangedAndHidden}
+                              $unchanged={unchanged}
+                              $clickable={true}
+                              onClick={onClickNodeKey(keyConcat)}
+                              children={
+                                <>
+                                  <Key
+                                    showIf={!isTopLevel}
+                                    children={key.toString()}
+                                  />
+                                  <Col
+                                    showIf={!isTopLevel}
+                                    children={`:`}
+                                  />
+                                  <Act
+                                    showIf={topLevelActionType}
+                                    children={props.actionType}
+                                  />
+                                  <Par
+                                    showIf={topLevelActionType}
+                                    children={`(`}
+                                  />
+                                  <Obj
+                                    children={`{`}
+                                  />
+                                </>
+                              }
+                            />
+                            <Con
+                              $unchanged={unchanged}
+                              $block={true}
+                              $indent={true}
+                              children={recurse(val[key], keyConcat)}
+                            />
+                            <Con
+                              $unchanged={unchanged}
+                              showIf={!isUnChangedAndHidden}
+                              children={
+                                <>
+                                  <Obj
+                                    children={`}`}
+                                  />
+                                  <Par
+                                    showIf={topLevelActionType}
+                                    children={`)`}
+                                  />
+                                </>
+                              }
+                            />
+                          </>
+                        }
+                      />
+                      <Com
+                        showIf={notLast}
+                        children={`,`}
+                      />
+                    </>
                   ) : (
-                    <Row
+                    <Con
                       $unchanged={unchanged}
-                      $hideUnchanged={props.hideUnchanged}
+                      showIf={!isUnChangedAndHidden}
                       children={
                         <>
-                          <Key children={key.toString()} />
-                          <Colon />
+                          <Key
+                            children={key.toString()}
+                          />
+                          <Col
+                            children={`:`}
+                          />
                           {recurse(val[key], keyConcat)}
-                          {possibleComma}
+                          <Com
+                            showIf={notLast}
+                            children={`,`}
+                          />
                         </>
                       }
                     />
@@ -386,3 +492,94 @@ export const getStateAsJsx = (
   };
   return recurse(is.objectOrArray(props.state) ? { '': props.state } : props.state, '');
 }
+
+
+// const renderThing = <S extends Record<string, unknown> | unknown>(
+//   props: TreeProps,
+//   recurse: (val: S, outerKey: string) => JSX.Element,
+//   onClickNodeKey: (key: string) => (event: MouseEvent) => void,
+//   outerKey: string,
+//   index: number,
+//   val: S,
+// ) => {
+//   const isTopLevel = false;
+//   const keyConcat = isTopLevel ? index.toString() : `${outerKey}.${index}`;
+//   const notLast = index !== val.length - 1;
+//   const unchanged = props.unchanged.includes(keyConcat);
+//   const itemIsArray = is.array(item);
+//   const itemIsNonArrayObject = is.nonArrayObject(item);
+//   const isContracted = props.contractedKeys.includes(keyConcat);
+//   const hasValues = itemIsArray ? !!item.length : itemIsNonArrayObject ? !!Object.keys(item).length : false;
+//   const topLevelActionType = isTopLevel && !!props.actionType;
+//   const isExpandedWithValues = !isContracted && hasValues;
+//   const isUnChangedAndHidden = unchanged && props.hideUnchanged;
+//   return (
+//     <Con
+//       key={index}
+//       $unchanged={unchanged}
+//       children={
+//         (itemIsArray || itemIsNonArrayObject) ? (
+//           <>
+//             <Act
+//               children={props.actionType}
+//               showIf={topLevelActionType}
+//               $unchanged={unchanged}
+//               $clickable={true}
+//               onClick={onClickNodeKey(keyConcat)}
+//             />
+//             <Par
+//               children={`(`}
+//               showIf={topLevelActionType}
+//               $unchanged={unchanged}
+//               $clickable={true}
+//               onClick={onClickNodeKey(keyConcat)}
+//             />
+//             <ArrObj
+//               children={itemIsArray ? `[` : `{`}
+//               $type={itemIsArray ? 'array' : 'object'}
+//               $unchanged={unchanged}
+//               $clickable={true}
+//               onClick={onClickNodeKey(keyConcat)}
+//             />
+//             <ArrObj
+//               children={`...`}
+//               $type={itemIsArray ? 'array' : 'object'}
+//               showIf={isContracted}
+//               $unchanged={unchanged}
+//               $clickable={true}
+//               onClick={onClickNodeKey(keyConcat)}
+//             />
+//             <Con
+//               children={recurse(item, keyConcat)}
+//               showIf={!isContracted}
+//               $unchanged={unchanged}
+//               $block={true}
+//               $indent={true}
+//             />
+//             <ArrObj
+//               children={itemIsArray ? `]` : `}`}
+//               $type={itemIsArray ? 'array' : 'object'}
+//               $unchanged={unchanged}
+//             />
+//             <Par
+//               children={`)`}
+//               showIf={topLevelActionType}
+//               $unchanged={unchanged}
+//             />
+//             <Com
+//               children={`,`}
+//               showIf={notLast}
+//             />
+//           </>
+//         ) : (
+//           <Con
+//             $block={true}
+//             $unchanged={unchanged}
+//             showIf={!isUnChangedAndHidden}
+//             children={recurse(item, keyConcat)}
+//           />
+//         )
+//       }
+//     />
+//   )
+// }

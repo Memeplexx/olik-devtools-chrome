@@ -59,6 +59,7 @@ export const ItemWrapper = styled.div`
 `;
 
 export const ItemHeading = styled.div`
+	color: white;
 `;
 
 export const ItemHead = styled.div`
@@ -82,6 +83,7 @@ export const ItemJsx = styled.div`
 `;
 
 export const ItemTime = styled.div`
+	color: white;
 	position: absolute;
 	right: 0;
 	top: 0;
@@ -101,7 +103,6 @@ export const DevtoolsPanel = styled.div`
 	display: flex;
 	flex-direction: column;
 	background-color: rgb(28 28 28);
-  color: white;
 	overflow-x: auto;
 	min-width: 300px;
 `;
@@ -116,6 +117,7 @@ export const StatePanel = styled(State)`
 `;
 
 export const ResizeHandle = styled(PanelResizeHandle)`
+	color: white;
   position: relative;
   outline: none;
   background-color: rgba(255, 255, 255, 0.05);

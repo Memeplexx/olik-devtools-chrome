@@ -1,131 +1,125 @@
-import styled from "styled-components/macro";
+import styled, { css } from "styled-components/macro";
 import { possible } from "../html";
 
 
+
+const possiblyClickable = (props: { $clickable?: boolean }) => !props.$clickable ? css`` : css`
+  cursor: pointer;
+  &:hover {
+    background-color: rgba(255,255,255,0.2);
+  }
+`;
+
+const possiblyUnchanged = (props: { $unchanged?: boolean }) => !props.$unchanged ? css`` : css`
+  color: gray!important;
+  * {
+    color: gray!important;
+  }
+`;
+
+const possiblyIndented = (props: { $indent?: boolean }) => !props.$indent ? css`` : css`
+  padding-left: 16px;
+`;
+
+const possiblyBlock = (props: { $block?: boolean }) => !props.$block ? css`` : css`
+  display: block;
+`;
+
+const arrayOrObject = (props: { $type?: 'array' | 'object' }) => props.$type === 'array'
+  ? css`
+    color: red;
+` : css`
+    color: violet;
+`;
+
+const possibleProps = (props: { $clickable?: boolean, $unchanged?: boolean, $indent?: boolean, $block?: boolean, $type?: 'array' | 'object' }) => css`
+  ${possiblyClickable(props)}
+  ${possiblyUnchanged(props)}
+  ${possiblyIndented(props)}
+  ${possiblyBlock(props)}
+  ${arrayOrObject(props)}
+`;
+
+/* String Value */
 export const Str = styled(possible.span)`
   color: green;
 `;
 
+/* Number Value */
 export const Num = styled(possible.span)`
   color: darkorange;
 `;
 
+/* Boolean Value */
 export const Boo = styled(possible.span)`
   color: lightblue;
 `;
 
+/* Null Value */
 export const Nul = styled(possible.span)`
   color: magenta;
 `;
 
+/* Undefined Value */
 export const Und = styled(possible.span)`
 `;
 
+/* Date Value */
 export const Dat = styled(possible.span)`
-  color: beige;
+  color: deepskyblue;
 `;
 
+/* Array Value */
 export const Arr = styled(possible.span)`
+  color: red;
+  ${possibleProps};
 `;
 
+/* Object */
 export const Obj = styled(possible.span)`
-  display: flex;
-  flex-direction: column;
-  align-items: start;
+  color: violet;
+  ${possibleProps};
 `;
 
-const unchangedOverride = (p: { $unchanged?: boolean, $hideUnchanged?: boolean }) => `
-  ${p.$hideUnchanged && p.$unchanged ? `
-    display: none;
-  ` : p.$unchanged ? `
-    color: gray!important;
-    * {
-      color: gray!important;
-    }
-  ` : `
-  `};
+export const ArrObj = styled(possible.span)`
+  color: violet;
+  ${possibleProps};
 `;
 
-export const ArrOpen = styled(possible.span).attrs({ children: '[' }) <{ $unchanged?: boolean, $hideUnchanged?: boolean }>`
-  &:hover {
-    background-color: rgba(255,255,255,0.2);
-  }
-  ${unchangedOverride};
+/* Action */
+export const Act = styled(possible.span)`
+  color: #fff;
+  ${possibleProps};
 `;
 
-export const ArrClose = styled(possible.span).attrs({ children: ']' }) <{ $unchanged?: boolean, $hideUnchanged?: boolean }>`
-  ${unchangedOverride};
+/* Object Key */
+export const Key = styled(possible.span)`
+  color: #fff;
+  ${possibleProps};
 `;
 
-export const Colon = styled(possible.span).attrs({ children: ':' })`
+/* Colon */
+export const Col = styled(possible.span)`
+  color: #fff;
   padding-right: 4px;
 `;
 
-export const Key = styled(possible.span)`
+/* Parenthesis */
+export const Par = styled(possible.span)`
+  color: #fff;
+  ${possibleProps};
 `;
 
-export const ObjEmpty = styled(possible.span).attrs({ children: '{...}' })``;
-
-export const ArrEmpty = styled(possible.span).attrs({ children: '[...]' })``;
-
-export const Value = styled(possible.span)`
-  padding-left: 16px;
-  display: block;
+/* Container */
+export const Con = styled(possible.span)`
+  ${possibleProps};
 `;
 
-export const ArrElement = styled(possible.span)`
-  display: block;
-`;
-
-export const Row = styled(possible.span) <{ $unchanged?: boolean, $hideUnchanged?: boolean }>`
-  display: flex;
-  ${unchangedOverride};
-`;
-
-export const ObjOpen = styled(possible.span).attrs({ children: '{' })`
-  cursor: pointer;
-  &:hover > * {
-    background-color: rgba(255,255,255,0.2);
+/* Comma */
+export const Com = styled(possible.span)`
+  color: #fff;
+  &:after {
+    content: ' ';
+    display: block;
   }
-`;
-
-export const Prim = styled(possible.span)<{ $unchanged?: boolean, $hideUnchanged?: boolean }>`
-  ${unchangedOverride};
-`;
-
-export const ActionTypeOpen = styled(possible.span)`
-  cursor: pointer;
-  &:hover > * {
-    background-color: rgba(255,255,255,0.2);
-  }
-`;
-
-export const ActionTypeClose = styled(possible.span)`
-`;
-
-export const ActionTypeClosed = styled(possible.span)`
-  cursor: pointer;
-`;
-
-export const ObjClose = styled(possible.span).attrs({ children: '}' })`
-`;
-
-export const Comma = styled(possible.span).attrs({ children: ',' })`
-`;
-
-export const RowContracted = styled(Row)`
-  cursor: pointer;
-  &:hover > * {
-    background-color: rgba(255,255,255,0.2);
-  }
-`;
-
-export const RowUnchanged = styled(Row)`
-  color: gray;
-  * {
-    color: gray;
-  }
-`;
-
-export const RowEmpty = styled(Row)`
 `;
