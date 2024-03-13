@@ -63,7 +63,7 @@ export const is = {
 	nullOrUndefined: (val: unknown): val is null | undefined => {
 		return val === null || val === undefined;
 	},
-	possibleBrandedPrimitive: (val: unknown): val is PossiblyBrandedPrimitive => {
-		return typeof (val) === 'string' || typeof (val) === 'number' || typeof (val) === 'boolean';
+	possibleBrandedPrimitive: (val: unknown): val is 'number' | 'string' | 'boolean' | 'date' | 'null' => {
+		return typeof (val) === 'string' || typeof (val) === 'number' || typeof (val) === 'boolean' || val === null || val instanceof Date;
 	}
 }

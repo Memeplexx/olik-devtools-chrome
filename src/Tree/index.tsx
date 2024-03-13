@@ -1,7 +1,7 @@
 import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
 import { is } from "../shared/functions";
-import { NodeType, TreeProps } from "./constants";
+import { TreeProps } from "./constants";
 import { Node } from "./styles";
 
 
@@ -14,28 +14,14 @@ export const getStateAsJsx = (
     props.onClickNodeKey(key);
   }
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
-    const unchanged = props.unchanged.includes(outerKey);
-    const doRenderPrimitive = (type: NodeType, value?: string) => renderPrimitive({ props, unchanged, outerKey, el: <Node children={value} $type={type} /> });
-    if (is.undefined(val)) {
-      return doRenderPrimitive('undefined');
-    } else if (is.null(val)) {
-      return doRenderPrimitive('null', 'null');
-    } else if (is.string(val)) {
-      return doRenderPrimitive('string', `"${val}"`);
-    } else if (is.number(val)) {
-      return doRenderPrimitive('number', val.toString());
-    } else if (is.boolean(val)) {
-      return doRenderPrimitive('boolean', val.toString());
-    } else if (is.date(val)) {
-      return doRenderPrimitive('date', val.toISOString());
-    } else if (is.array(val)) {
+    if (is.array(val)) {
       return (
         <>
           {val.map((item, index) => {
             const notLast = index !== val.length - 1;
             const isTopLevel = false;
             const keyConcat = isTopLevel ? index.toString() : `${outerKey}.${index}`;
-            return renderObjectOrArray({ props, recurse, onClickNodeKey, keyConcat, index, item, notLast, isTopLevel });
+            return renderNode({ props, recurse, onClickNodeKey, keyConcat, index, item, notLast, isTopLevel });
           })}
         </>
       );
@@ -48,10 +34,14 @@ export const getStateAsJsx = (
             const isTopLevel = key === '';
             const item = val[key];
             const keyConcat = isTopLevel ? key.toString() : `${outerKey.toString()}.${key.toString()}`;
-            return renderObjectOrArray({ props, recurse, onClickNodeKey, keyConcat, index, item, notLast, isTopLevel, key });
+            return renderNode({ props, recurse, onClickNodeKey, keyConcat, index, item, notLast, isTopLevel, key });
           })}
         </>
       );
+    } else if (is.possibleBrandedPrimitive(val)) {
+      const isTopLevel = outerKey === '';
+      const keyConcat = isTopLevel ? `` : outerKey;
+      return renderNode({ props, recurse, onClickNodeKey, keyConcat, index: 0, item: val, notLast: false, isTopLevel: true });
     } else {
       throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
@@ -60,7 +50,7 @@ export const getStateAsJsx = (
 }
 
 
-const renderObjectOrArray = (
+const renderNode = (
   {
     props,
     recurse,
@@ -144,7 +134,8 @@ const renderObjectOrArray = (
             onClick={onClickNodeKey(keyConcat)}
           />
           <Node
-            children={recurse(item, keyConcat)}
+            $type={is.number(item) ? `number` : is.string(item) ? `string` : is.boolean(item) ? `boolean` : is.date(item) ? `date` : is.null(item) ? `null` : is.undefined(item) ? `undefined` : `object`}
+            children={is.number(item) ? item.toString() : is.string(item) ? `"${item}"` : is.boolean(item) ? item.toString() : is.date(item) ? item.toISOString() : is.null(item) ? 'null' : is.undefined(item) ? 'undefined' : recurse(item, keyConcat)}
             showIf={!isContracted && !isEmpty && !hideUnchanged}
             $unchanged={isUnchanged}
             $block={!itemIsPrimitive}
@@ -172,54 +163,4 @@ const renderObjectOrArray = (
       }
     />
   )
-}
-
-const renderPrimitive = (
-  {
-    props,
-    el,
-    unchanged,
-    outerKey
-  }: {
-    props: TreeProps,
-    el: JSX.Element,
-    unchanged: boolean,
-    outerKey: string
-  }
-) => {
-  const isTopLevel = outerKey === '';
-  const isUnChangedAndHidden = unchanged && props.hideUnchanged;
-  const element = (
-    <Node
-      $unchanged={unchanged}
-      children={el}
-    />
-  );
-  return (isTopLevel && props.actionType) ? (
-    <Node
-      $unchanged={unchanged}
-      children={
-        <>
-          <Node
-            $type={`actionType`}
-            children={props.actionType}
-          />
-          <Node
-            $type={`parenthesis`}
-            children={`(`}
-          />
-          <Frag
-            showIf={!isUnChangedAndHidden}
-            children={element}
-          />
-          <Node
-            $type={`parenthesis`}
-            children={`)`}
-          />
-        </>
-      }
-    />
-  ) : (
-    element
-  );
 }
