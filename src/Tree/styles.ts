@@ -69,45 +69,34 @@ export const Dat = styled(possible.span)`
   color: deepskyblue;
 `;
 
-/* Array Value */
-export const Arr = styled(possible.span)`
-  color: red;
-  ${possibleProps};
-`;
-
-/* Object */
-export const Obj = styled(possible.span)`
-  color: violet;
-  ${possibleProps};
-`;
-
+/* Array or Object Value */
 export const ArrObj = styled(possible.span)`
-  color: violet;
   ${possibleProps};
 `;
 
 /* Action */
 export const Act = styled(possible.span)`
-  color: #fff;
   ${possibleProps};
+  color: #fff;
 `;
 
 /* Object Key */
 export const Key = styled(possible.span)`
-  color: #fff;
   ${possibleProps};
+  color: #fff;
 `;
 
 /* Colon */
 export const Col = styled(possible.span)`
+  ${possibleProps};
   color: #fff;
   padding-right: 4px;
 `;
 
 /* Parenthesis */
 export const Par = styled(possible.span)`
-  color: #fff;
   ${possibleProps};
+  color: #fff;
 `;
 
 /* Container */
@@ -117,6 +106,7 @@ export const Con = styled(possible.span)`
 
 /* Comma */
 export const Com = styled(possible.span)`
+  ${possibleProps};
   color: #fff;
   &:after {
     content: ' ';

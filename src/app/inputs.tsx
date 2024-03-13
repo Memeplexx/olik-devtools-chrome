@@ -64,7 +64,7 @@ const instantiateStore = (arg: ReturnType<typeof useLocalState>) => {
 
 const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
   const { setState } = props;
-  const processEvent = useCallback((incoming: Message) => setState(s => {console.log(incoming)
+  const processEvent = useCallback((incoming: Message) => setState(s => {
     if (incoming.action.type === '$load()') {
       s.storeRef.current = null;
       return { ...s, storeFullyInitialized: false, items: [] };
