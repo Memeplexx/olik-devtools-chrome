@@ -16,6 +16,7 @@ export const Node = styled(possible.span) <{ $clickable?: boolean, $unchanged?: 
   ${p => p.$type === 'null' && css`color: magenta;`}
   ${p => p.$type === 'key' && css`color: #fff;`}
   ${p => p.$type === 'parenthesis' && css`color: #fff;`}
+  ${p => p.$type === 'comma' && css`color: #fff;`}
   ${p => p.$indent && css`padding-left: 16px;`}
   ${p => p.$block && css`display: block;`}
   ${p => p.$clickable && css`
