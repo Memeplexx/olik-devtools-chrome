@@ -1,8 +1,8 @@
 import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
 import { is } from "../shared/functions";
-import { Boo, Dat, Nul, Num, Con, Str, Und, Act, Key, Col, Par, Com, ArrObj } from "./styles";
-import { TreeProps } from "./constants";
+import { NodeType, TreeProps } from "./constants";
+import { Node } from "./styles";
 
 
 
@@ -15,19 +15,19 @@ export const getStateAsJsx = (
   }
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
     const unchanged = props.unchanged.includes(outerKey);
-    const doRenderPrimitive = (el: JSX.Element) => renderPrimitive({ props, unchanged, outerKey, el });
+    const doRenderPrimitive = (type: NodeType, value?: string) => renderPrimitive({ props, unchanged, outerKey, el: <Node children={value} $type={type} /> });
     if (is.undefined(val)) {
-      return doRenderPrimitive(<Und />);
+      return doRenderPrimitive('undefined');
     } else if (is.null(val)) {
-      return doRenderPrimitive(<Nul children='null' />);
+      return doRenderPrimitive('null', 'null');
     } else if (is.string(val)) {
-      return doRenderPrimitive(<Str children={`"${val}"`} />);
+      return doRenderPrimitive('string', `"${val}"`);
     } else if (is.number(val)) {
-      return doRenderPrimitive(<Num children={val} />);
+      return doRenderPrimitive('number', val.toString());
     } else if (is.boolean(val)) {
-      return doRenderPrimitive(<Boo children={val} />);
+      return doRenderPrimitive('boolean', val.toString());
     } else if (is.date(val)) {
-      return doRenderPrimitive(<Dat children={val.toISOString()} />);
+      return doRenderPrimitive('date', val.toISOString());
     } else if (is.array(val)) {
       return (
         <>
@@ -98,93 +98,102 @@ const renderObjectOrArray = (
       children={
         (itemIsArray || itemIsNonArrayObject) ? (
           <>
-            <Act
+            <Node
+              $type={`actionType`}
               children={props.actionType}
               showIf={showActionType}
               $unchanged={isUnchanged}
               $clickable={true}
               onClick={onClickNodeKey(keyConcat)}
             />
-            <Par
+            <Node
+              $type={'parenthesis'}
               children={`(`}
               showIf={showActionType}
               $unchanged={isUnchanged}
               $clickable={true}
               onClick={onClickNodeKey(keyConcat)}
             />
-            <Key
+            <Node
+              $type={'key'}
               children={key}
               $unchanged={isUnchanged}
               showIf={isObject && !isTopLevel && !hideUnchanged}
               $clickable={true}
               onClick={onClickNodeKey(keyConcat)}
             />
-            <Col
+            <Node
+              $type={'colon'}
               children={`:`}
               $unchanged={isUnchanged}
               showIf={isObject && !isTopLevel && !hideUnchanged}
             />
-            <ArrObj
+            <Node
+              $type={itemIsArray ? `array` : `object`}
               children={itemIsArray ? `[` : `{`}
-              $type={itemIsArray ? 'array' : 'object'}
               $unchanged={isUnchanged}
               $clickable={true}
               onClick={onClickNodeKey(keyConcat)}
               showIf={!hideUnchanged}
             />
-            <ArrObj
+            <Node
+              $type={itemIsArray ? `array` : `object`}
               children={`...`}
-              $type={itemIsArray ? 'array' : 'object'}
               showIf={isContracted && !hideUnchanged}
               $unchanged={isUnchanged}
               $clickable={true}
               onClick={onClickNodeKey(keyConcat)}
             />
-            <Con
+            <Node
               children={recurse(item, keyConcat)}
               showIf={!isContracted && !isEmpty && !hideUnchanged}
               $unchanged={isUnchanged}
               $block={true}
               $indent={true}
             />
-            <ArrObj
+            <Node
+              $type={itemIsArray ? `array` : `object`}
               children={itemIsArray ? `]` : `}`}
-              $type={itemIsArray ? 'array' : 'object'}
               $unchanged={isUnchanged}
               showIf={!hideUnchanged}
             />
-            <Par
+            <Node
+              $type={`parenthesis`}
               children={`)`}
               showIf={showActionType}
               $unchanged={isUnchanged}
             />
-            <Com
+            <Node
+              $type={`comma`}
               children={`,`}
               showIf={notLast && !hideUnchanged}
               $unchanged={isUnchanged}
             />
           </>
         ) : (
-          <Con
+          <Node
             $block={true}
             $unchanged={isUnchanged}
             showIf={!(isUnchanged && props.hideUnchanged)}
             children={
               <>
-                <Key
+                <Node
+                  $type={`key`}
                   children={key}
                   showIf={isObject && !isTopLevel && !hideUnchanged}
                   $unchanged={isUnchanged}
                   $clickable={true}
                   onClick={onClickNodeKey(keyConcat)}
                 />
-                <Col
+                <Node
+                  $type={`colon`}
                   children={`:`}
                   showIf={isObject && !isTopLevel && !hideUnchanged}
                   $unchanged={isUnchanged}
                 />
                 {recurse(item, keyConcat)}
-                <Com
+                <Node
+                  $type={`comma`}
                   children={`,`}
                   showIf={notLast && !hideUnchanged}
                   $unchanged={isUnchanged}
@@ -214,27 +223,29 @@ const renderPrimitive = (
   const isTopLevel = outerKey === '';
   const isUnChangedAndHidden = unchanged && props.hideUnchanged;
   const element = (
-    <Con
+    <Node
       $unchanged={unchanged}
       children={el}
     />
   );
   return (isTopLevel && props.actionType) ? (
-    <Con
+    <Node
       $unchanged={unchanged}
       children={
         <>
-          <Act
+          <Node
             children={props.actionType}
           />
-          <Par
+          <Node
+            $type={`parenthesis`}
             children={`(`}
           />
           <Frag
             showIf={!isUnChangedAndHidden}
             children={element}
           />
-          <Par
+          <Node
+            $type={`parenthesis`}
             children={`)`}
           />
         </>

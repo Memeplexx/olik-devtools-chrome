@@ -67,3 +67,58 @@ export const is = {
 		return typeof (val) === 'string' || typeof (val) === 'number' || typeof (val) === 'boolean';
 	}
 }
+
+export const defaultValue = Symbol('default');
+
+export type DecisionResult<X, H> = X extends (string | number | boolean | symbol | Record<string, unknown>) ? X : H;
+
+/**
+ * A construct for expressing conditional logic with the following advantages over conventional approaches:
+ * * Unlike 'if' and 'ternary' statements, this is more readable when there are a lot of conditions.
+ * * Unlike 'switch' statements, this can use an expression as a condition.
+ * * Unlike both 'if' and 'switch' (and much like ternary statements),
+ * this returns an individual result and doesn't oblige us to define any local variables.
+ *
+ * @example
+ *
+ * cont result = decide([
+ *   {
+ *     when: () => // some expression returning a boolean,
+ *     then: () => // some result,
+ *   },
+ *   {
+ *     when: () => // some expression returning a boolean,
+ *     then: () => // some result,
+ *   }
+ * ])
+ */
+export const decide = <X>(
+  decisions: { when(): boolean | null | undefined; then(): X }[],
+): DecisionResult<X, ReturnType<typeof decisions[0]['then']>> =>
+  decisions.find(d => d.when())!.then() as DecisionResult<X, ReturnType<typeof decisions[0]['then']>>;
+
+/**
+ * A construct for expressing conditional logic with the following advantages over conventional approaches:
+ * * Unlike 'if' and 'ternary' statements, this is more readable when there are a lot of conditions.
+ * * Unlike both 'if' and 'switch' (and much like ternary statements),
+ * this returns an individual result and doesn't oblige us to define any local variables.
+ *
+ * @example
+ *
+ * cont result = decideComparing(someValue, [
+ *   {
+ *     when: () => // something which may or may not equal someValue,
+ *     then: () => // some result,
+ *   },
+ *   {
+ *     when: () => // something which may or may not equal someValue,
+ *     then: () => // some result,
+ *   }
+ * ])
+ */
+export const decideComparing = <C, X, T extends { when(): C | typeof defaultValue; then(): X }>(
+  toCompare: C,
+  decisions: T[],
+): DecisionResult<X, ReturnType<T['then']>> =>
+  decisions.find(d => d.when() === toCompare || d.when() === defaultValue)!.then() as DecisionResult<X, ReturnType<T['then']>>;
+

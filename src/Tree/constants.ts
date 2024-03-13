@@ -8,3 +8,4 @@ export interface TreeProps {
   hideUnchanged?: boolean,
 }
 
+export type NodeType = 'array' | 'object' | 'number' | 'string' | 'date' | 'boolean' | 'null' | 'undefined' | 'actionType' | 'colon' | 'comma' | 'parenthesis' | 'key';
