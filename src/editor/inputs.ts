@@ -25,7 +25,7 @@ const useLocalState = (props: EditorProps) => {
     onDidScrollChange: null as null | IDisposable,
     onDidChangeModelContent: null as null | IDisposable,
   });
-  return { ...state, setState, ...props };
+  return { ...props, ...state, setState };
 }
 
 const instantiateEditor = (arg: ReturnType<typeof useLocalState>) => {
@@ -51,17 +51,15 @@ const reGenerateTypeDefinitions = (arg: ReturnType<typeof useLocalState>) => {
     } else if (is.null(val)) {
       return '"null"';
     } else if (is.nonArrayObject(val)) {
-      return Object.keys(val).map((key, index, array) => {
-        return `${!index ? '{' : '' }"${key}": ${recurse(val[key])}${index === array.length - 1 ? '}' : '' }`;
-      }).join(',');
+      return `{${Object.keys(val).map(key => `"${key}": ${recurse(val[key])}`).join(',')}}`;
     } else if (is.array(val)) {
-      return `[${val.length ? recurse(val[0]) : 'unknown'}]`;
+      return `[${val.length ? recurse(val[0]) : ''}]`;
     } else {
       throw new Error(`Unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
   }
   const typeDef = recurse(arg.state!);
-  // console.log(JSON.stringify(JSON.parse(typeDef), null, 2)); // for debug purposes
+  // console.log(JSON.stringify(JSON.parse(typeDef), null, 2)); // un-comment to debug
   const defaultEditorValue = [olikTypeDefsAsString + `; const store: Store<${typeDef}>;`, 'store.'].join('\n');
   arg.setState(s => ({ ...s, defaultEditorValue }));
   return defaultEditorValue;

@@ -1,6 +1,7 @@
 export const initialState = {
   modal: null as 'confirmDeleteGroup' | 'confirmDeleteTag' | 'synonymOptions' | 'groupOptions' | null,
   bool: false,
+  thing: {},
   flatObj: {
     one: 'hello',
     two: 'world',

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(props: P) => {
 	return React.useRef(() => {
@@ -15,7 +15,7 @@ export const useForwardedRef = <T>(forwardedRef: React.ForwardedRef<T>) => {
 	const basicRef = React.useRef<T | null>(null);
 	const targetRef = React.useRef<T | null>(null)
 	const refs = React.useMemo(() => [basicRef, forwardedRef], [forwardedRef]);
-	React.useEffect(() => {
+	useEffect(() => {
 		refs.forEach(ref => {
 			if (!ref) return
 			if (typeof ref === 'function') {
