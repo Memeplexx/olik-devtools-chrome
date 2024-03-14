@@ -15,6 +15,7 @@ export const useInputs = (props: EditorProps) => {
   respondToEditorScrollChanges(localState);
   respondToEditorTextChanges(localState);
   respondToEditorEnterKeyup(localState);
+  useStateChangeResponder(localState);
   return localState;
 }
 
@@ -105,13 +106,22 @@ const respondToEditorEnterKeyup = (arg: ReturnType<typeof useLocalState>) => {
     if (hasError) { return; }
     const lastLine = arg.editorRef.current!.getModel()!.getLineContent(2);
     arg.onEnter(lastLine.substring('store.'.length));
-    arg.setState(s => {
-      s.editorRef.current!.setValue(s.defaultEditorValue);
-      return s;
-    });
   });
   arg.setState(s => ({
     ...s,
     onKeyUp
   }));
+}
+
+const useStateChangeResponder = (arg: ReturnType<typeof useLocalState>) => {
+  const previousStateRef = useRef(arg.state);
+  if (!arg.state) { return; }
+  if (arg.state !== previousStateRef.current) {
+    arg.setState(s => {
+      reGenerateTypeDefinitions(arg);
+      setTimeout(() => s.editorRef.current!.setValue(s.defaultEditorValue));
+      return s;
+    });
+    previousStateRef.current = arg.state;
+  }
 }
