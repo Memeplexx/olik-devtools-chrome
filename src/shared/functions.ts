@@ -1,4 +1,3 @@
-import { PossiblyBrandedPrimitive } from "olik";
 import React from "react";
 
 export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(props: P) => {
