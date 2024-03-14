@@ -1,134 +1,50 @@
-import { useEffect, useRef, useState } from "react";
-import { editor } from 'monaco-editor';
-import { EditorHookArgs, EditorProps } from "./constants";
+import { useRef, useState } from "react";
+import { editor, IDisposable } from 'monaco-editor';
+import { EditorProps, editorRefOptions, editorTheme } from "./constants";
 import * as olikTypeDefsText from '../../node_modules/olik/dist/type.d.ts?raw';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import { is } from "../shared/functions";
 
 const olikTypeDefsAsString = olikTypeDefsText.default.replace(/\n|\r/g, "");
 
 const lineHeight = 18;
 
 export const useInputs = (props: EditorProps) => {
-  const hookArgs = useHooksInitializer(props);
-  useInitializeTextEditor(hookArgs);
-  useAddTypescriptSupportToEditor();
-  useUpdateTypeDefinitions(hookArgs);
-  usePreventCertainEditorActions(hookArgs);
-  useLimitEditorScrolling(hookArgs);
-  return {
-    ...hookArgs,
-  }
+  const localState = useLocalState(props);
+  instantiateEditor(localState);
+  useLimitEditorScrolling(localState);
+  preventCertainEditorActions(localState);
+  return localState;
 }
 
-export const useHooksInitializer = (props: EditorProps) => {
-  const [initialized, setInitialized] = useState(false);
-  const divEl = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-  return {
-    divEl,
-    editorRef,
-    initialized,
-    setInitialized,
-    ...props,
-  };
+const useLocalState = (props: EditorProps) => {
+  const [state, setState] = useState({
+    defaultEditorValue: '',
+    divEl: useRef<HTMLDivElement>(null),
+    editorRef: useRef<editor.IStandaloneCodeEditor | null>(null),
+    onDidScrollChange: null as null | IDisposable,
+    onDidChangeModelContent: null as null | IDisposable,
+  });
+  return { ...state, setState, ...props };
 }
 
-const useAddTypescriptSupportToEditor = () => {
-  useEffect(() => {
-    self.MonacoEnvironment = {
-      getWorker: () => new tsWorker(),
-    };
-  }, [])
+const instantiateEditor = (arg: ReturnType<typeof useLocalState>) => {
+  if (!arg.divEl.current || arg.editorRef.current || !arg.state) { return; }
+  self.MonacoEnvironment = { getWorker: () => new tsWorker() };
+  editor.defineTheme('olik-editor-theme', editorTheme);
+  arg.editorRef.current = editor.create(arg.divEl.current, editorRefOptions);
+  arg.editorRef.current.setScrollPosition({ scrollTop: lineHeight });
+  const defaultEditorValue = reGenerateTypeDefinitions(arg);
+  arg.editorRef.current.setValue(defaultEditorValue);
 }
 
-const useUpdateTypeDefinitions = (args: EditorHookArgs) => {
-  const editor = args.editorRef.current;
-  const [typeDef, setTypeDef] = useState<string>('');
-  useEffect(() => {
-    setTypeDef(generateTypeDefinition(args.state!).replace(/\n|\r/g, ""));
-  }, [args.state]);
-  useEffect(() => {
-    if (!editor) { return; }
-    const typeDefString = olikTypeDefsAsString + `; const store: Store<${typeDef}>;`;
-    editor.setValue([typeDefString, 'store.'].join('\n'));
-  }, [editor, typeDef, args.initialized]);
-}
-
-const usePreventCertainEditorActions = (args: EditorHookArgs) => {
-  const editorRef = args.editorRef.current;
-  const queryChangedRef = useRef(args.onQueryChanged);
-  useEffect(() => {
-    if (!editorRef) { return; }
-    editorRef.onDidChangeModelContent(() => {
-      const value = editorRef.getValue();
-      const lines = value.split('\n')!;
-      if (value.trim() === '') {
-        // const typeDefString = olikTypeDefsAsString + `; const store: Store<${typeDef}>;`;
-        // editorRef.setValue([typeDefString, 'store.'].join('\n'));
-      } else if (!lines[1].startsWith('store.')) {
-        editorRef.setValue([lines[0], 'store.'].join('\n'));
-        editorRef.setPosition({ lineNumber: 2, column: value.length + 1 });
-      } else if (lines.length > 2) {
-        editorRef.setValue([lines[0], lines[1]].join('\n'));
-      } else {
-        const lastLine = editorRef.getModel()!.getLineContent(2);
-        queryChangedRef.current(lastLine.substring('store.'.length));
-      }
-    })
-  }, [editorRef])
-}
-
-const useInitializeTextEditor = (args: EditorHookArgs) => {
-  const divEl = args.divEl.current;
-  const editorRef = args.editorRef;
-  const setInitialized = useRef(args.setInitialized);
-  useEffect(() => {
-    if (!divEl || !!editorRef.current) { return; }
-    editor.defineTheme('olik-editor-theme', {
-      base: 'vs-dark',
-      inherit: false,
-      rules: [
-        { token: 'green', background: 'FF0000', foreground: '00FF00', fontStyle: 'italic' },
-        { token: 'red', foreground: 'FF0000', fontStyle: 'bold underline' },
-      ],
-      colors: {
-        'editor.foreground': '#FFFFFF',
-        'editor.background': '#00000000',
-      }
-    });
-    editorRef.current = editor.create(divEl, {
-      language: 'typescript',
-      fontSize: 11,
-      minimap: {
-        enabled: false
-      },
-      scrollbar: {
-        vertical: 'hidden',
-        handleMouseWheel: false,
-        verticalSliderSize: 0,
-        horizontal: 'hidden',
-      },
-      wordWrapOverride1: 'off',
-      lineNumbers: 'off',
-      glyphMargin: false,
-      folding: false,
-      // Undocumented see https://github.com/Microsoft/vscode/issues/30795#issuecomment-410998882
-      lineDecorationsWidth: 0,
-      lineNumbersMinChars: 0,
-      // theme: 'vs-dark',
-      theme: 'olik-editor-theme',
-    });
-    setInitialized.current(true);
-    editorRef.current.setScrollPosition({ scrollTop: lineHeight });
-  }, [divEl, editorRef])
-}
-
-
-const generateTypeDefinition = (obj: Record<string, unknown>) => {
+const reGenerateTypeDefinitions = (arg: ReturnType<typeof useLocalState>) => {
   const collector = { str: `{\n` };
-  recurseObject(collector, obj, 1);
+  recurseObject(collector, arg.state!, 1);
   collector.str += '};\n';
-  return collector.str;
+  const defaultEditorValue = [olikTypeDefsAsString + `; const store: Store<${collector.str.replace(/\n|\r/g, "")}>;`, 'store.'].join('\n');
+  arg.setState(s => ({ ...s, defaultEditorValue }));
+  return defaultEditorValue;
 }
 
 const recurseObject = (collector: { str: string }, obj: Record<string, unknown>, level: number) => {
@@ -141,7 +57,7 @@ const recurseObject = (collector: { str: string }, obj: Record<string, unknown>,
       collector.str += `${key}: ${typeofValue};\n`;
     } else if (value === null) {
       collector.str += `${key}: null;\n`;
-    } else if (Array.isArray(value)) {
+    } else if (is.array(value)) {
       if (value.length === 0) {
         collector.str += `${key}: Array<any>;\n`;
       } else if (['boolean', 'number', 'string'].includes(typeof value[0])) {
@@ -161,17 +77,30 @@ const recurseObject = (collector: { str: string }, obj: Record<string, unknown>,
   });
 }
 
-const useLimitEditorScrolling = (args: EditorHookArgs) => {
-  const editor = args.editorRef.current!;
-  useEffect(() => {
-    if (!editor) { return; }
-    const listener = editor.onDidScrollChange(() => {
-      if (editor.getScrollTop() !== lineHeight) {
-        editor.setScrollPosition({ scrollTop: lineHeight });
-        editor.setPosition({ lineNumber: 2, column: editor.getValue().length + 1 });
-      }
-    });
-    return () => listener.dispose()
-  }, [editor])
+const useLimitEditorScrolling = (arg: ReturnType<typeof useLocalState>) => {
+  if (!arg.editorRef.current || arg.onDidScrollChange) { return; }
+  arg.setState(s => ({
+    ...s,
+    onDidScrollChange: arg.editorRef.current!.onDidScrollChange(() => {
+      if (arg.editorRef.current!.getScrollTop() === lineHeight) { return; }
+      arg.editorRef.current!.setScrollPosition({ scrollTop: lineHeight });
+      arg.editorRef.current!.setPosition({ lineNumber: 2, column: arg.editorRef.current!.getValue().length + 1 });
+    })
+  }));
 }
 
+const preventCertainEditorActions = (arg: ReturnType<typeof useLocalState>) => {
+  if (!arg.editorRef.current || arg.onDidChangeModelContent) { return; }
+  arg.setState(s => ({
+    ...s,
+    onDidChangeModelContent: arg.editorRef.current!.onDidChangeModelContent(() => {
+      const lines = arg.editorRef.current!.getValue().split('\n')!;
+      if (lines.length === 1 || lines.length > 2 || !lines[1].startsWith('store.')) {
+        arg.editorRef.current!.setValue(arg.defaultEditorValue);
+      } else {
+        const lastLine = arg.editorRef.current!.getModel()!.getLineContent(2);
+        arg.onChange(lastLine.substring('store.'.length));
+      }
+    })
+  }));
+}

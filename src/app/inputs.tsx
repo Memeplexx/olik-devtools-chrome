@@ -1,6 +1,6 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { is } from "../shared/functions";
 import { getStateAsJsx } from "../tree";
 import { Item, ItemWrapper, Message } from "./constants";
@@ -13,12 +13,7 @@ export const useInputs = () => {
 
   useMessageHandler(localState);
 
-  const itemsForView = useMemo(() => localState.items.filter(i => i.visible), [localState.items]);
-
-  return {
-    ...localState,
-    itemsForView,
-  };
+  return localState;
 }
 
 const useLocalState = () => {

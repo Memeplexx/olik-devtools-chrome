@@ -25,7 +25,7 @@ export const App = () => {
                 <>
                   <EditorPanel
                     state={inputs.storeState}
-                    onQueryChanged={outputs.onQueryChanged}
+                    onChange={outputs.onQueryChanged}
                   />
                   <PanelGroup
                     direction="vertical"
@@ -78,7 +78,7 @@ export const App = () => {
                               tabIndex={0}
                               children={
                                 <>
-                                  {inputs.itemsForView.map(itemWrapper => (
+                                  {inputs.items.map(itemWrapper => (
                                     <ItemWrapper
                                       key={itemWrapper.id}
                                       children={
