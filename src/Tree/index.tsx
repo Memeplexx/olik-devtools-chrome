@@ -9,18 +9,13 @@ import { Node } from "./styles";
 export const getStateAsJsx = (
   props: TreeProps
 ): JSX.Element => {
-  const onClickNodeKey = (key: string) => (event: MouseEvent) => {
-    event.stopPropagation();
-    props.onClickNodeKey(key);
-  }
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
     if (is.array(val)) {
       return (
         <>
           {val.map((item, index) => renderNode({
-            props,
+            ...props,
             recurse,
-            onClickNodeKey,
             keyConcat: `${outerKey}.${index}`,
             index,
             item,
@@ -33,9 +28,8 @@ export const getStateAsJsx = (
       return (
         <>
           {Object.keys(val).map((key, index, arr) => renderNode({
-            props,
+            ...props,
             recurse,
-            onClickNodeKey,
             keyConcat: key === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`,
             index,
             item: val[key],
@@ -47,9 +41,8 @@ export const getStateAsJsx = (
       );
     } else if (is.possibleBrandedPrimitive(val)) {
       return renderNode({
-        props,
+        ...props,
         recurse,
-        onClickNodeKey,
         keyConcat: ``,
         index: 0,
         item: val,
@@ -63,22 +56,22 @@ export const getStateAsJsx = (
   return recurse(is.objectOrArray(props.state) ? { '': props.state } : props.state, '');
 }
 
-
 const renderNode = (
   {
-    props,
+    unchanged,
+    contractedKeys,
     recurse,
-    onClickNodeKey,
     keyConcat,
     index,
     item,
     isLast,
     isTopLevel,
     key,
-  }: {
-    props: TreeProps,
+    actionType,
+    hideUnchanged,
+    onClickNodeKey,
+  }: TreeProps & {
     recurse: (val: unknown, outerKey: string) => JSX.Element,
-    onClickNodeKey: (key: string) => (event: MouseEvent) => void,
     keyConcat: string,
     index: number,
     item: unknown,
@@ -89,11 +82,15 @@ const renderNode = (
 ) => {
   const itemIsPrimitive = !is.array(item) && !is.nonArrayObject(item);
   const isObject = key !== undefined;
-  const isUnchanged = props.unchanged.includes(keyConcat);
-  const isContracted = props.contractedKeys.includes(keyConcat);
+  const isUnchanged = unchanged.includes(keyConcat);
+  const isContracted = contractedKeys.includes(keyConcat);
   const isEmpty = is.array(item) ? !item.length : is.nonArrayObject(item) ? !Object.keys(item).length : false;
-  const hideUnchanged = isUnchanged && props.hideUnchanged;
-  const showActionType = isTopLevel && !!props.actionType;
+  const isHidden = isUnchanged && hideUnchanged;
+  const showActionType = isTopLevel && !!actionType;
+  const handleNodeClick = (key: string) => (event: MouseEvent) => {
+    event.stopPropagation();
+    onClickNodeKey(key);
+  }
   const nodeType
     = is.array(item) ? 'array'
       : is.nonArrayObject(item) ? 'object'
@@ -119,11 +116,11 @@ const renderNode = (
         <>
           <Node
             $type='actionType'
-            children={props.actionType}
+            children={actionType}
             showIf={showActionType}
             $unchanged={isUnchanged}
             $clickable={true}
-            onClick={onClickNodeKey(keyConcat)}
+            onClick={handleNodeClick(keyConcat)}
           />
           <Node
             $type='parenthesis'
@@ -131,42 +128,42 @@ const renderNode = (
             showIf={showActionType}
             $unchanged={isUnchanged}
             $clickable={true}
-            onClick={onClickNodeKey(keyConcat)}
+            onClick={handleNodeClick(keyConcat)}
           />
           <Node
             $type='key'
             children={key}
             $unchanged={isUnchanged}
-            showIf={isObject && !isTopLevel && !hideUnchanged}
+            showIf={isObject && !isTopLevel && !isHidden}
             $clickable={true}
-            onClick={onClickNodeKey(keyConcat)}
+            onClick={handleNodeClick(keyConcat)}
           />
           <Node
             $type='colon'
             children=':'
             $unchanged={isUnchanged}
-            showIf={isObject && !isTopLevel && !hideUnchanged}
+            showIf={isObject && !isTopLevel && !isHidden}
           />
           <Node
             $type={nodeType}
             children={is.array(item) ? '[' : '{'}
             $unchanged={isUnchanged}
             $clickable={true}
-            onClick={onClickNodeKey(keyConcat)}
-            showIf={!hideUnchanged && !itemIsPrimitive}
+            onClick={handleNodeClick(keyConcat)}
+            showIf={!isHidden && !itemIsPrimitive}
           />
           <Node
             $type={nodeType}
             children='...'
-            showIf={isContracted && !hideUnchanged}
+            showIf={isContracted && !isHidden}
             $unchanged={isUnchanged}
             $clickable={true}
-            onClick={onClickNodeKey(keyConcat)}
+            onClick={handleNodeClick(keyConcat)}
           />
           <Node
             $type={nodeType}
             children={nodeContent}
-            showIf={!isContracted && !isEmpty && !hideUnchanged}
+            showIf={!isContracted && !isEmpty && !isHidden}
             $unchanged={isUnchanged}
             $block={!itemIsPrimitive}
             $indent={!itemIsPrimitive}
@@ -175,7 +172,7 @@ const renderNode = (
             $type={nodeType}
             children={is.array(item) ? ']' : '}'}
             $unchanged={isUnchanged}
-            showIf={!hideUnchanged && !itemIsPrimitive}
+            showIf={!isHidden && !itemIsPrimitive}
           />
           <Node
             $type='parenthesis'
@@ -186,7 +183,7 @@ const renderNode = (
           <Node
             $type='comma'
             children=','
-            showIf={!isLast && !hideUnchanged}
+            showIf={!isLast && !isHidden}
             $unchanged={isUnchanged}
           />
         </>
