@@ -99,7 +99,7 @@ const renderNode = (
             : is.boolean(item) ? `boolean`
               : is.date(item) ? `date`
                 : is.null(item) ? `null`
-                  : is.undefined(item) ? `undefined` 
+                  : is.undefined(item) ? `undefined`
                     : `object`;
   const nodeContent
     = is.number(item) ? item
@@ -107,79 +107,83 @@ const renderNode = (
         : is.boolean(item) ? item
           : is.date(item) ? item.toISOString()
             : is.null(item) ? 'null'
-              : is.undefined(item) ? '' 
+              : is.undefined(item) ? ''
                 : recurse(item, keyConcat);
+  const content = (
+    <>
+      <Node
+        $type={nodeType}
+        children={nodeContent}
+        showIf={!isContracted && !isEmpty && !isHidden}
+        $unchanged={isUnchanged}
+        $block={!itemIsPrimitive}
+        $indent={!itemIsPrimitive}
+      />
+      <Node
+        $type={nodeType}
+        children={is.array(item) ? ']' : '}'}
+        $unchanged={isUnchanged}
+        showIf={!isHidden && !itemIsPrimitive}
+      />
+      <Node
+        $type='parenthesis'
+        children=')'
+        showIf={showActionType}
+        $unchanged={isUnchanged}
+      />
+    </>
+  );
   return (
     <Frag
       key={index}
       children={
         <>
           <Node
-            $type='actionType'
-            children={actionType}
-            showIf={showActionType}
-            $unchanged={isUnchanged}
             $clickable={true}
             onClick={handleNodeClick(keyConcat)}
+            children={
+              <>
+                <Node
+                  $type='actionType'
+                  children={actionType}
+                  showIf={showActionType}
+                  $unchanged={isUnchanged}
+                />
+                <Node
+                  $type='parenthesis'
+                  children='('
+                  showIf={showActionType}
+                  $unchanged={isUnchanged}
+                />
+                <Node
+                  $type='key'
+                  children={key}
+                  $unchanged={isUnchanged}
+                  showIf={isObject && !isTopLevel && !isHidden}
+                />
+                <Node
+                  $type='colon'
+                  children=':'
+                  $unchanged={isUnchanged}
+                  showIf={isObject && !isTopLevel && !isHidden}
+                />
+                <Node
+                  $type={nodeType}
+                  children={is.array(item) ? '[' : '{'}
+                  $unchanged={isUnchanged}
+                  showIf={!isHidden && !itemIsPrimitive}
+                />
+                <Node
+                  $type={nodeType}
+                  children='...'
+                  showIf={isContracted && !isHidden}
+                  $unchanged={isUnchanged}
+                />
+                {isContracted && content}
+              </>
+            }
           />
-          <Node
-            $type='parenthesis'
-            children='('
-            showIf={showActionType}
-            $unchanged={isUnchanged}
-            $clickable={true}
-            onClick={handleNodeClick(keyConcat)}
-          />
-          <Node
-            $type='key'
-            children={key}
-            $unchanged={isUnchanged}
-            showIf={isObject && !isTopLevel && !isHidden}
-            $clickable={true}
-            onClick={handleNodeClick(keyConcat)}
-          />
-          <Node
-            $type='colon'
-            children=':'
-            $unchanged={isUnchanged}
-            showIf={isObject && !isTopLevel && !isHidden}
-          />
-          <Node
-            $type={nodeType}
-            children={is.array(item) ? '[' : '{'}
-            $unchanged={isUnchanged}
-            $clickable={true}
-            onClick={handleNodeClick(keyConcat)}
-            showIf={!isHidden && !itemIsPrimitive}
-          />
-          <Node
-            $type={nodeType}
-            children='...'
-            showIf={isContracted && !isHidden}
-            $unchanged={isUnchanged}
-            $clickable={true}
-            onClick={handleNodeClick(keyConcat)}
-          />
-          <Node
-            $type={nodeType}
-            children={nodeContent}
-            showIf={!isContracted && !isEmpty && !isHidden}
-            $unchanged={isUnchanged}
-            $block={!itemIsPrimitive}
-            $indent={!itemIsPrimitive}
-          />
-          <Node
-            $type={nodeType}
-            children={is.array(item) ? ']' : '}'}
-            $unchanged={isUnchanged}
-            showIf={!isHidden && !itemIsPrimitive}
-          />
-          <Node
-            $type='parenthesis'
-            children=')'
-            showIf={showActionType}
-            $unchanged={isUnchanged}
-          />
+          {!isContracted && content}
           <Node
             $type='comma'
             children=','
