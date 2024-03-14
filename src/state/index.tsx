@@ -1,12 +1,12 @@
+import { ForwardedRef, forwardRef } from "react";
 import { StateProps } from "./constants";
-import { JsonWrapper } from "./styles";
-import React from "react";
 import { useInputs } from "./inputs";
+import { JsonWrapper } from "./styles";
 
 
-export const State = React.forwardRef(function Tree(
+export const State = forwardRef(function Tree(
   props: StateProps,
-  ref: React.ForwardedRef<HTMLDivElement>
+  ref: ForwardedRef<HTMLDivElement>
 ) {
   const inputs = useInputs(props, ref);
   return (
