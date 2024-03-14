@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(props: P) => {
-	return React.useRef(() => {
+	return useRef(() => {
 		return (Object.keys(props) as Array<keyof P>)
 			.filter(key => typeof (props[key]) !== 'function')
 			.reduce((prev, curr) => ({ ...prev, [curr]: props[curr] }), {} as {
@@ -12,9 +12,9 @@ export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(prop
 }
 
 export const useForwardedRef = <T>(forwardedRef: React.ForwardedRef<T>) => {
-	const basicRef = React.useRef<T | null>(null);
-	const targetRef = React.useRef<T | null>(null)
-	const refs = React.useMemo(() => [basicRef, forwardedRef], [forwardedRef]);
+	const basicRef = useRef<T | null>(null);
+	const targetRef = useRef<T | null>(null)
+	const refs = useMemo(() => [basicRef, forwardedRef], [forwardedRef]);
 	useEffect(() => {
 		refs.forEach(ref => {
 			if (!ref) return
