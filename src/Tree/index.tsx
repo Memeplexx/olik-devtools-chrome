@@ -104,7 +104,7 @@ const renderNode = (
   const nodeContent
     = is.number(item) ? item
       : is.string(item) ? `"${item}"`
-        : is.boolean(item) ? item
+        : is.boolean(item) ? item.toString()
           : is.date(item) ? item.toISOString()
             : is.null(item) ? 'null'
               : is.undefined(item) ? ''
