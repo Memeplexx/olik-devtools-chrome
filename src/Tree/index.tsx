@@ -80,8 +80,8 @@ const renderNode = (
     key?: string,
   }
 ) => {
-  const itemIsPrimitive = !is.array(item) && !is.nonArrayObject(item);
-  const isObject = key !== undefined;
+  const isPrimitive = !is.array(item) && !is.nonArrayObject(item);
+  const hasObjectKey = key !== undefined;
   const isUnchanged = unchanged.includes(keyConcat);
   const isContracted = contractedKeys.includes(keyConcat);
   const isEmpty = is.array(item) ? !item.length : is.nonArrayObject(item) ? !Object.keys(item).length : false;
@@ -116,14 +116,14 @@ const renderNode = (
         children={nodeContent}
         showIf={!isContracted && !isEmpty && !isHidden}
         $unchanged={isUnchanged}
-        $block={!itemIsPrimitive}
-        $indent={!itemIsPrimitive}
+        $block={!isPrimitive}
+        $indent={!isPrimitive}
       />
       <Node
         $type={nodeType}
         children={is.array(item) ? ']' : '}'}
         $unchanged={isUnchanged}
-        showIf={!isHidden && !itemIsPrimitive}
+        showIf={!isHidden && !isPrimitive}
       />
       <Node
         $type='parenthesis'
@@ -159,19 +159,19 @@ const renderNode = (
                   $type='key'
                   children={key}
                   $unchanged={isUnchanged}
-                  showIf={isObject && !isTopLevel && !isHidden}
+                  showIf={hasObjectKey && !isTopLevel && !isHidden}
                 />
                 <Node
                   $type='colon'
                   children=':'
                   $unchanged={isUnchanged}
-                  showIf={isObject && !isTopLevel && !isHidden}
+                  showIf={hasObjectKey && !isTopLevel && !isHidden}
                 />
                 <Node
                   $type={nodeType}
                   children={is.array(item) ? '[' : '{'}
                   $unchanged={isUnchanged}
-                  showIf={!isHidden && !itemIsPrimitive}
+                  showIf={!isHidden && !isPrimitive}
                 />
                 <Node
                   $type={nodeType}

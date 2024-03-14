@@ -5,6 +5,7 @@ import { Panel, PanelResizeHandle } from "react-resizable-panels";
 import { CiCircleRemove } from 'react-icons/ci';
 import { BsToggleOff, BsToggleOn } from 'react-icons/bs';
 import { possible } from "../html";
+import { DemoWrapper } from "../demo/demo-wrapper";
 
 export const ClearButton = styled.button`
 	position: absolute;
@@ -161,4 +162,8 @@ export const ItemsWrapper = styled(Panel)`
 	overflow-x: auto!important;
 	display:flex;
 	flex-direction:column-reverse;
+`;
+
+export const DemoPanel = styled(DemoWrapper)`
+	max-width: 50vw;
 `;

@@ -1,9 +1,8 @@
-import { ClearButton, ClearIcon, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, StatePanel } from './styles';
+import { ClearButton, ClearIcon, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, StatePanel, DemoPanel } from './styles';
 import { PanelGroup } from 'react-resizable-panels';
 import { useInputs } from './inputs';
 import { Frag } from '../html/frag';
 import { useOutputs } from './outputs';
-import { DemoWrapper } from '../demo/demo-wrapper';
 
 
 export const App = () => {
@@ -12,7 +11,7 @@ export const App = () => {
   const storeStateVersion = inputs.storeStateVersion as Record<string, unknown>;
   return (
     <>
-      {!chrome.runtime && <DemoWrapper />}
+      {!chrome.runtime && <DemoPanel />}
       <DevtoolsPanel
         children={
           <>

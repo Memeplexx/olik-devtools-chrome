@@ -1,5 +1,5 @@
-import React from "react";
-import * as monaco from 'monaco-editor';
+import { useEffect, useRef, useState } from "react";
+import { editor } from 'monaco-editor';
 import { EditorHookArgs, EditorProps } from "./constants";
 import * as olikTypeDefsText from '../../node_modules/olik/dist/type.d.ts?raw';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
@@ -21,9 +21,9 @@ export const useInputs = (props: EditorProps) => {
 }
 
 export const useHooksInitializer = (props: EditorProps) => {
-  const [initialized, setInitialized] = React.useState(false);
-  const divEl = React.useRef<HTMLDivElement>(null);
-  const editorRef = React.useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [initialized, setInitialized] = useState(false);
+  const divEl = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   return {
     divEl,
     editorRef,
@@ -34,7 +34,7 @@ export const useHooksInitializer = (props: EditorProps) => {
 }
 
 const useAddTypescriptSupportToEditor = () => {
-  React.useEffect(() => {
+  useEffect(() => {
     self.MonacoEnvironment = {
       getWorker: () => new tsWorker(),
     };
@@ -43,11 +43,11 @@ const useAddTypescriptSupportToEditor = () => {
 
 const useUpdateTypeDefinitions = (args: EditorHookArgs) => {
   const editor = args.editorRef.current;
-  const [typeDef, setTypeDef] = React.useState<string>('');
-  React.useEffect(() => {
+  const [typeDef, setTypeDef] = useState<string>('');
+  useEffect(() => {
     setTypeDef(generateTypeDefinition(args.state!).replace(/\n|\r/g, ""));
   }, [args.state]);
-  React.useEffect(() => {
+  useEffect(() => {
     if (!editor) { return; }
     const typeDefString = olikTypeDefsAsString + `; const store: Store<${typeDef}>;`;
     editor.setValue([typeDefString, 'store.'].join('\n'));
@@ -56,15 +56,20 @@ const useUpdateTypeDefinitions = (args: EditorHookArgs) => {
 
 const usePreventCertainEditorActions = (args: EditorHookArgs) => {
   const editorRef = args.editorRef.current;
-  const queryChangedRef = React.useRef(args.onQueryChanged);
-  React.useEffect(() => {
+  const queryChangedRef = useRef(args.onQueryChanged);
+  useEffect(() => {
     if (!editorRef) { return; }
     editorRef.onDidChangeModelContent(() => {
       const value = editorRef.getValue();
       const lines = value.split('\n')!;
-      if (!lines[1].startsWith('store.')) {
+      if (value.trim() === '') {
+        // const typeDefString = olikTypeDefsAsString + `; const store: Store<${typeDef}>;`;
+        // editorRef.setValue([typeDefString, 'store.'].join('\n'));
+      } else if (!lines[1].startsWith('store.')) {
         editorRef.setValue([lines[0], 'store.'].join('\n'));
         editorRef.setPosition({ lineNumber: 2, column: value.length + 1 });
+      } else if (lines.length > 2) {
+        editorRef.setValue([lines[0], lines[1]].join('\n'));
       } else {
         const lastLine = editorRef.getModel()!.getLineContent(2);
         queryChangedRef.current(lastLine.substring('store.'.length));
@@ -76,10 +81,10 @@ const usePreventCertainEditorActions = (args: EditorHookArgs) => {
 const useInitializeTextEditor = (args: EditorHookArgs) => {
   const divEl = args.divEl.current;
   const editorRef = args.editorRef;
-  const setInitialized = React.useRef(args.setInitialized);
-  React.useEffect(() => {
+  const setInitialized = useRef(args.setInitialized);
+  useEffect(() => {
     if (!divEl || !!editorRef.current) { return; }
-    monaco.editor.defineTheme('olik-editor-theme', {
+    editor.defineTheme('olik-editor-theme', {
       base: 'vs-dark',
       inherit: false,
       rules: [
@@ -91,7 +96,7 @@ const useInitializeTextEditor = (args: EditorHookArgs) => {
         'editor.background': '#00000000',
       }
     });
-    editorRef.current = monaco.editor.create(divEl, {
+    editorRef.current = editor.create(divEl, {
       language: 'typescript',
       fontSize: 11,
       minimap: {
@@ -158,7 +163,7 @@ const recurseObject = (collector: { str: string }, obj: Record<string, unknown>,
 
 const useLimitEditorScrolling = (args: EditorHookArgs) => {
   const editor = args.editorRef.current!;
-  React.useEffect(() => {
+  useEffect(() => {
     if (!editor) { return; }
     const listener = editor.onDidScrollChange(() => {
       if (editor.getScrollTop() !== lineHeight) {
