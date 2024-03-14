@@ -14,6 +14,7 @@ export const useInputs = (props: EditorProps) => {
   instantiateEditor(localState);
   respondToEditorScrollChanges(localState);
   respondToEditorTextChanges(localState);
+  respondToEditorEnterKeyup(localState);
   return localState;
 }
 
@@ -24,6 +25,7 @@ const useLocalState = (props: EditorProps) => {
     editorRef: useRef<editor.IStandaloneCodeEditor | null>(null),
     onDidScrollChange: null as null | IDisposable,
     onDidChangeModelContent: null as null | IDisposable,
+    onKeyUp: null as null | IDisposable,
   });
   return { ...props, ...state, setState };
 }
@@ -40,12 +42,8 @@ const instantiateEditor = (arg: ReturnType<typeof useLocalState>) => {
 
 const reGenerateTypeDefinitions = (arg: ReturnType<typeof useLocalState>) => {
   const recurse = (val: unknown): string => {
-    if (is.string(val)) {
-      return '"string"';
-    } else if (is.number(val)) {
-      return '"number"';
-    } else if (is.boolean(val)) {
-      return '"boolean"';
+    if (is.primitive(val)) {
+      return `"${typeof val}"`;
     } else if (is.date(val)) {
       return '"Date"';
     } else if (is.null(val)) {
@@ -60,7 +58,7 @@ const reGenerateTypeDefinitions = (arg: ReturnType<typeof useLocalState>) => {
   }
   const typeDef = recurse(arg.state!);
   // console.log(JSON.stringify(JSON.parse(typeDef), null, 2)); // un-comment to debug
-  const defaultEditorValue = [olikTypeDefsAsString + `; const store: Store<${typeDef}>;`, 'store.'].join('\n');
+  const defaultEditorValue = [olikTypeDefsAsString + `; const store: Store<${typeDef.replace(/"/g, '')}>;`, 'store.'].join('\n');
   arg.setState(s => ({ ...s, defaultEditorValue }));
   return defaultEditorValue;
 }
@@ -82,11 +80,11 @@ const respondToEditorTextChanges = (arg: ReturnType<typeof useLocalState>) => {
   if (!arg.editorRef.current || arg.onDidChangeModelContent) { return; }
   const onDidChangeModelContent = arg.editorRef.current.onDidChangeModelContent(() => {
     arg.setState(s => {
-      const lines = arg.editorRef.current!.getValue().split('\n')!;
+      const lines = s.editorRef.current!.getValue().split('\n')!;
       if (lines.length === 1 || lines.length > 2 || !lines[1].startsWith('store.')) {
-        arg.editorRef.current!.setValue(s.defaultEditorValue);
+        s.editorRef.current!.setValue(s.defaultEditorValue);
       } else {
-        const lastLine = arg.editorRef.current!.getModel()!.getLineContent(2);
+        const lastLine = s.editorRef.current!.getModel()!.getLineContent(2);
         arg.onChange(lastLine.substring('store.'.length));
       }
       return s;
@@ -95,5 +93,25 @@ const respondToEditorTextChanges = (arg: ReturnType<typeof useLocalState>) => {
   arg.setState(s => ({
     ...s,
     onDidChangeModelContent
+  }));
+}
+
+const respondToEditorEnterKeyup = (arg: ReturnType<typeof useLocalState>) => {
+  if (!arg.editorRef.current || arg.onKeyUp) { return; }
+  const onKeyUp = arg.editorRef.current.onKeyDown((e) => {
+    if (e.code !== 'Enter') { return; }
+    e.preventDefault();
+    const hasError = editor.getModelMarkers({}).some(e => e.startLineNumber === 2);
+    if (hasError) { return; }
+    const lastLine = arg.editorRef.current!.getModel()!.getLineContent(2);
+    arg.onEnter(lastLine.substring('store.'.length));
+    arg.setState(s => {
+      s.editorRef.current!.setValue(s.defaultEditorValue);
+      return s;
+    });
+  });
+  arg.setState(s => ({
+    ...s,
+    onKeyUp
   }));
 }

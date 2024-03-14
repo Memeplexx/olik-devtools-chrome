@@ -3,6 +3,7 @@ import { editor } from "monaco-editor"
 export type EditorProps = {
   state: Record<string, unknown> | null,
   onChange: (query: string) => void,
+  onEnter: (query: string) => void,
 }
 
 export const editorRefOptions: editor.IStandaloneEditorConstructionOptions = {

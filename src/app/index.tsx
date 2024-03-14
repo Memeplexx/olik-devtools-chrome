@@ -25,7 +25,8 @@ export const App = () => {
                 <>
                   <EditorPanel
                     state={inputs.storeState}
-                    onChange={outputs.onQueryChanged}
+                    onChange={outputs.onEditorChange}
+                    onEnter={outputs.onEditorEnter}
                   />
                   <PanelGroup
                     direction="vertical"
