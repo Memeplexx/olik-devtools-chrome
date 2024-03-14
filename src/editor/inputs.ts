@@ -39,10 +39,30 @@ const instantiateEditor = (arg: ReturnType<typeof useLocalState>) => {
 }
 
 const reGenerateTypeDefinitions = (arg: ReturnType<typeof useLocalState>) => {
-  const collector = { str: `{\n` };
-  recurseObject(collector, arg.state!, 1);
-  collector.str += '};\n';
-  const defaultEditorValue = [olikTypeDefsAsString + `; const store: Store<${collector.str.replace(/\n|\r/g, "")}>;`, 'store.'].join('\n');
+  const recurse = (val: unknown): string => {
+    if (is.string(val)) {
+      return '"string"';
+    } else if (is.number(val)) {
+      return '"number"';
+    } else if (is.boolean(val)) {
+      return '"boolean"';
+    } else if (is.date(val)) {
+      return '"Date"';
+    } else if (is.null(val)) {
+      return '"null"';
+    } else if (is.nonArrayObject(val)) {
+      return Object.keys(val).map((key, index, array) => {
+        return `${!index ? '{' : '' }"${key}": ${recurse(val[key])}${index === array.length - 1 ? '}' : '' }`;
+      }).join(',');
+    } else if (is.array(val)) {
+      return `[${val.length ? recurse(val[0]) : 'unknown'}]`;
+    } else {
+      throw new Error(`Unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
+    }
+  }
+  const typeDef = recurse(arg.state!);
+  // console.log(JSON.stringify(JSON.parse(typeDef), null, 2)); // for debug purposes
+  const defaultEditorValue = [olikTypeDefsAsString + `; const store: Store<${typeDef}>;`, 'store.'].join('\n');
   arg.setState(s => ({ ...s, defaultEditorValue }));
   return defaultEditorValue;
 }
@@ -78,34 +98,4 @@ const respondToEditorTextChanges = (arg: ReturnType<typeof useLocalState>) => {
     ...s,
     onDidChangeModelContent
   }));
-}
-
-const recurseObject = (collector: { str: string }, obj: Record<string, unknown>, level: number) => {
-  if (!obj) { return; }
-  Object.keys(obj).forEach(key => {
-    const value = obj[key];
-    collector.str += '\t'.repeat(level);
-    const typeofValue = typeof (value);
-    if (is.primitive(value)) {
-      collector.str += `${key}: ${typeofValue};\n`;
-    } else if (is.null(value)) {
-      collector.str += `${key}: null;\n`;
-    } else if (is.array(value)) {
-      if (value.length === 0) {
-        collector.str += `${key}: Array<any>;\n`;
-      } else if (is.primitive(value[0])) {
-        collector.str += `${key}: Array<${typeof (value[0])}>;\n`;
-      } else if (is.null(value[0])) {
-        collector.str += `${key}: Array<null>;\n`;
-      } else {
-        const collectorInner = { str: '{\n' };
-        recurseObject(collectorInner, value[0] as Record<string, unknown>, level + 1);
-        collector.str += `${key}: Array<${collectorInner.str}${'\t'.repeat(level)}>;\n`;
-      }
-    } else if (typeof value === 'object') {
-      const collectorInner = { str: '{\n' };
-      recurseObject(collectorInner, value as Record<string, unknown>, level + 1);
-      collector.str += `${key}: ${collectorInner.str}${'\t'.repeat(level)}};\n`;
-    }
-  });
 }
