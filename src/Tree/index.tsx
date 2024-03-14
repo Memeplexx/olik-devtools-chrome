@@ -17,31 +17,45 @@ export const getStateAsJsx = (
     if (is.array(val)) {
       return (
         <>
-          {val.map((item, index) => {
-            const notLast = index !== val.length - 1;
-            const isTopLevel = false;
-            const keyConcat = isTopLevel ? index.toString() : `${outerKey}.${index}`;
-            return renderNode({ props, recurse, onClickNodeKey, keyConcat, index, item, notLast, isTopLevel });
-          })}
+          {val.map((item, index) => renderNode({
+            props,
+            recurse,
+            onClickNodeKey,
+            keyConcat: `${outerKey}.${index}`,
+            index,
+            item,
+            notLast: index !== val.length - 1,
+            isTopLevel: false
+          }))}
         </>
       );
     } else if (is.nonArrayObject(val)) {
-      const objectKeys = Object.keys(val);
       return (
         <>
-          {objectKeys.map((key, index) => {
-            const notLast = index !== objectKeys.length - 1;
-            const isTopLevel = key === '';
-            const item = val[key];
-            const keyConcat = isTopLevel ? key.toString() : `${outerKey.toString()}.${key.toString()}`;
-            return renderNode({ props, recurse, onClickNodeKey, keyConcat, index, item, notLast, isTopLevel, key });
-          })}
+          {Object.keys(val).map((key, index, arr) => renderNode({
+            props,
+            recurse,
+            onClickNodeKey,
+            keyConcat: key === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`,
+            index,
+            item: val[key],
+            notLast: index !== arr.length - 1,
+            isTopLevel: key === '',
+            key
+          }))}
         </>
       );
     } else if (is.possibleBrandedPrimitive(val)) {
-      const isTopLevel = outerKey === '';
-      const keyConcat = isTopLevel ? `` : outerKey;
-      return renderNode({ props, recurse, onClickNodeKey, keyConcat, index: 0, item: val, notLast: false, isTopLevel: true });
+      return renderNode({
+        props,
+        recurse,
+        onClickNodeKey,
+        keyConcat: ``,
+        index: 0,
+        item: val,
+        notLast: false,
+        isTopLevel: true,
+      });
     } else {
       throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
@@ -82,13 +96,29 @@ const renderNode = (
   const isEmpty = itemIsArray ? !item.length : itemIsNonArrayObject ? !Object.keys(item).length : false;
   const hideUnchanged = isUnchanged && props.hideUnchanged;
   const showActionType = isTopLevel && !!props.actionType;
+  const nodeType
+    = is.array(item) ? 'array'
+      : is.nonArrayObject(item) ? 'object'
+        : is.number(item) ? `number`
+          : is.string(item) ? `string`
+            : is.boolean(item) ? `boolean`
+              : is.date(item) ? `date`
+                : is.null(item) ? `null`
+                  : is.undefined(item) ? `undefined` : `object`;
+  const nodeContent
+    = is.number(item) ? item.toString()
+      : is.string(item) ? `"${item}"`
+        : is.boolean(item) ? item.toString()
+          : is.date(item) ? item.toISOString()
+            : is.null(item) ? 'null'
+              : is.undefined(item) ? '' : recurse(item, keyConcat);
   return (
     <Frag
       key={index}
       children={
         <>
           <Node
-            $type={`actionType`}
+            $type='actionType'
             children={props.actionType}
             showIf={showActionType}
             $unchanged={isUnchanged}
@@ -96,15 +126,15 @@ const renderNode = (
             onClick={onClickNodeKey(keyConcat)}
           />
           <Node
-            $type={'parenthesis'}
-            children={`(`}
+            $type='parenthesis'
+            children='('
             showIf={showActionType}
             $unchanged={isUnchanged}
             $clickable={true}
             onClick={onClickNodeKey(keyConcat)}
           />
           <Node
-            $type={'key'}
+            $type='key'
             children={key}
             $unchanged={isUnchanged}
             showIf={isObject && !isTopLevel && !hideUnchanged}
@@ -112,50 +142,50 @@ const renderNode = (
             onClick={onClickNodeKey(keyConcat)}
           />
           <Node
-            $type={'colon'}
-            children={`:`}
+            $type='colon'
+            children=':'
             $unchanged={isUnchanged}
             showIf={isObject && !isTopLevel && !hideUnchanged}
           />
           <Node
-            $type={itemIsArray ? `array` : `object`}
-            children={itemIsArray ? `[` : `{`}
+            $type={nodeType}
+            children={itemIsArray ? '[' : '{'}
             $unchanged={isUnchanged}
             $clickable={true}
             onClick={onClickNodeKey(keyConcat)}
             showIf={!hideUnchanged && !itemIsPrimitive}
           />
           <Node
-            $type={itemIsArray ? `array` : `object`}
-            children={`...`}
+            $type={nodeType}
+            children='...'
             showIf={isContracted && !hideUnchanged}
             $unchanged={isUnchanged}
             $clickable={true}
             onClick={onClickNodeKey(keyConcat)}
           />
           <Node
-            $type={is.number(item) ? `number` : is.string(item) ? `string` : is.boolean(item) ? `boolean` : is.date(item) ? `date` : is.null(item) ? `null` : is.undefined(item) ? `undefined` : `object`}
-            children={is.number(item) ? item.toString() : is.string(item) ? `"${item}"` : is.boolean(item) ? item.toString() : is.date(item) ? item.toISOString() : is.null(item) ? 'null' : is.undefined(item) ? 'undefined' : recurse(item, keyConcat)}
+            $type={nodeType}
+            children={nodeContent}
             showIf={!isContracted && !isEmpty && !hideUnchanged}
             $unchanged={isUnchanged}
             $block={!itemIsPrimitive}
             $indent={!itemIsPrimitive}
           />
           <Node
-            $type={itemIsArray ? `array` : `object`}
-            children={itemIsArray ? `]` : `}`}
+            $type={nodeType}
+            children={itemIsArray ? ']' : '}'}
             $unchanged={isUnchanged}
             showIf={!hideUnchanged && !itemIsPrimitive}
           />
           <Node
-            $type={`parenthesis`}
-            children={`)`}
+            $type='parenthesis'
+            children=')'
             showIf={showActionType}
             $unchanged={isUnchanged}
           />
           <Node
-            $type={`comma`}
-            children={`,`}
+            $type='comma'
+            children=','
             showIf={notLast && !hideUnchanged}
             $unchanged={isUnchanged}
           />
