@@ -12,8 +12,8 @@ const lineHeight = 18;
 export const useInputs = (props: EditorProps) => {
   const localState = useLocalState(props);
   instantiateEditor(localState);
-  useLimitEditorScrolling(localState);
-  preventCertainEditorActions(localState);
+  respondToEditorScrollChanges(localState);
+  respondToEditorTextChanges(localState);
   return localState;
 }
 
@@ -47,22 +47,55 @@ const reGenerateTypeDefinitions = (arg: ReturnType<typeof useLocalState>) => {
   return defaultEditorValue;
 }
 
+const respondToEditorScrollChanges = (arg: ReturnType<typeof useLocalState>) => {
+  if (!arg.editorRef.current || arg.onDidScrollChange) { return; }
+  const onDidScrollChange = arg.editorRef.current.onDidScrollChange(() => {
+    if (arg.editorRef.current!.getScrollTop() === lineHeight) { return; }
+    arg.editorRef.current!.setScrollPosition({ scrollTop: lineHeight });
+    arg.editorRef.current!.setPosition({ lineNumber: 2, column: arg.editorRef.current!.getValue().length + 1 });
+  })
+  arg.setState(s => ({
+    ...s,
+    onDidScrollChange
+  }));
+}
+
+const respondToEditorTextChanges = (arg: ReturnType<typeof useLocalState>) => {
+  if (!arg.editorRef.current || arg.onDidChangeModelContent) { return; }
+  const onDidChangeModelContent = arg.editorRef.current.onDidChangeModelContent(() => {
+    arg.setState(s => {
+      const lines = arg.editorRef.current!.getValue().split('\n')!;
+      if (lines.length === 1 || lines.length > 2 || !lines[1].startsWith('store.')) {
+        arg.editorRef.current!.setValue(s.defaultEditorValue);
+      } else {
+        const lastLine = arg.editorRef.current!.getModel()!.getLineContent(2);
+        arg.onChange(lastLine.substring('store.'.length));
+      }
+      return s;
+    })
+  });
+  arg.setState(s => ({
+    ...s,
+    onDidChangeModelContent
+  }));
+}
+
 const recurseObject = (collector: { str: string }, obj: Record<string, unknown>, level: number) => {
   if (!obj) { return; }
   Object.keys(obj).forEach(key => {
     const value = obj[key];
     collector.str += '\t'.repeat(level);
     const typeofValue = typeof (value);
-    if (['boolean', 'number', 'string'].includes(typeofValue)) {
+    if (is.primitive(value)) {
       collector.str += `${key}: ${typeofValue};\n`;
-    } else if (value === null) {
+    } else if (is.null(value)) {
       collector.str += `${key}: null;\n`;
     } else if (is.array(value)) {
       if (value.length === 0) {
         collector.str += `${key}: Array<any>;\n`;
-      } else if (['boolean', 'number', 'string'].includes(typeof value[0])) {
+      } else if (is.primitive(value[0])) {
         collector.str += `${key}: Array<${typeof (value[0])}>;\n`;
-      } else if (value[0] === null) {
+      } else if (is.null(value[0])) {
         collector.str += `${key}: Array<null>;\n`;
       } else {
         const collectorInner = { str: '{\n' };
@@ -75,32 +108,4 @@ const recurseObject = (collector: { str: string }, obj: Record<string, unknown>,
       collector.str += `${key}: ${collectorInner.str}${'\t'.repeat(level)}};\n`;
     }
   });
-}
-
-const useLimitEditorScrolling = (arg: ReturnType<typeof useLocalState>) => {
-  if (!arg.editorRef.current || arg.onDidScrollChange) { return; }
-  arg.setState(s => ({
-    ...s,
-    onDidScrollChange: arg.editorRef.current!.onDidScrollChange(() => {
-      if (arg.editorRef.current!.getScrollTop() === lineHeight) { return; }
-      arg.editorRef.current!.setScrollPosition({ scrollTop: lineHeight });
-      arg.editorRef.current!.setPosition({ lineNumber: 2, column: arg.editorRef.current!.getValue().length + 1 });
-    })
-  }));
-}
-
-const preventCertainEditorActions = (arg: ReturnType<typeof useLocalState>) => {
-  if (!arg.editorRef.current || arg.onDidChangeModelContent) { return; }
-  arg.setState(s => ({
-    ...s,
-    onDidChangeModelContent: arg.editorRef.current!.onDidChangeModelContent(() => {
-      const lines = arg.editorRef.current!.getValue().split('\n')!;
-      if (lines.length === 1 || lines.length > 2 || !lines[1].startsWith('store.')) {
-        arg.editorRef.current!.setValue(arg.defaultEditorValue);
-      } else {
-        const lastLine = arg.editorRef.current!.getModel()!.getLineContent(2);
-        arg.onChange(lastLine.substring('store.'.length));
-      }
-    })
-  }));
 }

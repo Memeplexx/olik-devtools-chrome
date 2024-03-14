@@ -41,6 +41,9 @@ export const is = {
 	string: (val: unknown): val is string => {
 		return typeof (val) === 'string';
 	},
+	primitive: (val: unknown): val is string | number | boolean => {
+		return typeof (val) === 'string' || typeof (val) === 'number' || typeof (val) === 'boolean';
+	},
 	undefined: (val: unknown): val is undefined => {
 		return val === undefined;
 	},
@@ -62,7 +65,7 @@ export const is = {
 	nullOrUndefined: (val: unknown): val is null | undefined => {
 		return val === null || val === undefined;
 	},
-	possibleBrandedPrimitive: (val: unknown): val is 'number' | 'string' | 'boolean' | 'date' | 'null' | 'undefined' => {
+	scalar: (val: unknown): val is 'number' | 'string' | 'boolean' | 'date' | 'null' | 'undefined' => {
 		return typeof (val) === 'string' || typeof (val) === 'number' || typeof (val) === 'boolean' || val === null || val === undefined || val instanceof Date;
 	}
 }

@@ -39,7 +39,7 @@ export const getStateAsJsx = (
           }))}
         </>
       );
-    } else if (is.possibleBrandedPrimitive(val)) {
+    } else if (is.scalar(val)) {
       return renderNode({
         ...props,
         recurse,
