@@ -24,7 +24,7 @@ export const getStateAsJsx = (
             keyConcat: `${outerKey}.${index}`,
             index,
             item,
-            notLast: index !== val.length - 1,
+            isLast: index === val.length - 1,
             isTopLevel: false
           }))}
         </>
@@ -39,7 +39,7 @@ export const getStateAsJsx = (
             keyConcat: key === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`,
             index,
             item: val[key],
-            notLast: index !== arr.length - 1,
+            isLast: index === arr.length - 1,
             isTopLevel: key === '',
             key
           }))}
@@ -53,7 +53,7 @@ export const getStateAsJsx = (
         keyConcat: ``,
         index: 0,
         item: val,
-        notLast: false,
+        isLast: true,
         isTopLevel: true,
       });
     } else {
@@ -72,7 +72,7 @@ const renderNode = (
     keyConcat,
     index,
     item,
-    notLast,
+    isLast,
     isTopLevel,
     key,
   }: {
@@ -82,18 +82,16 @@ const renderNode = (
     keyConcat: string,
     index: number,
     item: unknown,
-    notLast: boolean,
+    isLast: boolean,
     isTopLevel: boolean,
     key?: string,
   }
 ) => {
-  const itemIsArray = is.array(item);
-  const itemIsNonArrayObject = is.nonArrayObject(item);
-  const itemIsPrimitive = !itemIsArray && !itemIsNonArrayObject;
+  const itemIsPrimitive = !is.array(item) && !is.nonArrayObject(item);
   const isObject = key !== undefined;
   const isUnchanged = props.unchanged.includes(keyConcat);
   const isContracted = props.contractedKeys.includes(keyConcat);
-  const isEmpty = itemIsArray ? !item.length : itemIsNonArrayObject ? !Object.keys(item).length : false;
+  const isEmpty = is.array(item) ? !item.length : is.nonArrayObject(item) ? !Object.keys(item).length : false;
   const hideUnchanged = isUnchanged && props.hideUnchanged;
   const showActionType = isTopLevel && !!props.actionType;
   const nodeType
@@ -149,7 +147,7 @@ const renderNode = (
           />
           <Node
             $type={nodeType}
-            children={itemIsArray ? '[' : '{'}
+            children={is.array(item) ? '[' : '{'}
             $unchanged={isUnchanged}
             $clickable={true}
             onClick={onClickNodeKey(keyConcat)}
@@ -173,7 +171,7 @@ const renderNode = (
           />
           <Node
             $type={nodeType}
-            children={itemIsArray ? ']' : '}'}
+            children={is.array(item) ? ']' : '}'}
             $unchanged={isUnchanged}
             showIf={!hideUnchanged && !itemIsPrimitive}
           />
@@ -186,7 +184,7 @@ const renderNode = (
           <Node
             $type='comma'
             children=','
-            showIf={notLast && !hideUnchanged}
+            showIf={!isLast && !hideUnchanged}
             $unchanged={isUnchanged}
           />
         </>
