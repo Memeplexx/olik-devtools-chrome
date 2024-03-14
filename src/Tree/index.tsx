@@ -102,14 +102,16 @@ const renderNode = (
             : is.boolean(item) ? `boolean`
               : is.date(item) ? `date`
                 : is.null(item) ? `null`
-                  : is.undefined(item) ? `undefined` : `object`;
+                  : is.undefined(item) ? `undefined` 
+                    : `object`;
   const nodeContent
-    = is.number(item) ? item.toString()
+    = is.number(item) ? item
       : is.string(item) ? `"${item}"`
-        : is.boolean(item) ? item.toString()
+        : is.boolean(item) ? item
           : is.date(item) ? item.toISOString()
             : is.null(item) ? 'null'
-              : is.undefined(item) ? '' : recurse(item, keyConcat);
+              : is.undefined(item) ? '' 
+                : recurse(item, keyConcat);
   return (
     <Frag
       key={index}
