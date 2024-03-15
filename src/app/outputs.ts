@@ -1,5 +1,6 @@
 import { Store, deserialize, libState } from "olik";
 import { useInputs } from "./inputs";
+import { silentlyApplyStateAction } from "../shared/functions";
 
 
 export const useOutputs = (props: ReturnType<typeof useInputs>) => {
@@ -24,32 +25,8 @@ export const useOutputs = (props: ReturnType<typeof useInputs>) => {
       props.setState(s => ({ ...s, query }));
     },
     onEditorEnter: (query: string) => {
-      silentlyApplyStateAction(props, query);
+      silentlyApplyStateAction(props.storeRef.current!, query);
     },
-  }
-}
-
-const silentlyApplyStateAction = (props: ReturnType<typeof useInputs>, query: string) => {
-  if (!chrome.runtime) {
-    let store = props.storeRef.current!;
-    query.split('.').filter(e => !!e).forEach(key => {
-      const arg = key.match(/\(([^)]*)\)/)?.[1];
-      const containsParenthesis = arg !== null && arg !== undefined;
-      if (containsParenthesis) {
-        const functionName = key.split('(')[0];
-        const typedArg = deserialize(arg);
-        const functionToCall = store[functionName] as unknown as ((arg?: unknown) => unknown);
-        store = functionToCall(typedArg) as Store<Record<string, unknown>>;
-      } else {
-        store = store[key] as unknown as Store<Record<string, unknown>>;
-      }
-    })
-  } else {
-    const updateDiv = (query: string) => document.getElementById('olik-action')!.innerHTML = query;
-    chrome.tabs
-      .query({ active: true })
-      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: updateDiv, args: [query] }))
-      .catch(console.error);
   }
 }
 

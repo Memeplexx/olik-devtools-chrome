@@ -1,3 +1,4 @@
+import { Store } from "olik";
 
 export interface TreeProps {
   state: unknown,
@@ -6,6 +7,7 @@ export interface TreeProps {
   actionType?: string,
   unchanged: string[],
   hideUnchanged?: boolean,
+  store?: Store<Record<string, unknown>>,
 }
 
 export type NodeType = 

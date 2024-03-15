@@ -33,6 +33,7 @@ export const initialState = {
     [7, 8, 9]
   ],
   dat: new Date(),
+  thingy: 'ddd',
 };
 
 export type AppState = typeof initialState;

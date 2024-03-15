@@ -1,9 +1,11 @@
 import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
-import { is } from "../shared/functions";
+import { dateToISOLikeButLocal, is, silentlyApplyStateAction } from "../shared/functions";
 import { TreeProps } from "./constants";
 import { Node } from "./styles";
-
+import './date-picker';
+import { DatePicker } from "./date-picker";
+import { CompactInput } from "./compact-input";
 
 
 export const getStateAsJsx = (
@@ -70,6 +72,7 @@ const renderNode = (
     actionType,
     hideUnchanged,
     onClickNodeKey,
+    store,
   }: TreeProps & {
     recurse: (val: unknown, outerKey: string) => JSX.Element,
     keyConcat: string,
@@ -102,10 +105,10 @@ const renderNode = (
                   : is.undefined(item) ? `undefined`
                     : `object`;
   const nodeContent
-    = is.number(item) ? item
-      : is.string(item) ? `"${item}"`
-        : is.boolean(item) ? item.toString()
-          : is.date(item) ? item.toISOString()
+    = is.number(item) ? textNode(item, keyConcat, store, 'number')
+      : is.string(item) ? textNode(item, keyConcat, store, 'text')
+        : is.boolean(item) ? booleanNode(item, keyConcat, store)
+          : is.date(item) ? dateNode(item, keyConcat, store)
             : is.null(item) ? 'null'
               : is.undefined(item) ? ''
                 : recurse(item, keyConcat);
@@ -195,3 +198,47 @@ const renderNode = (
     />
   )
 }
+
+const textNode = <Type extends string | number>(item: Type, key: string, store: TreeProps['store'], type: 'text' | 'number') => {
+  if (!store) { return type === 'text' ? `"${item}"` : item; }
+  return (
+    <CompactInput
+      value={item}
+      type={type}
+      onChange={function onChangeInputNode(e) {
+        const keyRev = key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
+        console.log(keyRev);
+        silentlyApplyStateAction(store, `${keyRev}.$set(${e})`);
+      }} 
+    />
+  )
+}
+
+const dateNode = (item: Date, key: string, store: TreeProps['store']) => {
+  if (!store) { return dateToISOLikeButLocal(item); }
+  return (
+    <DatePicker
+      value={item}
+      onChange={function onChangeDateNode(e) {
+        silentlyApplyStateAction(store, `${key.substring(1)}.$set(${dateToISOLikeButLocal(e)})`);
+      }} 
+    />
+  )
+}
+
+const booleanNode = (item: boolean, key: string, store: TreeProps['store']) => {
+  if (!store) { return item.toString(); }
+  return (
+    <select
+      value={item.toString()}
+      onChange={e => silentlyApplyStateAction(store, `${key.substring(1)}.$set(${e.target.value})`)}
+      children={
+        <>
+          <option value='true' children='true' />
+          <option value='false' children='false' />
+        </>
+      }
+    />
+  )
+}
+

@@ -4,7 +4,6 @@ import { useInputs } from './inputs';
 import { Frag } from '../html/frag';
 import { useOutputs } from './outputs';
 
-
 export const App = () => {
   const inputs = useInputs();
   const outputs = useOutputs(inputs);
@@ -38,8 +37,8 @@ export const App = () => {
                             <StatePanel
                               ref={inputs.treeRef}
                               state={storeStateVersion ?? inputs.storeState!}
-                              storeRef={inputs.storeRef}
                               query={inputs.query}
+                              store={inputs.storeRef.current!}
                             />
                           }
                         />
@@ -85,9 +84,9 @@ export const App = () => {
                                       children={
                                         <>
                                           <ItemHeading
-                                            children={itemWrapper.event.map(e => (
+                                            children={itemWrapper.event.map((e, i) => (
                                               <ItemHead
-                                                key={e}
+                                                key={i}
                                                 children={e}
                                               />
                                             ))}

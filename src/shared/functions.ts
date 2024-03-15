@@ -1,3 +1,4 @@
+import { Store, deserialize } from "olik";
 import { useEffect, useMemo, useRef } from "react";
 
 export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(props: P) => {
@@ -67,5 +68,40 @@ export const is = {
 	},
 	scalar: (val: unknown): val is 'number' | 'string' | 'boolean' | 'date' | 'null' | 'undefined' => {
 		return typeof (val) === 'string' || typeof (val) === 'number' || typeof (val) === 'boolean' || val === null || val === undefined || val instanceof Date;
-	}
+	},
+	htmlElement: (val: unknown): val is HTMLElement => {
+		return val instanceof HTMLElement;
+	},
+}
+
+export const dateToISOLikeButLocal = (date: Date) => {
+  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+  const msLocal =  date.getTime() - offsetMs;
+  const dateLocal = new Date(msLocal);
+  const iso = dateLocal.toISOString();
+  const isoLocal = iso.slice(0, 19);
+  return isoLocal;
+}
+
+export const silentlyApplyStateAction = (store: Store<Record<string, unknown>>, query: string) => {
+  if (!chrome.runtime) {
+    query.split('.').filter(e => !!e).forEach(key => {
+      const arg = key.match(/\(([^)]*)\)/)?.[1];
+      const containsParenthesis = arg !== null && arg !== undefined;
+      if (containsParenthesis) {
+        const functionName = key.split('(')[0];
+        const typedArg = deserialize(arg);
+        const functionToCall = store[functionName] as unknown as ((arg?: unknown) => unknown);
+        store = functionToCall(typedArg) as Store<Record<string, unknown>>;
+      } else {
+        store = store[key] as unknown as Store<Record<string, unknown>>;
+      }
+    })
+  } else {
+    const updateDiv = (query: string) => document.getElementById('olik-action')!.innerHTML = query;
+    chrome.tabs
+      .query({ active: true })
+      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: updateDiv, args: [query] }))
+      .catch(console.error);
+  }
 }
