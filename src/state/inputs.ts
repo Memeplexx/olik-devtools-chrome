@@ -1,5 +1,5 @@
 import { ForwardedRef, useState } from "react";
-import { is, useForwardedRef } from "../shared/functions";
+import { useForwardedRef } from "../shared/functions";
 import { StateProps } from "./constants";
 import { StateAction, Store, deserialize, readState, updateFunctions } from "olik";
 import { getStateAsJsx } from "../tree";
