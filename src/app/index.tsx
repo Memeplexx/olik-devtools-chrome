@@ -79,7 +79,7 @@ export const App = () => {
                               tabIndex={0}
                               children={
                                 <>
-                                  {inputs.items.map(itemWrapper => (
+                                  {inputs.items.filter(i => i.visible).map(itemWrapper => (
                                     <ItemWrapper
                                       key={itemWrapper.id}
                                       children={
