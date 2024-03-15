@@ -41,7 +41,7 @@ export class WebComponent extends HTMLElement {
     });
     const updateInputLength = () => {
       if (type === 'text') {
-        inputElement.size = inputElement.value.length;
+        inputElement.size = Math.max(1, inputElement.value.length);
       } else {
         const length = Math.pow(10, inputElement.value.length).toString();
         inputElement.max = length;

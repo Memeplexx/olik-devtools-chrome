@@ -207,7 +207,6 @@ const textNode = <Type extends string | number>(item: Type, key: string, store: 
       type={type}
       onChange={function onChangeInputNode(e) {
         const keyRev = key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
-        console.log(keyRev);
         silentlyApplyStateAction(store, `${keyRev}.$set(${e})`);
       }} 
     />
