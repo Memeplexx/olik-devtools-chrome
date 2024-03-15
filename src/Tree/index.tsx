@@ -109,7 +109,7 @@ const renderNode = (
       : is.string(item) ? textNode(item, keyConcat, store, 'text')
         : is.boolean(item) ? booleanNode(item, keyConcat, store)
           : is.date(item) ? dateNode(item, keyConcat, store)
-            : is.null(item) ? 'null'
+            : is.null(item) ? textNode(item, keyConcat, store, 'text')
               : is.undefined(item) ? ''
                 : recurse(item, keyConcat);
   const content = (
@@ -199,11 +199,11 @@ const renderNode = (
   )
 }
 
-const textNode = <Type extends string | number>(item: Type, key: string, store: TreeProps['store'], type: 'text' | 'number') => {
-  if (!store) { return type === 'text' ? `"${item}"` : item; }
+const textNode = <Type extends string | number | null>(item: Type, key: string, store: TreeProps['store'], type: 'text' | 'number') => {
+  if (!store) { return item === null ? 'null' : type === 'text' ? `"${item}"` : item; }
   return (
     <CompactInput
-      value={item}
+      value={item ?? 'null'}
       type={type}
       onChange={function onChangeInputNode(e) {
         const keyRev = key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
