@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { editor, IDisposable } from 'monaco-editor';
-import { EditorProps, editorRefOptions, editorTheme } from "./constants";
+import { EditorProps, State, editorRefOptions, editorTheme } from "./constants";
 import * as olikTypeDefsText from '../../node_modules/olik/dist/type.d.ts?raw';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import { is } from "../shared/functions";
@@ -19,7 +19,7 @@ export const useInputs = (props: EditorProps) => {
   return localState;
 }
 
-const useLocalState = (props: EditorProps) => {
+export const useLocalState = (props: EditorProps) => {
   const [state, setState] = useState({
     defaultEditorValue: '',
     divEl: useRef<HTMLDivElement>(null),
@@ -31,7 +31,7 @@ const useLocalState = (props: EditorProps) => {
   return { ...props, ...state, setState };
 }
 
-const instantiateEditor = (arg: ReturnType<typeof useLocalState>) => {
+const instantiateEditor = (arg: State) => {
   if (!arg.divEl.current || arg.editorRef.current || !arg.state) { return; }
   self.MonacoEnvironment = { getWorker: () => new tsWorker() };
   editor.defineTheme('olik-editor-theme', editorTheme);
@@ -41,7 +41,7 @@ const instantiateEditor = (arg: ReturnType<typeof useLocalState>) => {
   arg.editorRef.current.setValue(defaultEditorValue);
 }
 
-const reGenerateTypeDefinitions = (arg: ReturnType<typeof useLocalState>) => {
+const reGenerateTypeDefinitions = (arg: State) => {
   const recurse = (val: unknown): string => {
     if (is.primitive(val)) {
       return `"${typeof val}"`;
@@ -64,7 +64,7 @@ const reGenerateTypeDefinitions = (arg: ReturnType<typeof useLocalState>) => {
   return defaultEditorValue;
 }
 
-const respondToEditorScrollChanges = (arg: ReturnType<typeof useLocalState>) => {
+const respondToEditorScrollChanges = (arg: State) => {
   if (!arg.editorRef.current || arg.onDidScrollChange) { return; }
   const onDidScrollChange = arg.editorRef.current.onDidScrollChange(() => {
     if (arg.editorRef.current!.getScrollTop() === lineHeight) { return; }
@@ -77,7 +77,7 @@ const respondToEditorScrollChanges = (arg: ReturnType<typeof useLocalState>) => 
   }));
 }
 
-const respondToEditorTextChanges = (arg: ReturnType<typeof useLocalState>) => {
+const respondToEditorTextChanges = (arg: State) => {
   if (!arg.editorRef.current || arg.onDidChangeModelContent) { return; }
   const onDidChangeModelContent = arg.editorRef.current.onDidChangeModelContent(() => {
     arg.setState(s => {
@@ -97,7 +97,7 @@ const respondToEditorTextChanges = (arg: ReturnType<typeof useLocalState>) => {
   }));
 }
 
-const respondToEditorEnterKeyup = (arg: ReturnType<typeof useLocalState>) => {
+const respondToEditorEnterKeyup = (arg: State) => {
   if (!arg.editorRef.current || arg.onKeyUp) { return; }
   const onKeyUp = arg.editorRef.current.onKeyDown((e) => {
     if (e.code !== 'Enter') { return; }
@@ -113,7 +113,7 @@ const respondToEditorEnterKeyup = (arg: ReturnType<typeof useLocalState>) => {
   }));
 }
 
-const useStateChangeResponder = (arg: ReturnType<typeof useLocalState>) => {
+const useStateChangeResponder = (arg: State) => {
   const previousStateRef = useRef(arg.state);
   if (!arg.state) { return; }
   if (arg.state !== previousStateRef.current) {

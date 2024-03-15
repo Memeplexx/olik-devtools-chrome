@@ -3,7 +3,7 @@ import { StateAction, Store, createStore, getStore, libState, readState, setNewS
 import { useCallback, useEffect, useRef, useState } from "react";
 import { is } from "../shared/functions";
 import { getStateAsJsx } from "../tree";
-import { Item, ItemWrapper, Message } from "./constants";
+import { Item, ItemWrapper, Message, State } from "./constants";
 
 export const useInputs = () => {
 
@@ -16,7 +16,7 @@ export const useInputs = () => {
   return localState;
 }
 
-const useLocalState = () => {
+export const useLocalState = () => {
   const [state, setState] = useState({
     error: '',
     storeFullyInitialized: false,
@@ -35,7 +35,7 @@ const useLocalState = () => {
   return { ...state, setState };
 }
 
-const instantiateStore = (arg: ReturnType<typeof useLocalState>) => {
+const instantiateStore = (arg: State) => {
   if (arg.storeRef.current) { return; }
   if (!chrome.runtime) {
     arg.storeRef.current = getStore<Record<string, unknown>>(); // get store from demo app
@@ -57,7 +57,7 @@ const instantiateStore = (arg: ReturnType<typeof useLocalState>) => {
   }
 }
 
-const useMessageHandler = (props: ReturnType<typeof useLocalState>) => {
+const useMessageHandler = (props: State) => {
   const { setState } = props;
   const processEvent = useCallback((incoming: Message) => setState(s => {
     if (incoming.action.type === '$load()') {

@@ -1,4 +1,5 @@
 import { OlikAction, StateAction } from "olik"
+import { useLocalState } from "./inputs";
 
 export type Message = {
   source: string,
@@ -25,3 +26,5 @@ export type Item = {
   time: string,
   date: Date,
 }
+
+export type State = ReturnType<typeof useLocalState>;

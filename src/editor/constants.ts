@@ -1,4 +1,5 @@
 import { editor } from "monaco-editor"
+import { useLocalState } from "./inputs";
 
 export type EditorProps = {
   state: Record<string, unknown> | null,
@@ -41,3 +42,5 @@ export const editorTheme: editor.IStandaloneThemeData = {
     'editor.background': '#00000000',
   }
 }
+
+export type State = ReturnType<typeof useLocalState>;
