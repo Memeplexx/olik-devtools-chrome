@@ -5,7 +5,6 @@ import { is } from "../shared/functions";
 import { getStateAsJsx } from "../tree";
 import { Item, ItemWrapper, Message, State } from "./constants";
 
-
 export const useInputs = () => {
 
   const localState = useLocalState();
@@ -32,6 +31,7 @@ export const useLocalState = () => {
     items: new Array<ItemWrapper>(),
     hideUnchanged: false,
     query: '',
+    stateDef: null as null | Record<string, unknown>,
   });
   return { ...state, setState };
 }
@@ -130,6 +130,7 @@ const useMessageHandler = (props: State) => {
     return {
       ...s,
       storeState: fullStateAfter,
+      stateDef: incoming.typeObject ?? fullStateAfter,
       items: currentEvent.toString() === previousEvent.toString()
         ? [
           ...s.items.slice(0, s.items.length - 1),
@@ -158,6 +159,7 @@ const useMessageHandler = (props: State) => {
       processEvent(e.data);
     }
     const chromeMessageListener = (event: Message) => {
+      console.log('...', event);
       processEvent(event);
     }
     if (!chrome.runtime) {
@@ -190,11 +192,11 @@ const getTypeJsx = (arg: {
   const unchanged = new Array<string>();
   const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
-      if (is.nonArrayObject(after)) {
+      if (is.record(after)) {
         if (JSON.stringify(after) === JSON.stringify(before)) {
           unchanged.push(keyCollector);
         }
-        Object.keys(after).forEach(key => recurse(is.nonArrayObject(before) ? before[key] : {}, after[key], `${keyCollector}.${key}`));
+        Object.keys(after).forEach(key => recurse(is.record(before) ? before[key] : {}, after[key], `${keyCollector}.${key}`));
       } else if (is.array(after)) {
         if (JSON.stringify(after) === JSON.stringify(before)) {
           unchanged.push(keyCollector);

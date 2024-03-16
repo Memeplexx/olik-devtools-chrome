@@ -6,6 +6,7 @@ export type Message = {
   action: OlikAction,
   stateActions: StateAction[],
   trace: string,
+  typeObject: Record<string, unknown>,
 }
 
 export type ItemWrapper = {

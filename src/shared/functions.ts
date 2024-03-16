@@ -29,8 +29,10 @@ export const useForwardedRef = <T>(forwardedRef: React.ForwardedRef<T>) => {
 	return targetRef
 }
 
+export const isoDateRegexPattern = new RegExp(/\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/);
+
 export const is = {
-	objectOrArray: (val: unknown): val is object => {
+	recordOrArray: (val: unknown): val is object => {
 		return typeof (val) === 'object' && val !== null && !(val instanceof Date);
 	},
 	number: (val: unknown): val is number => {
@@ -54,7 +56,7 @@ export const is = {
 	date: (val: unknown): val is Date => {
 		return val instanceof Date;
 	},
-	nonArrayObject: (val: unknown): val is Record<string, unknown> => {
+	record: (val: unknown): val is Record<string, unknown> => {
 		return typeof (val) === 'object' && val !== null && !Array.isArray(val) && !(val instanceof Date);
 	},
 	array: <T>(val: unknown): val is Array<T> => {

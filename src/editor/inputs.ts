@@ -49,7 +49,7 @@ const reGenerateTypeDefinitions = (arg: State) => {
       return '"Date"';
     } else if (is.null(val)) {
       return '"null"';
-    } else if (is.nonArrayObject(val)) {
+    } else if (is.record(val)) {
       return `{${Object.keys(val).map(key => `"${key}": ${recurse(val[key])}`).join(',')}}`;
     } else if (is.array(val)) {
       return `[${val.length ? recurse(val[0]) : ''}]`;

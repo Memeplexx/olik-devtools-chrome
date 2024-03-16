@@ -26,7 +26,7 @@ export const getStateAsJsx = (
           }))}
         </>
       );
-    } else if (is.nonArrayObject(val)) {
+    } else if (is.record(val)) {
       return (
         <>
           {Object.keys(val).map((key, index, arr) => renderNode({
@@ -55,7 +55,7 @@ export const getStateAsJsx = (
       throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
   };
-  return recurse(is.objectOrArray(props.state) ? { '': props.state } : props.state, '');
+  return recurse(is.recordOrArray(props.state) ? { '': props.state } : props.state, '');
 }
 
 const renderNode = (
@@ -83,11 +83,11 @@ const renderNode = (
     key?: string,
   }
 ) => {
-  const isPrimitive = !is.array(item) && !is.nonArrayObject(item);
+  const isPrimitive = !is.array(item) && !is.record(item);
   const hasObjectKey = key !== undefined;
   const isUnchanged = unchanged.includes(keyConcat);
   const isContracted = contractedKeys.includes(keyConcat);
-  const isEmpty = is.array(item) ? !item.length : is.nonArrayObject(item) ? !Object.keys(item).length : false;
+  const isEmpty = is.array(item) ? !item.length : is.record(item) ? !Object.keys(item).length : false;
   const isHidden = isUnchanged && hideUnchanged;
   const showActionType = isTopLevel && !!actionType;
   const handleNodeClick = (key: string) => (event: MouseEvent) => {
@@ -96,7 +96,7 @@ const renderNode = (
   }
   const nodeType
     = is.array(item) ? 'array'
-      : is.nonArrayObject(item) ? 'object'
+      : is.record(item) ? 'object'
         : is.number(item) ? `number`
           : is.string(item) ? `string`
             : is.boolean(item) ? `boolean`

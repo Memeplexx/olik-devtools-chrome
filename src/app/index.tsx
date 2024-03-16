@@ -23,7 +23,7 @@ export const App = () => {
               children={
                 <>
                   <EditorPanel
-                    state={inputs.storeState}
+                    state={inputs.stateDef}
                     onChange={outputs.onEditorChange}
                     onEnter={outputs.onEditorEnter}
                   />
