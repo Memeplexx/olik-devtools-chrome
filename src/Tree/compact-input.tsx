@@ -17,12 +17,10 @@ export class WebComponent extends HTMLElement {
     const self = this;
     let textBefore = inputElement.value;
     inputElement.addEventListener('focus', () => {
-      // inputElement.style.backgroundColor = 'rgba(255,255,255,0.1)';
       inputElement.style.outline = '1px solid #add8e6';
       textBefore = inputElement.value;
     });
     inputElement.addEventListener('blur', () => {
-      // inputElement.style.backgroundColor = '';
       inputElement.style.outline = '';
       inputElement.value = textBefore;
     });
