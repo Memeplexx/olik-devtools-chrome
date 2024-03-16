@@ -1,7 +1,7 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { is } from "../shared/functions";
+import { is, isoDateRegexPattern } from "../shared/functions";
 import { getStateAsJsx } from "../tree";
 import { Item, ItemWrapper, Message, State } from "./constants";
 
@@ -31,7 +31,6 @@ export const useLocalState = () => {
     items: new Array<ItemWrapper>(),
     hideUnchanged: false,
     query: '',
-    stateDef: null as null | Record<string, unknown>,
   });
   return { ...state, setState };
 }
@@ -71,6 +70,7 @@ const useMessageHandler = (props: State) => {
     const time = !itemsFlattened.length ? '0ms' : getTimeDiff(date, itemsFlattened[itemsFlattened.length - 1].date);
     if (chrome.runtime) {
       libState.disableDevtoolsDispatch = true;
+      // incoming.stateActions = incoming.stateActions.map(sa => !isNaN(sa.name as unknown as number) ? { name: '$at', arg: +sa.name } : sa);
       setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
       libState.disableDevtoolsDispatch = false;
     }
@@ -130,7 +130,6 @@ const useMessageHandler = (props: State) => {
     return {
       ...s,
       storeState: fullStateAfter,
-      stateDef: incoming.typeObject ?? fullStateAfter,
       items: currentEvent.toString() === previousEvent.toString()
         ? [
           ...s.items.slice(0, s.items.length - 1),
@@ -159,7 +158,19 @@ const useMessageHandler = (props: State) => {
       processEvent(e.data);
     }
     const chromeMessageListener = (event: Message) => {
-      console.log('...', event);
+      const recurse = (val: unknown): unknown => {
+        if (is.record(val)) {
+          Object.keys(val).forEach(key => val[key] = recurse(val[key]))
+        } else if (is.array(val)) {
+          return val.map(recurse);
+        } else if (is.string(val) && isoDateRegexPattern.test(val)) {
+          return new Date(val);
+        }
+        return val;
+      }
+      event.action.payload = recurse(event.action.payload);
+      event.action.payloadOrig = recurse(event.action.payloadOrig);
+      event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: recurse(sa.arg) }));
       processEvent(event);
     }
     if (!chrome.runtime) {

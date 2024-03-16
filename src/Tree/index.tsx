@@ -1,9 +1,8 @@
 import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
-import { dateToISOLikeButLocal, is, silentlyApplyStateAction } from "../shared/functions";
+import { is, silentlyApplyStateAction } from "../shared/functions";
 import { TreeProps } from "./constants";
 import { Node } from "./styles";
-import './date-picker';
 import { DatePicker } from "./date-picker";
 import { CompactInput } from "./compact-input";
 
@@ -206,20 +205,22 @@ const textNode = <Type extends string | number | null>(item: Type, key: string, 
       value={item ?? 'null'}
       type={type}
       onChange={function onChangeInputNode(e) {
-        const keyRev = key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
-        silentlyApplyStateAction(store, `${keyRev}.$set(${e})`);
+        // silentlyApplyStateAction(store, `${fixKey(key)}.$set(${e})`);
+        silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e})`]);
       }} 
     />
   )
 }
 
 const dateNode = (item: Date, key: string, store: TreeProps['store']) => {
-  if (!store) { return dateToISOLikeButLocal(item); }
+  // if (!store) { return dateToISOLikeButLocal(item); }
+  if (!store) { return item.toISOString(); }
   return (
     <DatePicker
       value={item}
       onChange={function onChangeDateNode(e) {
-        silentlyApplyStateAction(store, `${key.substring(1)}.$set(${dateToISOLikeButLocal(e)})`);
+        // silentlyApplyStateAction(store, `${fixKey(key)}.$set(${/*dateToISOLikeButLocal(e)*/e.toISOString()})`);
+        silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e.toISOString()})`]);
       }} 
     />
   )
@@ -230,7 +231,10 @@ const booleanNode = (item: boolean, key: string, store: TreeProps['store']) => {
   return (
     <select
       value={item.toString()}
-      onChange={e => silentlyApplyStateAction(store, `${key.substring(1)}.$set(${e.target.value})`)}
+      onChange={function onChangeBooleanNode(e) {
+        // silentlyApplyStateAction(store, `${fixKey(key)}.$set(${e.target.value})`);
+        silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e.target.value})`]);
+      }} 
       children={
         <>
           <option value='true' children='true' />
@@ -239,5 +243,9 @@ const booleanNode = (item: boolean, key: string, store: TreeProps['store']) => {
       }
     />
   )
+}
+
+const fixKey = (key: string) => {
+  return key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
 }
 

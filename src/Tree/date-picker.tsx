@@ -1,27 +1,33 @@
 import flatpickr from "flatpickr";
 import 'flatpickr/dist/flatpickr.css';
 import { useRef } from "react";
-import { dateToISOLikeButLocal } from "../shared/functions";
 
 export class WebComponent extends HTMLElement {
 
+  setAttribute(qualifiedName: string, value: string): void {
+    super.setAttribute(qualifiedName, value);
+    switch (qualifiedName) {
+      case 'value':
+        this.innerHTML = value;
+        break;
+    }
+  }
+
   connectedCallback() {
-    this.innerHTML = /*html*/`
-      <span>${this.getAttribute('value')!}</span>
-    `;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    flatpickr(this.querySelector('span')!, {
+    flatpickr(this, {
       enableTime: true,
       defaultDate: this.getAttribute('value')!,
-      onChange: function onChangeFlatpickr(s) {
+      formatDate: d => d.toISOString(),
+      onClose: function onChangeFlatpickr(s) {
         self.dispatchEvent(new CustomEvent('onChange', {
           bubbles: true, // Allows the event to bubble up the DOM tree
           composed: true, // Allows the event to pass through Shadow DOM boundaries
           detail: s[0] // Optional data to pass with the event
         }))
       },
-    });
+    })
   }
 }
 
@@ -41,7 +47,7 @@ export const DatePicker = (props: { value: Date, onChange: (date: Date) => void 
   return (
     <app-date-picker
       ref={ref}
-      value={dateToISOLikeButLocal(props.value)}
+      value={props.value.toISOString()}
     />
   )
 }

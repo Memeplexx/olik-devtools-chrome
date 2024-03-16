@@ -25,7 +25,7 @@ export const useOutputs = (props: ReturnType<typeof useInputs>) => {
       props.setState(s => ({ ...s, query }));
     },
     onEditorEnter: (query: string) => {
-      silentlyApplyStateAction(props.storeRef.current!, query);
+      silentlyApplyStateAction(props.storeRef.current!, query.split('.'));
     },
   }
 }

@@ -2,6 +2,7 @@ import { Store } from "olik";
 
 export interface TreeProps {
   state: unknown,
+  stateDef?: unknown,
   onClickNodeKey: (key: string) => void,
   contractedKeys: string[],
   actionType?: string,

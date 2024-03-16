@@ -85,9 +85,9 @@ export const dateToISOLikeButLocal = (date: Date) => {
   return isoLocal;
 }
 
-export const silentlyApplyStateAction = (store: Store<Record<string, unknown>>, query: string) => {
+export const silentlyApplyStateAction = (store: Store<Record<string, unknown>>, query: string[]) => {
   if (!chrome.runtime) {
-    query.split('.').filter(e => !!e).forEach(key => {
+    query.filter(e => !!e).forEach(key => {
       const arg = key.match(/\(([^)]*)\)/)?.[1];
       const containsParenthesis = arg !== null && arg !== undefined;
       if (containsParenthesis) {
@@ -100,7 +100,7 @@ export const silentlyApplyStateAction = (store: Store<Record<string, unknown>>, 
       }
     })
   } else {
-    const updateDiv = (query: string) => document.getElementById('olik-action')!.innerHTML = query;
+    const updateDiv = (query: string[]) => document.getElementById('olik-action')!.innerHTML = JSON.stringify(query);
     chrome.tabs
       .query({ active: true })
       .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: updateDiv, args: [query] }))
