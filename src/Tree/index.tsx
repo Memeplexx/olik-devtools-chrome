@@ -200,7 +200,6 @@ const renderNode = (
 
 const textNode = <Type extends string | number | null>(item: Type, key: string, store: TreeProps['store'], type: 'text' | 'number') => {
   if (!store) { return item === null ? 'null' : type === 'text' ? `"${item}"` : item; }
-  // console.log(type);
   return (
     <CompactInput
       value={item ?? 'null'}

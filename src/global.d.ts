@@ -12,7 +12,6 @@ declare module 'react' {
   namespace JSX {
     interface IntrinsicElements {
       ['app-date-picker']: { value: string, ref: React.RefObject<HTMLElement> };
-      ['app-compact-input']: { value: string | number, ref: React.RefObject<HTMLElement>, type: 'text' | 'number' };
     }
   }
 }
