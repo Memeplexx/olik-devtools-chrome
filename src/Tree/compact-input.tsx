@@ -10,7 +10,8 @@ const Input = styled.input`
   }
 `;
 
-const Quote = styled(possible.span)`
+const Quote = styled(possible.span)<{ $pushLeft?: boolean }>`
+  ${p => p.$pushLeft ? 'margin-left: -4px;' : ''}
 `;
 
 export const CompactInput = <V extends number | string>(props: { value: V, onChange: (arg: V) => void, type: 'number' | 'text' }) => {
@@ -28,8 +29,6 @@ export const CompactInput = <V extends number | string>(props: { value: V, onCha
       ref.current!.blur();
     } else if (event.key === 'Escape') {
       ref.current!.blur();
-    } else {
-      reEvaluate();
     }
   }
   const onBlur = () => {
@@ -39,14 +38,12 @@ export const CompactInput = <V extends number | string>(props: { value: V, onCha
   const onFocus = () => {
     valueBefore.current = ref.current!.value;
   }
-  const reEvaluate = () => {
-    setState(s => ({
-      ...s,
-      size: Math.max(1, ref.current!.value.length),
-      length: Math.pow(10, ref.current!.value.length),
-      type: props.type,
-    }));
-  }
+  const reEvaluate = () => setState(s => ({
+    ...s,
+    size: Math.max(1, ref.current!.value.length),
+    length: Math.pow(10, ref.current!.value.length),
+    type: props.type,
+  }));
   if (!ref.current) {
     setTimeout(() => {
       ref.current!.value = props.value.toString();
@@ -64,6 +61,7 @@ export const CompactInput = <V extends number | string>(props: { value: V, onCha
         ref={ref}
         type={props.type}
         onKeyUp={onKeyUp}
+        onChange={reEvaluate}
         min={1}
         size={state.size}
         max={state.length}
@@ -73,6 +71,7 @@ export const CompactInput = <V extends number | string>(props: { value: V, onCha
       <Quote
         showIf={showQuote}
         children={'"'}
+        $pushLeft={true}
       />
     </>
   );

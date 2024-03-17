@@ -1,7 +1,7 @@
 import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
 import { is, silentlyApplyStateAction } from "../shared/functions";
-import { TreeProps } from "./constants";
+import { RenderNodeArgs, TreeProps } from "./constants";
 import { Node } from "./styles";
 import { DatePicker } from "./date-picker";
 import { CompactInput } from "./compact-input";
@@ -72,15 +72,7 @@ const renderNode = (
     hideUnchanged,
     onClickNodeKey,
     store,
-  }: TreeProps & {
-    recurse: (val: unknown, outerKey: string) => JSX.Element,
-    keyConcat: string,
-    index: number,
-    item: unknown,
-    isLast: boolean,
-    isTopLevel: boolean,
-    key?: string,
-  }
+  }: RenderNodeArgs
 ) => {
   const isPrimitive = !is.array(item) && !is.record(item);
   const hasObjectKey = key !== undefined;
