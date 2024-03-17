@@ -6,4 +6,3 @@ export interface StateProps {
   query: string,
   store: Store<Record<string, unknown>>,
 }
-

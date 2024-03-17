@@ -1,48 +1,46 @@
+import { StateAction, deserialize, readState, updateFunctions } from "olik";
 import { ForwardedRef, useState } from "react";
 import { useForwardedRef } from "../shared/functions";
-import { StateProps } from "./constants";
-import { StateAction, Store, deserialize, readState, updateFunctions } from "olik";
 import { getStateAsJsx } from "../tree";
+import { StateProps } from "./constants";
 
 
 export const useInputs = (props: StateProps, ref: ForwardedRef<HTMLDivElement>) => {
-  const containerRef = useForwardedRef<HTMLDivElement>(ref);
-  const [contractedKeys, setContractedKeys] = useState(new Array<string>());
-  const onClickNodeKey = (key: string) => {
-    setContractedKeys(keys => {
-      if (keys.includes(key)) {
-        return keys.filter(k => k !== key);
-      } else {
-        return [...keys, key];
-      }
-    })
-  }
-  const newJsx = tryReadState({ state: props.state, query: props.query, contractedKeys, onClickNodeKey, store: props.store });
+  const localState = useLocalState(props, ref);
   return {
-    containerRef,
-    data: newJsx,
-  }
+    ...localState,
+    data: tryReadState(localState),
+  };
 }
 
-const tryReadState = ({ state, contractedKeys, query, onClickNodeKey, store }: { query: string, contractedKeys: string[], state: unknown, store: Store<Record<string, unknown>>, onClickNodeKey: (k: string) => void, }): JSX.Element => {
+const useLocalState = (props: StateProps, ref: ForwardedRef<HTMLDivElement>) => {
+  const [state, setState] = useState({
+    containerRef: useForwardedRef<HTMLDivElement>(ref),
+    contractedKeys: new Array<string>(),
+  });
+  return { ...props, ...state, setState };
+}
+
+const tryReadState = (arg: ReturnType<typeof useLocalState> & { query: string }): JSX.Element => {
+  const onClickNodeKey = (key: string) => arg.setState(s => ({
+    ...s,
+    contractedKeys: s.contractedKeys.includes(key)
+      ? s.contractedKeys.filter(k => k !== key)
+      : [...s.contractedKeys, key]
+  }));
   try {
-    const stateRev = doReadState(query, state || {});
-    if (stateRev === undefined) {
-      throw new Error();
-    }
-    return getStateAsJsx({ state: stateRev, onClickNodeKey, contractedKeys, unchanged: [], store });
+    const state = doReadState(arg.query, arg.state || {});
+    if (state === undefined) { throw new Error(); }
+    return getStateAsJsx({ onClickNodeKey, unchanged: [], ...arg, state });
   } catch (e) {
-    const segments = query.split('.').filter(e => !!e);
-    segments.pop();
-    if (segments.length === 0) {
-      return getStateAsJsx({ state, onClickNodeKey, contractedKeys, unchanged: [], store });
-    } else {
-      return tryReadState({ query: segments.join('.'), state, onClickNodeKey, contractedKeys, store });
-    }
+    const segments = arg.query.split('.').filter(e => !!e).slice(0, -1);
+    return segments.length === 0 
+      ? getStateAsJsx({ onClickNodeKey, unchanged: [], ...arg }) 
+      : tryReadState({ ...arg, query: segments.join('.') });
   }
 };
 
-export const doReadState = (type: string, state: unknown) => {
+const doReadState = (type: string, state: unknown) => {
   if (type === undefined) { return state; }
   const segments = type.split('.').filter(s => s !== '');
   const stateActions: StateAction[] = segments

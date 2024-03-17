@@ -4,7 +4,7 @@ import { useInputs } from "./inputs";
 import { JsonWrapper } from "./styles";
 
 
-export const State = forwardRef(function Tree(
+export const State = forwardRef(function State(
   props: StateProps,
   ref: ForwardedRef<HTMLDivElement>
 ) {
