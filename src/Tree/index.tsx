@@ -2,7 +2,7 @@ import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
 import { is, silentlyApplyStateAction } from "../shared/functions";
 import { RenderNodeArgs, TreeProps } from "./constants";
-import { Node } from "./styles";
+import { BooleanNode, Node } from "./styles";
 import { DatePicker } from "./date-picker";
 import { CompactInput } from "./compact-input";
 
@@ -218,17 +218,11 @@ const dateNode = (item: Date, key: string, store: TreeProps['store']) => {
 const booleanNode = (item: boolean, key: string, store: TreeProps['store']) => {
   if (!store) { return item.toString(); }
   return (
-    <select
-      value={item.toString()}
-      onChange={function onChangeBooleanNode(e) {
-        silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e.target.value})`]);
-      }} 
-      children={
-        <>
-          <option value='true' children='true' />
-          <option value='false' children='false' />
-        </>
-      }
+    <BooleanNode
+      children={item.toString()}
+      onClick={function onClickBooleanNode() {
+        silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${(!item).toString()})`]);
+      }}
     />
   )
 }

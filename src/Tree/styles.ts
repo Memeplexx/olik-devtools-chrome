@@ -66,3 +66,30 @@ export const Node = styled(possible.span) <{ $clickable?: boolean, $unchanged?: 
     }
   `}
 `;
+
+export const BooleanNode = styled.span`
+  cursor: pointer;
+  :hover {
+    background-color: rgba(255,255,255,0.1);
+  }
+`;
+
+export const Input = styled.input`
+  margin-right: ${p => p.type === 'text' ? '0px' : '-26px'};
+  :focus {
+    outline: 1px solid #add8e6;
+  }
+  :hover {
+    background-color: rgba(255,255,255,0.1);
+  }
+`;
+
+export const Quote = styled(possible.span)<{ $pushLeft?: boolean }>`
+  ${p => p.$pushLeft ? 'margin-left: -4px;' : ''}
+`;
+
+export const DatePickerContainer = styled.span`
+  :hover {
+    background-color: rgba(255,255,255,0.1);
+  }
+`;

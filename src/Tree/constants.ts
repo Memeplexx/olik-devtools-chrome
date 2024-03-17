@@ -23,6 +23,17 @@ export type RenderNodeArgs
     key?: string,
   }
 
+export type DatePickerProps = {
+  value: Date,
+  onChange: (date: Date) => void,
+};
+
+export type CompactInputProps<V extends number | string> = {
+  value: V,
+  onChange: (arg: V) => void,
+  type: 'number' | 'text'
+}
+
 export type NodeType =
   | 'array'
   | 'object'

@@ -1,20 +1,9 @@
 import { KeyboardEvent, useRef, useState } from "react";
-import styled from "styled-components";
-import { possible } from "../html";
+import { Input, Quote } from "./styles";
+import { CompactInputProps } from "./constants";
 
 
-const Input = styled.input`
-  margin-right: ${p => p.type === 'text' ? '0px' : '-26px'};
-  :focus {
-    outline: 1px solid #add8e6;
-  }
-`;
-
-const Quote = styled(possible.span)<{ $pushLeft?: boolean }>`
-  ${p => p.$pushLeft ? 'margin-left: -4px;' : ''}
-`;
-
-export const CompactInput = <V extends number | string>(props: { value: V, onChange: (arg: V) => void, type: 'number' | 'text' }) => {
+export const CompactInput = <V extends number | string>(props: CompactInputProps<V>) => {
   const ref = useRef<HTMLInputElement>(null);
   const valueBefore = useRef('');
   const [state, setState] = useState({
