@@ -9,9 +9,4 @@ declare module 'react' {
   interface SVGProps<SVGSVGElement> extends SVGProps<SVGSVGElement> {
     showIf?: boolean;
   }
-  namespace JSX {
-    interface IntrinsicElements {
-      ['app-date-picker']: { value: string, ref: React.RefObject<HTMLElement> };
-    }
-  }
 }
