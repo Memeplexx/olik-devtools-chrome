@@ -5,7 +5,9 @@ import { DatePickerContainer } from "./styles";
 import { DatePickerProps } from "./constants";
 
 
-export const DatePicker = (props: DatePickerProps) => {
+export const DatePicker = (
+  props: DatePickerProps
+) => {
   const ref = useRef<HTMLSpanElement>(null);
   const changed = useRef(false);
   if (!ref.current) {

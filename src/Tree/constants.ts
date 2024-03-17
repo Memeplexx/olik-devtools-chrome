@@ -28,10 +28,12 @@ export type DatePickerProps = {
   onChange: (date: Date) => void,
 };
 
+export type Type = 'number' | 'text';
+
 export type CompactInputProps<V extends number | string> = {
   value: V,
   onChange: (arg: V) => void,
-  type: 'number' | 'text'
+  type: Type,
 }
 
 export type NodeType =

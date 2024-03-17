@@ -1,7 +1,7 @@
 import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
 import { is, silentlyApplyStateAction } from "../shared/functions";
-import { RenderNodeArgs, TreeProps } from "./constants";
+import { RenderNodeArgs, TreeProps, Type } from "./constants";
 import { BooleanNode, Node } from "./styles";
 import { DatePicker } from "./date-picker";
 import { CompactInput } from "./compact-input";
@@ -190,7 +190,7 @@ const renderNode = (
   )
 }
 
-const textNode = <Type extends string | number | null>(item: Type, key: string, store: TreeProps['store'], type: 'text' | 'number') => {
+const textNode = <T extends string | number | null>(item: T, key: string, store: TreeProps['store'], type: Type) => {
   if (!store) { return item === null ? 'null' : type === 'text' ? `"${item}"` : item; }
   return (
     <CompactInput

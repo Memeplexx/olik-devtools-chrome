@@ -3,7 +3,9 @@ import { Input, Quote } from "./styles";
 import { CompactInputProps } from "./constants";
 
 
-export const CompactInput = <V extends number | string>(props: CompactInputProps<V>) => {
+export const CompactInput = <V extends number | string>(
+  props: CompactInputProps<V>
+) => {
   const ref = useRef<HTMLInputElement>(null);
   const valueBefore = useRef('');
   const [state, setState] = useState({
