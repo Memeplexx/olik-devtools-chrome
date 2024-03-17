@@ -4,21 +4,15 @@ import { useRef } from "react";
 
 export class WebComponent extends HTMLElement {
 
-  setAttribute(qualifiedName: string, value: string): void {
-    super.setAttribute(qualifiedName, value);
-    switch (qualifiedName) {
-      case 'value':
-        this.innerHTML = value;
-        break;
-    }
-  }
+  set value(v: string) { this.setAttribute('value', v); this.innerHTML = v; }
+  get value() { return this.getAttribute('value')!; }
 
   connectedCallback() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     flatpickr(this, {
       enableTime: true,
-      defaultDate: this.getAttribute('value')!,
+      defaultDate: self.value,
       formatDate: d => d.toISOString(),
       onClose: function onChangeFlatpickr(s) {
         self.dispatchEvent(new CustomEvent('onChange', {

@@ -2,54 +2,88 @@ import { useRef } from "react";
 
 export class WebComponent extends HTMLElement {
 
+  textBefore!: string;
+
+  get input() { return this.querySelector('input') as HTMLInputElement; }
+  get span() { return this.querySelector('span') as HTMLSpanElement; }
+  get type(){ return this.getAttribute('type')! as 'text' | 'number'; }
+  get value(){ return this.getAttribute('value')!; }
+
+  setAttribute(qualifiedName: string, value: string): void {
+    super.setAttribute(qualifiedName, value);
+    if (qualifiedName === 'value') {
+      if (this.children.length === 0) { return; }
+      this.resetState(value);
+    }
+  }
+
   connectedCallback() {
-    const type = this.getAttribute('type')!;
-    const value = this.getAttribute('value')!;
     this.style.display = 'inline-flex';
-    this.style.marginRight = type === 'text' ? '-5px' : '-25px';
     this.innerHTML = /*html*/`
-      <input type=${type} value="${value}" />
+      <span></span>
+      <input />
     `;
-    const inputElement = this.querySelector('input') as HTMLInputElement;
-    inputElement.style.padding = '0 2px';
+    this.input.type = this.type;
+    this.input.style.marginRight = this.type === 'text' ? '0' : '-28px';
+    this.input.style.padding = this.type === 'text' ? '0 2px 0 4px' : '0 0 0 4px';
+    this.input.style.marginLeft = this.type === 'text' ? '3px' : '-3px';
+    this.resetState(this.value);
+
+    this.span.addEventListener('click', () => {
+      this.span.style.display = 'none';
+      this.input.style.display = '';
+      this.input.focus();
+    });
+
+    this.input.addEventListener('focus', () => {
+      this.input.style.outline = '1px solid #add8e6';
+      this.textBefore = this.input.value;
+    });
+
+    this.input.addEventListener('blur', () => {
+      this.input.style.outline = '';
+      this.input.value = this.textBefore;
+      this.input.style.display = 'none';
+      this.span.style.display = '';
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    let textBefore = inputElement.value;
-    inputElement.addEventListener('focus', () => {
-      inputElement.style.outline = '1px solid #add8e6';
-      textBefore = inputElement.value;
-    });
-    inputElement.addEventListener('blur', () => {
-      inputElement.style.outline = '';
-      inputElement.value = textBefore;
-    });
     // listen to enter press on input element
-    inputElement.addEventListener('keyup', function onInputKeyUp(e) {
+    this.input.addEventListener('keyup', function onInputKeyUp(e) {
       if (e.key === 'Enter') {
-        if (textBefore === inputElement.value) { return; }
-        textBefore = inputElement.value;
+        if (self.textBefore === self.input.value) { return; }
+        self.textBefore = self.input.value;
         self.dispatchEvent(new CustomEvent('onChange', {
           bubbles: true, // Allows the event to bubble up the DOM tree
           composed: true, // Allows the event to pass through Shadow DOM boundaries
-          detail: inputElement.value
+          detail: self.input.value
         }));
-        inputElement.blur();
+        self.input.blur();
       }
     });
     const updateInputLength = () => {
-      if (type === 'text') {
-        inputElement.size = Math.max(1, inputElement.value.length);
+      if (this.type === 'text') {
+        this.input.size = Math.max(1, this.input.value.length);
       } else {
-        const length = Math.pow(10, inputElement.value.length).toString();
-        inputElement.max = length;
-        inputElement.min = '1';
+        const length = Math.pow(10, this.input.value.length).toString();
+        this.input.max = length;
+        this.input.min = '1';
       }
     }
     updateInputLength();
-    inputElement.addEventListener('input', () => {
+    this.input.addEventListener('input', () => {
       updateInputLength();
     });
+  }
+
+  private resetState(value: string) {
+    this.textBefore = value;
+    this.input.value = value;
+    this.input.style.display = 'none';
+    this.span.style.display = '';
+    this.span.textContent = value;
+    this.span.innerHTML = this.getAttribute('type')! === 'text' ? `&quot;${value}&quot;` : value;
   }
 
 }

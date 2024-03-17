@@ -205,7 +205,6 @@ const textNode = <Type extends string | number | null>(item: Type, key: string, 
       value={item ?? 'null'}
       type={type}
       onChange={function onChangeInputNode(e) {
-        // silentlyApplyStateAction(store, `${fixKey(key)}.$set(${e})`);
         silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e})`]);
       }} 
     />
@@ -213,13 +212,11 @@ const textNode = <Type extends string | number | null>(item: Type, key: string, 
 }
 
 const dateNode = (item: Date, key: string, store: TreeProps['store']) => {
-  // if (!store) { return dateToISOLikeButLocal(item); }
   if (!store) { return item.toISOString(); }
   return (
     <DatePicker
       value={item}
       onChange={function onChangeDateNode(e) {
-        // silentlyApplyStateAction(store, `${fixKey(key)}.$set(${/*dateToISOLikeButLocal(e)*/e.toISOString()})`);
         silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e.toISOString()})`]);
       }} 
     />
@@ -232,7 +229,6 @@ const booleanNode = (item: boolean, key: string, store: TreeProps['store']) => {
     <select
       value={item.toString()}
       onChange={function onChangeBooleanNode(e) {
-        // silentlyApplyStateAction(store, `${fixKey(key)}.$set(${e.target.value})`);
         silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e.target.value})`]);
       }} 
       children={
