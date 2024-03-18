@@ -108,7 +108,7 @@ export const PopupOptions = styled.span`
   border-bottom-left-radius: 3px;
 `;
 
-export const PopupOption = styled.span`
+export const PopupOption = styled(possible.span)`
   cursor: pointer;
   padding: 4px 8px;
   display: flex;

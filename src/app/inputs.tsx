@@ -1,10 +1,10 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
-import { StateAction, Store, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
+import { StateAction, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { is, isoDateRegexPattern } from "../shared/functions";
+import { BasicStore } from '../shared/types';
 import { getStateAsJsx } from "../tree";
 import { Item, ItemWrapper, Message, State } from "./constants";
-import { BasicStore } from '../shared/types';
 
 export const useInputs = () => {
 
@@ -71,7 +71,6 @@ const useMessageHandler = (props: State) => {
     const time = !itemsFlattened.length ? '0ms' : getTimeDiff(date, itemsFlattened[itemsFlattened.length - 1].date);
     if (chrome.runtime) {
       libState.disableDevtoolsDispatch = true;
-      // incoming.stateActions = incoming.stateActions.map(sa => !isNaN(sa.name as unknown as number) ? { name: '$at', arg: +sa.name } : sa);
       setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
       libState.disableDevtoolsDispatch = false;
     }
