@@ -95,7 +95,7 @@ export const DatePickerContainer = styled.span`
 
 export const PopupOptions = styled.span`
   position: absolute;
-  display: none;
+  /* display: none; */
   left: calc(100%);
   top: 0;
   background-color: #FFF;

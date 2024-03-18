@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, RefObject } from "react";
+import { HTMLAttributes, InputHTMLAttributes, RefObject } from "react";
 import { BasicStore } from "../shared/types";
 import { useOutputs } from "./outputs";
 
@@ -40,7 +40,16 @@ export type CompactInputProps = {
   ref?: RefObject<HTMLInputElement>,
   minWidth?: number,
   revertOnBlur?: boolean,
-} & InputHTMLAttributes<HTMLInputElement>
+} & InputHTMLAttributes<HTMLInputElement>;
+
+export type OptionsProps = {
+  onCopy: () => unknown,
+  onDelete: () => unknown,
+  onAddToArray: (value: unknown) => void,
+  onAddToObject: (key: string, value: unknown) => unknown,
+  state: unknown,
+  ref?: RefObject<HTMLInputElement>,
+} & HTMLAttributes<HTMLSpanElement>;
 
 export type NodeType =
   | 'array'

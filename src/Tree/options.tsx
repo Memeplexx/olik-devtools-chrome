@@ -1,24 +1,20 @@
-import { useRef, useState } from "react";
+import { ForwardedRef, forwardRef, useRef, useState } from "react";
 import { FaCopy } from "react-icons/fa";
-import { is } from "../shared/functions";
-import { CompactInput } from "./compact-input";
+import { is, useForwardedRef } from "../shared/functions";
 import { PopupOption, PopupOptions } from "./styles";
 import { deserialize } from "olik";
+import { OptionsProps } from "./constants";
+import { CompactInput } from "./compact-input";
 
 
-export const Options = ({ onAddToArray, onAddToObject, onCopy, onDelete, state }: { onCopy: () => unknown, onDelete: () => unknown, onAddToArray: (value: unknown) => void, onAddToObject: (key: string, value: unknown) => unknown, state: unknown }) => {
-  const ref = useRef<HTMLSpanElement>(null);
+const Options = forwardRef(function Options(
+  { onAddToArray, onAddToObject, onCopy, onDelete, state, onHide }: OptionsProps & { onHide: () => unknown },
+  forwardedRef: ForwardedRef<HTMLSpanElement>
+) {
+  const ref = useForwardedRef<HTMLSpanElement>(forwardedRef);
   const inputKeyRef = useRef<HTMLInputElement>(null);
   const inputValRef = useRef<HTMLInputElement>(null);
   const [showInput, setShowInput] = useState(false);
-  if (!ref.current) {
-    setTimeout(() => {
-      const el = ref.current!.parentNode as HTMLElement;
-      el.style.position = 'relative';
-      el.addEventListener('mouseover', () => ref.current!.style.display = 'flex');
-      el.addEventListener('mouseout', () => ref.current!.style.display = 'none');
-    })
-  }
   const onClickCopy = () => {
     onCopy();
     reset();
@@ -39,9 +35,11 @@ export const Options = ({ onAddToArray, onAddToObject, onCopy, onDelete, state }
   }
   const reset = () => {
     setShowInput(false);
-    inputKeyRef.current!.value = '';
-    inputValRef.current!.value = '';
-    ref.current!.style.display = 'none';
+    if (inputKeyRef.current && inputValRef.current) {
+      inputKeyRef.current.value = '';
+      inputValRef.current.value = '';
+    }
+    onHide();
   }
   const onChange = () => {
     const key = inputKeyRef.current!.value;
@@ -145,4 +143,30 @@ export const Options = ({ onAddToArray, onAddToObject, onCopy, onDelete, state }
       }
     />
   );
+});
+
+export const OptionsWrapper = (props: OptionsProps) => {
+  const [show, setShow] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  const refParent = useRef<HTMLElement | null>(null);
+  if (!ref.current) {
+    setTimeout(() => {
+      refParent.current = ref.current!.parentNode as HTMLElement;
+      refParent.current.style.position = 'relative';
+      refParent.current.addEventListener('mouseover', () => setShow(true));
+      refParent.current.addEventListener('mouseout', () => setShow(false));
+    })
+  }
+  return (
+    <span
+      ref={ref}
+      children={show && !!refParent.current && (
+        <Options
+          {...props}
+          ref={ref}
+          onHide={() => setShow(false)}
+        />
+      )}
+    />
+  )
 }

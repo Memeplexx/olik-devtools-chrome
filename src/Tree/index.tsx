@@ -5,7 +5,7 @@ import { NodeType, RenderNodeArgs, TreeProps, Type } from "./constants";
 import { BooleanNode, Node } from "./styles";
 import { DatePicker } from "./date-picker";
 import { CompactInput } from "./compact-input";
-import { Options } from "./options";
+import { OptionsWrapper } from "./options";
 import { BasicStore } from "../shared/types";
 import { useOutputs } from "./outputs";
 
@@ -183,7 +183,7 @@ const renderNode = (
                   $unchanged={isUnchanged}
                 />
                 {isContracted && content}
-                <Options
+                <OptionsWrapper
                   onCopy={outputs.onClickCopy(item)}
                   onDelete={outputs.onClickDelete(keyConcat)}
                   onAddToArray={outputs.onClickAddToArray(keyConcat)}

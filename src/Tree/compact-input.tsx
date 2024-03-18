@@ -5,9 +5,9 @@ import { useForwardedRef } from "../shared/functions";
 
 
 export const CompactInput = forwardRef(function CompactInput(
-    props: CompactInputProps,
-    forwardedRef: ForwardedRef<HTMLInputElement>
-  ) {
+  props: CompactInputProps,
+  forwardedRef: ForwardedRef<HTMLInputElement>
+) {
   const ref = useForwardedRef(forwardedRef);
   const valueBefore = useRef('');
   const [state, setState] = useState({
