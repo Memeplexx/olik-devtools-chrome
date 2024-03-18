@@ -1,13 +1,11 @@
 import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
 import { decisionMap, fixKey, is, silentlyApplyStateAction } from "../shared/functions";
-import { NodeType, RenderNodeArgs, TreeProps, Type } from "./constants";
-import { BooleanNode, Node } from "./styles";
-import { DatePicker } from "./date-picker";
 import { CompactInput } from "./compact-input";
+import { NodeType, RenderNodeArgs, TreeProps } from "./constants";
 import { OptionsWrapper } from "./options";
-import { BasicStore } from "../shared/types";
 import { useOutputs } from "./outputs";
+import { Node } from "./styles";
 
 
 export const Tree = (
@@ -104,14 +102,13 @@ const renderNode = (
     [() => is.undefined(item), 'undefined'],
   ]) as NodeType;
   const nodeEl = decisionMap([
-    [() => is.null(item), () => textNode('null', keyConcat, store!, 'text')],
+    [() => is.null(item), () => 'null'],
     [() => is.undefined(item), () => ''],
-    [() => is.number(item), () => textNode((item as number).toString(), keyConcat, store!, 'number')],
-    [() => is.string(item), () => textNode(item as string, keyConcat, store!, 'text')],
-    [() => is.boolean(item), () => booleanNode(item as boolean, keyConcat, store!)],
-    [() => is.date(item), () => dateNode(item as Date, keyConcat, store!)],
-    [() => true, () => recurse(item, keyConcat)],
-  ])();
+    [() => is.number(item), () => (item as number).toString()],
+    [() => is.string(item), () => `"${(item as string).toString()}"`],
+    [() => is.date(item), () => (item as Date).toISOString()],
+    [() => true, () => item],
+  ])() as JSX.Element;
   const content = (
     <>
       <Node
@@ -120,7 +117,17 @@ const renderNode = (
         $unchanged={isUnchanged}
         $block={!isPrimitive}
         $indent={!isPrimitive}
-        children={nodeEl}
+        children={
+          (is.recordOrArray(item) ? recurse(item, keyConcat) : !store ? nodeEl : (
+            <CompactInput
+              value={item === null ? 'null' : item === undefined ? '' : is.date(item) ? item.toISOString() : item.toString()}
+              revertOnBlur={true}
+              onChange={function onChangeInputNode(e) {
+                silentlyApplyStateAction(store, [...fixKey(keyConcat).split('.'), `$set(${e.toString()})`]);
+              }}
+            />
+          ))
+        }
       />
       <Node
         $type={nodeType}
@@ -205,38 +212,3 @@ const renderNode = (
     />
   )
 }
-
-const textNode = (item: string, key: string, store: BasicStore, type: Type) => {
-  return !store ? (item === null ? 'null' : type === 'text' ? `"${item}"` : item) : (
-    <CompactInput
-      value={item ?? 'null'}
-      revertOnBlur={true}
-      onChange={function onChangeInputNode(e) {
-        silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e.toString()})`]);
-      }}
-    />
-  )
-}
-
-const dateNode = (item: Date, key: string, store: BasicStore) => {
-  return !store ? item.toISOString() : (
-    <DatePicker
-      value={item}
-      onChange={function onChangeDateNode(e) {
-        silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e.toISOString()})`]);
-      }}
-    />
-  )
-}
-
-const booleanNode = (item: boolean, key: string, store: BasicStore) => {
-  return !store ? item.toString() : (
-    <BooleanNode
-      children={item.toString()}
-      onClick={function onClickBooleanNode() {
-        silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${(!item).toString()})`]);
-      }}
-    />
-  )
-}
-

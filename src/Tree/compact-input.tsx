@@ -1,7 +1,9 @@
+import flatpickr from "flatpickr";
+import { Instance } from "flatpickr/dist/types/instance";
 import { ForwardedRef, KeyboardEvent, forwardRef, useRef, useState } from "react";
-import { Input, Quote } from "./styles";
+import { isoDateRegexPattern, useForwardedRef } from "../shared/functions";
 import { CompactInputProps } from "./constants";
-import { useForwardedRef } from "../shared/functions";
+import { Input } from "./styles";
 
 
 export const CompactInput = forwardRef(function CompactInput(
@@ -10,6 +12,22 @@ export const CompactInput = forwardRef(function CompactInput(
 ) {
   const ref = useForwardedRef(forwardedRef);
   const valueBefore = useRef('');
+  const isDate = isoDateRegexPattern.test(ref.current?.value ?? '');
+  const flatPickerRef = useRef<Instance | null>(null);
+  const changed = useRef(false);
+  if (isDate && !flatPickerRef.current) {
+    flatPickerRef.current = flatpickr(ref.current!, {
+      enableTime: true,
+      defaultDate: props.value,
+      formatDate: d => d.toISOString(),
+      onChange: () => changed.current = true,
+      onOpen: () => changed.current = false,
+      onClose: function onChangeFlatpickr(s) {
+        if (!changed.current) { return; }
+        props.onChange?.(s[0].toISOString());
+      },
+    })
+  }
   const [state, setState] = useState({
     size: 0,
     length: 0,
@@ -21,6 +39,11 @@ export const CompactInput = forwardRef(function CompactInput(
       ref.current!.blur();
     } else if (event.key === 'Escape') {
       ref.current!.blur();
+    }
+  }
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (isDate) {
+      event.preventDefault();
     }
   }
   const onBlur = () => {
@@ -43,28 +66,18 @@ export const CompactInput = forwardRef(function CompactInput(
       reEvaluate();
     })
   }
-  const showQuote = ref.current?.value !== 'null' && props.type === 'text';
+
   return (
-    <>
-      <Quote
-        showIf={showQuote}
-        children={'"'}
-      />
-      <Input
-        ref={ref}
-        onKeyUp={onKeyUp}
-        onChange={reEvaluate}
-        min={1}
-        size={state.size}
-        max={state.length}
-        onBlur={onBlur}
-        onFocus={onFocus}
-      />
-      <Quote
-        showIf={showQuote}
-        children={'"'}
-        $pushLeft={true}
-      />
-    </>
+    <Input
+      ref={ref}
+      onKeyDown={onKeyDown}
+      onKeyUp={onKeyUp}
+      onChange={reEvaluate}
+      min={1}
+      size={state.size}
+      max={state.length}
+      onBlur={onBlur}
+      onFocus={onFocus}
+    />
   );
 });

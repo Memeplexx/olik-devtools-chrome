@@ -1,6 +1,7 @@
 import styled, { css } from "styled-components/macro";
 import { possible } from "../html";
 import { NodeType } from "./constants";
+import { FaCalendar } from "react-icons/fa";
 
 
 
@@ -83,10 +84,6 @@ export const Input = styled.input`
   }
 `;
 
-export const Quote = styled(possible.span)<{ $pushLeft?: boolean }>`
-  ${p => p.$pushLeft ? 'margin-left: -4px;' : ''}
-`;
-
 export const DatePickerContainer = styled.span`
   :hover {
     background-color: rgba(255,255,255,0.1);
@@ -95,7 +92,6 @@ export const DatePickerContainer = styled.span`
 
 export const PopupOptions = styled.span`
   position: absolute;
-  /* display: none; */
   left: calc(100%);
   top: 0;
   background-color: #FFF;

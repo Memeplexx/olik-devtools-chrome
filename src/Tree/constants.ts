@@ -36,7 +36,6 @@ export type Type = 'number' | 'text';
 export type CompactInputProps = {
   value: string,
   onChange?: (arg: string) => void,
-  type?: Type,
   ref?: RefObject<HTMLInputElement>,
   minWidth?: number,
   revertOnBlur?: boolean,

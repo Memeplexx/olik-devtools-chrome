@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, ForwardedRef, HTMLAttributes, InputHTMLAttributes, forwardRef } from "react";
+import { ButtonHTMLAttributes, ForwardedRef, HTMLAttributes, InputHTMLAttributes, forwardRef,  } from "react";
 
 
 
@@ -27,4 +27,12 @@ export const possible = {
   ) {
     return showIf === false ? null : <button ref={ref} {...props}>{children}</button>;
   }),
+  // element: function<P extends JSX.Element>(Element: P) {
+  //   return forwardRef(function Element(
+  //     { children, showIf, ...props }: HTMLAttributes<HTMLElement>,
+  //     ref?: ForwardedRef<HTMLElement>
+  //   ) {
+  //     return showIf === false ? null : <Element ref={ref} {...props}>{children}</Element>;
+  //   });
+  // },
 }
