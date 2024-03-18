@@ -93,3 +93,29 @@ export const DatePickerContainer = styled.span`
     background-color: rgba(255,255,255,0.1);
   }
 `;
+
+export const PopupOptions = styled.span`
+  position: absolute;
+  display: none;
+  left: calc(100%);
+  top: 0;
+  background-color: #FFF;
+  color: #000;
+  z-index: 1;
+  flex-direction: column;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+`;
+
+export const PopupOption = styled.span`
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  :hover {
+    background-color: rgba(0,0,0,0.1);
+  }
+`

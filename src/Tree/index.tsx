@@ -5,6 +5,7 @@ import { RenderNodeArgs, TreeProps, Type } from "./constants";
 import { BooleanNode, Node } from "./styles";
 import { DatePicker } from "./date-picker";
 import { CompactInput } from "./compact-input";
+import { Options } from "./options";
 
 
 export const getStateAsJsx = (
@@ -174,6 +175,9 @@ const renderNode = (
                   $unchanged={isUnchanged}
                 />
                 {isContracted && content}
+                <Options
+                  state={item}
+                />
               </>
             }
           />
