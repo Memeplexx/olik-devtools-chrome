@@ -189,32 +189,32 @@ const renderNode = (
                   children={
                     <>
                       <PopupOption
+                        onClick={outputs.onClickCopy(item)}
                         children={
                           <>
                             <FaCopy />
                             copy
                           </>
                         }
-                        onClick={outputs.onClickCopy(item)}
                       />
                       <PopupOption
+                        onClick={outputs.onClickDelete(keyConcat)}
                         children={
                           <>
                             <MdDelete />
                             delete
                           </>
                         }
-                        onClick={outputs.onClickDelete(keyConcat)}
                       />
                       <PopupOption
                         showIf={is.array(item)}
+                        onClick={outputs.onClickAdd(item, keyConcat)}
                         children={
                           <>
                             <MdAdd />
                             add
                           </>
                         }
-                        onClick={outputs.onClickAdd(item, keyConcat)}
                       />
                     </>
                   }
