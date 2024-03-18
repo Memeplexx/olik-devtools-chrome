@@ -2,14 +2,12 @@ import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
 import { decisionMap, fixKey, is, silentlyApplyStateAction } from "../shared/functions";
 import { NodeType, RenderNodeArgs, TreeProps, Type } from "./constants";
-import { BooleanNode, Node, PopupOption } from "./styles";
+import { BooleanNode, Node } from "./styles";
 import { DatePicker } from "./date-picker";
 import { CompactInput } from "./compact-input";
 import { Options } from "./options";
 import { BasicStore } from "../shared/types";
 import { useOutputs } from "./outputs";
-import { FaCopy } from "react-icons/fa";
-import { MdAdd, MdDelete } from "react-icons/md";
 
 
 export const Tree = (
@@ -106,9 +104,9 @@ const renderNode = (
     [() => is.undefined(item), 'undefined'],
   ]) as NodeType;
   const nodeEl = decisionMap([
-    [() => is.null(item), () => textNode(item as null, keyConcat, store!, 'text')],
+    [() => is.null(item), () => textNode('null', keyConcat, store!, 'text')],
     [() => is.undefined(item), () => ''],
-    [() => is.number(item), () => textNode(item as number, keyConcat, store!, 'number')],
+    [() => is.number(item), () => textNode((item as number).toString(), keyConcat, store!, 'number')],
     [() => is.string(item), () => textNode(item as string, keyConcat, store!, 'text')],
     [() => is.boolean(item), () => booleanNode(item as boolean, keyConcat, store!)],
     [() => is.date(item), () => dateNode(item as Date, keyConcat, store!)],
@@ -186,38 +184,11 @@ const renderNode = (
                 />
                 {isContracted && content}
                 <Options
-                  children={
-                    <>
-                      <PopupOption
-                        onClick={outputs.onClickCopy(item)}
-                        children={
-                          <>
-                            <FaCopy />
-                            copy
-                          </>
-                        }
-                      />
-                      <PopupOption
-                        onClick={outputs.onClickDelete(keyConcat)}
-                        children={
-                          <>
-                            <MdDelete />
-                            delete
-                          </>
-                        }
-                      />
-                      <PopupOption
-                        showIf={is.array(item)}
-                        onClick={outputs.onClickAdd(item, keyConcat)}
-                        children={
-                          <>
-                            <MdAdd />
-                            add
-                          </>
-                        }
-                      />
-                    </>
-                  }
+                  onCopy={outputs.onClickCopy(item)}
+                  onDelete={outputs.onClickDelete(keyConcat)}
+                  onAddToArray={outputs.onClickAddToArray(keyConcat)}
+                  onAddToObject={outputs.onClickAddToObject(keyConcat)}
+                  state={item}
                 />
               </>
             }
@@ -235,13 +206,13 @@ const renderNode = (
   )
 }
 
-const textNode = <T extends string | number | null>(item: T, key: string, store: BasicStore, type: Type) => {
+const textNode = (item: string, key: string, store: BasicStore, type: Type) => {
   return !store ? (item === null ? 'null' : type === 'text' ? `"${item}"` : item) : (
     <CompactInput
       value={item ?? 'null'}
-      type={type}
+      revertOnBlur={true}
       onChange={function onChangeInputNode(e) {
-        silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e})`]);
+        silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e.toString()})`]);
       }}
     />
   )

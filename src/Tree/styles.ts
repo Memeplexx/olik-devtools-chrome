@@ -75,7 +75,6 @@ export const BooleanNode = styled.span`
 `;
 
 export const Input = styled.input`
-  margin-right: ${p => p.type === 'text' ? '0px' : '-26px'};
   :focus {
     outline: 1px solid #add8e6;
   }
@@ -119,3 +118,10 @@ export const PopupOption = styled(possible.span)`
     background-color: rgba(0,0,0,0.1);
   }
 `
+
+export const PopupInput = styled(possible.input)`
+  padding: 2px;
+  :hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+`;

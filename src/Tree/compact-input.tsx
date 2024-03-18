@@ -1,29 +1,32 @@
-import { KeyboardEvent, useRef, useState } from "react";
+import { ForwardedRef, KeyboardEvent, forwardRef, useRef, useState } from "react";
 import { Input, Quote } from "./styles";
 import { CompactInputProps } from "./constants";
+import { useForwardedRef } from "../shared/functions";
 
 
-export const CompactInput = <V extends number | string>(
-  props: CompactInputProps<V>
-) => {
-  const ref = useRef<HTMLInputElement>(null);
+export const CompactInput = forwardRef(function CompactInput(
+    props: CompactInputProps,
+    forwardedRef: ForwardedRef<HTMLInputElement>
+  ) {
+  const ref = useForwardedRef(forwardedRef);
   const valueBefore = useRef('');
   const [state, setState] = useState({
     size: 0,
     length: 0,
-    type: 'text' as 'number' | 'text',
   });
   const onKeyUp = (event: KeyboardEvent) => {
     if (event.key === 'Enter') {
       valueBefore.current = ref.current!.value;
-      props.onChange(ref.current!.value as V);
+      props.onChange?.(ref.current!.value);
       ref.current!.blur();
     } else if (event.key === 'Escape') {
       ref.current!.blur();
     }
   }
   const onBlur = () => {
-    ref.current!.value = valueBefore.current;
+    if (props.revertOnBlur) {
+      ref.current!.value = valueBefore.current;
+    }
     reEvaluate();
   }
   const onFocus = () => {
@@ -31,9 +34,8 @@ export const CompactInput = <V extends number | string>(
   }
   const reEvaluate = () => setState(s => ({
     ...s,
-    size: Math.max(1, ref.current!.value.length),
-    length: Math.pow(10, ref.current!.value.length),
-    type: props.type,
+    size: Math.max(props.minWidth ?? 1, ref.current!.value.length),
+    type: props.type ?? 'text',
   }));
   if (!ref.current) {
     setTimeout(() => {
@@ -50,7 +52,6 @@ export const CompactInput = <V extends number | string>(
       />
       <Input
         ref={ref}
-        type={props.type}
         onKeyUp={onKeyUp}
         onChange={reEvaluate}
         min={1}
@@ -66,4 +67,4 @@ export const CompactInput = <V extends number | string>(
       />
     </>
   );
-}
+});

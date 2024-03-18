@@ -1,3 +1,4 @@
+import { InputHTMLAttributes, RefObject } from "react";
 import { BasicStore } from "../shared/types";
 import { useOutputs } from "./outputs";
 
@@ -32,11 +33,14 @@ export type DatePickerProps = {
 
 export type Type = 'number' | 'text';
 
-export type CompactInputProps<V extends number | string> = {
-  value: V,
-  onChange: (arg: V) => void,
-  type: Type,
-}
+export type CompactInputProps = {
+  value: string,
+  onChange?: (arg: string) => void,
+  type?: Type,
+  ref?: RefObject<HTMLInputElement>,
+  minWidth?: number,
+  revertOnBlur?: boolean,
+} & InputHTMLAttributes<HTMLInputElement>
 
 export type NodeType =
   | 'array'
