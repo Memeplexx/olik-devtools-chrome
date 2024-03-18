@@ -1,4 +1,5 @@
 import { BasicStore } from "../shared/types";
+import { useOutputs } from "./outputs";
 
 export interface TreeProps {
   state: unknown,
@@ -21,6 +22,7 @@ export type RenderNodeArgs
     isLast: boolean,
     isTopLevel: boolean,
     key?: string,
+    outputs: ReturnType<typeof useOutputs>,
   }
 
 export type DatePickerProps = {

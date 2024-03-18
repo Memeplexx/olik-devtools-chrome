@@ -1,7 +1,7 @@
 import { StateAction, deserialize, readState, updateFunctions } from "olik";
 import { ForwardedRef, useState } from "react";
 import { useForwardedRef } from "../shared/functions";
-import { getStateAsJsx } from "../tree";
+import { Tree } from "../tree";
 import { StateProps } from "./constants";
 
 
@@ -31,11 +31,11 @@ const tryReadState = (arg: ReturnType<typeof useLocalState> & { query: string })
   try {
     const state = doReadState(arg.query, arg.state || {});
     if (state === undefined) { throw new Error(); }
-    return getStateAsJsx({ onClickNodeKey, unchanged: [], ...arg, state });
+    return Tree({ onClickNodeKey, unchanged: [], ...arg, state });
   } catch (e) {
     const segments = arg.query.split('.').filter(e => !!e).slice(0, -1);
     return segments.length === 0 
-      ? getStateAsJsx({ onClickNodeKey, unchanged: [], ...arg }) 
+      ? Tree({ onClickNodeKey, unchanged: [], ...arg }) 
       : tryReadState({ ...arg, query: segments.join('.') });
   }
 };

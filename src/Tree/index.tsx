@@ -1,17 +1,21 @@
 import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
-import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
-import { RenderNodeArgs, TreeProps, Type } from "./constants";
-import { BooleanNode, Node } from "./styles";
+import { decisionMap, fixKey, is, silentlyApplyStateAction } from "../shared/functions";
+import { NodeType, RenderNodeArgs, TreeProps, Type } from "./constants";
+import { BooleanNode, Node, PopupOption } from "./styles";
 import { DatePicker } from "./date-picker";
 import { CompactInput } from "./compact-input";
 import { Options } from "./options";
 import { BasicStore } from "../shared/types";
+import { useOutputs } from "./outputs";
+import { FaCopy } from "react-icons/fa";
+import { MdAdd, MdDelete } from "react-icons/md";
 
 
-export const getStateAsJsx = (
+export const Tree = (
   props: TreeProps
 ): JSX.Element => {
+  const outputs = useOutputs(props);
   const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
     if (is.array(val)) {
       return (
@@ -23,7 +27,8 @@ export const getStateAsJsx = (
             index,
             item,
             isLast: index === val.length - 1,
-            isTopLevel: false
+            isTopLevel: false,
+            outputs,
           }))}
         </>
       );
@@ -38,7 +43,8 @@ export const getStateAsJsx = (
             item: val[key],
             isLast: index === arr.length - 1,
             isTopLevel: key === '',
-            key
+            key,
+            outputs,
           }))}
         </>
       );
@@ -51,6 +57,7 @@ export const getStateAsJsx = (
         item: val,
         isLast: true,
         isTopLevel: true,
+        outputs,
       });
     } else {
       throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
@@ -74,6 +81,7 @@ const renderNode = (
     hideUnchanged,
     onClickNodeKey,
     store,
+    outputs,
   }: RenderNodeArgs
 ) => {
   const isPrimitive = !is.array(item) && !is.record(item);
@@ -87,33 +95,34 @@ const renderNode = (
     event.stopPropagation();
     onClickNodeKey(key);
   }
-  const nodeType
-    = is.array(item) ? 'array'
-      : is.record(item) ? 'object'
-        : is.number(item) ? `number`
-          : is.string(item) ? `string`
-            : is.boolean(item) ? `boolean`
-              : is.date(item) ? `date`
-                : is.null(item) ? `null`
-                  : is.undefined(item) ? `undefined`
-                    : `object`;
-  const nodeContent
-    = is.number(item) ? textNode(item, keyConcat, store!, 'number')
-      : is.string(item) ? textNode(item, keyConcat, store!, 'text')
-        : is.boolean(item) ? booleanNode(item, keyConcat, store!)
-          : is.date(item) ? dateNode(item, keyConcat, store!)
-            : is.null(item) ? textNode(item, keyConcat, store!, 'text')
-              : is.undefined(item) ? ''
-                : recurse(item, keyConcat);
+  const nodeType = decisionMap([
+    [() => is.array(item), 'array'],
+    [() => is.record(item), 'object'],
+    [() => is.number(item), 'number'],
+    [() => is.string(item), 'string'],
+    [() => is.boolean(item), 'boolean'],
+    [() => is.date(item), 'date'],
+    [() => is.null(item), 'null'],
+    [() => is.undefined(item), 'undefined'],
+  ]) as NodeType;
+  const nodeEl = decisionMap([
+    [() => is.null(item), () => textNode(item as null, keyConcat, store!, 'text')],
+    [() => is.undefined(item), () => ''],
+    [() => is.number(item), () => textNode(item as number, keyConcat, store!, 'number')],
+    [() => is.string(item), () => textNode(item as string, keyConcat, store!, 'text')],
+    [() => is.boolean(item), () => booleanNode(item as boolean, keyConcat, store!)],
+    [() => is.date(item), () => dateNode(item as Date, keyConcat, store!)],
+    [() => true, () => recurse(item, keyConcat)],
+  ])();
   const content = (
     <>
       <Node
         $type={nodeType}
-        children={nodeContent}
         showIf={!isContracted && !isEmpty && !isHidden}
         $unchanged={isUnchanged}
         $block={!isPrimitive}
         $indent={!isPrimitive}
+        children={nodeEl}
       />
       <Node
         $type={nodeType}
@@ -177,9 +186,38 @@ const renderNode = (
                 />
                 {isContracted && content}
                 <Options
-                  state={item}
-                  keyConcat={keyConcat}
-                  store={store}
+                  children={
+                    <>
+                      <PopupOption
+                        children={
+                          <>
+                            <FaCopy />
+                            copy
+                          </>
+                        }
+                        onClick={outputs.onClickCopy(item)}
+                      />
+                      <PopupOption
+                        children={
+                          <>
+                            <MdDelete />
+                            delete
+                          </>
+                        }
+                        onClick={outputs.onClickDelete(keyConcat)}
+                      />
+                      <PopupOption
+                        showIf={is.array(item)}
+                        children={
+                          <>
+                            <MdAdd />
+                            add
+                          </>
+                        }
+                        onClick={outputs.onClickAdd(item, keyConcat)}
+                      />
+                    </>
+                  }
                 />
               </>
             }
@@ -198,33 +236,30 @@ const renderNode = (
 }
 
 const textNode = <T extends string | number | null>(item: T, key: string, store: BasicStore, type: Type) => {
-  if (!store) { return item === null ? 'null' : type === 'text' ? `"${item}"` : item; }
-  return (
+  return !store ? (item === null ? 'null' : type === 'text' ? `"${item}"` : item) : (
     <CompactInput
       value={item ?? 'null'}
       type={type}
       onChange={function onChangeInputNode(e) {
         silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e})`]);
-      }} 
+      }}
     />
   )
 }
 
 const dateNode = (item: Date, key: string, store: BasicStore) => {
-  if (!store) { return item.toISOString(); }
-  return (
+  return !store ? item.toISOString() : (
     <DatePicker
       value={item}
       onChange={function onChangeDateNode(e) {
         silentlyApplyStateAction(store, [...fixKey(key).split('.'), `$set(${e.toISOString()})`]);
-      }} 
+      }}
     />
   )
 }
 
 const booleanNode = (item: boolean, key: string, store: BasicStore) => {
-  if (!store) { return item.toString(); }
-  return (
+  return !store ? item.toString() : (
     <BooleanNode
       children={item.toString()}
       onClick={function onClickBooleanNode() {

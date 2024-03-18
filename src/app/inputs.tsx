@@ -3,7 +3,7 @@ import { StateAction, createStore, getStore, libState, readState, setNewStateAnd
 import { useCallback, useEffect, useRef, useState } from "react";
 import { is, isoDateRegexPattern } from "../shared/functions";
 import { BasicStore } from '../shared/types';
-import { getStateAsJsx } from "../tree";
+import { Tree } from "../tree";
 import { Item, ItemWrapper, Message, State } from "./constants";
 
 export const useInputs = () => {
@@ -237,7 +237,7 @@ const getTypeJsx = (arg: {
           return {
             ...itemInner,
             contractedKeys,
-            jsx: getStateAsJsx({
+            jsx: Tree({
               actionType,
               state: arg.stateAfter,
               contractedKeys,
@@ -245,7 +245,7 @@ const getTypeJsx = (arg: {
               unchanged,
               hideUnchanged: false,
             }),
-            jsxPruned: getStateAsJsx({
+            jsxPruned: Tree({
               actionType,
               state: arg.stateAfter,
               contractedKeys,
@@ -258,7 +258,7 @@ const getTypeJsx = (arg: {
       }
     })
   }));
-  return getStateAsJsx({
+  return Tree({
     actionType,
     state: arg.payload,
     contractedKeys: [],

@@ -78,37 +78,43 @@ export const is = {
 }
 
 export const dateToISOLikeButLocal = (date: Date) => {
-  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
-  const msLocal =  date.getTime() - offsetMs;
-  const dateLocal = new Date(msLocal);
-  const iso = dateLocal.toISOString();
-  const isoLocal = iso.slice(0, 19);
-  return isoLocal;
+	const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+	const msLocal = date.getTime() - offsetMs;
+	const dateLocal = new Date(msLocal);
+	const iso = dateLocal.toISOString();
+	const isoLocal = iso.slice(0, 19);
+	return isoLocal;
 }
 
 export const silentlyApplyStateAction = (store: BasicStore, query: string[]) => {
-  if (!chrome.runtime) {
-    query.filter(e => !!e).forEach(key => {
-      const arg = key.match(/\(([^)]*)\)/)?.[1];
-      const containsParenthesis = arg !== null && arg !== undefined;
-      if (containsParenthesis) {
-        const functionName = key.split('(')[0];
-        const typedArg = deserialize(arg);
-        const functionToCall = store[functionName] as unknown as ((arg?: unknown) => unknown);
-        store = functionToCall(typedArg) as BasicStore;
-      } else {
-        store = store[key] as unknown as BasicStore;
-      }
-    })
-  } else {
-    const updateDiv = (query: string[]) => document.getElementById('olik-action')!.innerHTML = JSON.stringify(query);
-    chrome.tabs
-      .query({ active: true })
-      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: updateDiv, args: [query] }))
-      .catch(console.error);
-  }
+	if (!chrome.runtime) {
+		query.filter(e => !!e).forEach(key => {
+			const arg = key.match(/\(([^)]*)\)/)?.[1];
+			const containsParenthesis = arg !== null && arg !== undefined;
+			if (containsParenthesis) {
+				const functionName = key.split('(')[0];
+				const typedArg = deserialize(arg);
+				const functionToCall = store[functionName] as unknown as ((arg?: unknown) => unknown);
+				store = functionToCall(typedArg) as BasicStore;
+			} else {
+				store = store[key] as unknown as BasicStore;
+			}
+		})
+	} else {
+		const updateDiv = (query: string[]) => document.getElementById('olik-action')!.innerHTML = JSON.stringify(query);
+		chrome.tabs
+			.query({ active: true })
+			.then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: updateDiv, args: [query] }))
+			.catch(console.error);
+	}
 }
 
 export const fixKey = (key: string) => {
-  return key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
+	return key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
+}
+
+export const decisionMap = function <K, V>(map: readonly (readonly [K, V])[]): V {
+	return [
+		...new Map(map).entries()
+	].find(([k]) => (typeof k === 'function' ? k() : k))![1];
 }
