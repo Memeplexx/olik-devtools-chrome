@@ -110,7 +110,7 @@ export const PopupOptions = styled.span`
 
 export const PopupOption = styled.span`
   cursor: pointer;
-  padding: 4px;
+  padding: 4px 8px;
   display: flex;
   align-items: center;
   display: flex;

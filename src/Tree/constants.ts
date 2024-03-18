@@ -1,4 +1,4 @@
-import { Store } from "olik";
+import { BasicStore } from "../shared/types";
 
 export interface TreeProps {
   state: unknown,
@@ -8,7 +8,7 @@ export interface TreeProps {
   actionType?: string,
   unchanged: string[],
   hideUnchanged?: boolean,
-  store?: Store<Record<string, unknown>>,
+  store?: BasicStore,
 }
 
 export type RenderNodeArgs

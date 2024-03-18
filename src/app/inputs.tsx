@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { is, isoDateRegexPattern } from "../shared/functions";
 import { getStateAsJsx } from "../tree";
 import { Item, ItemWrapper, Message, State } from "./constants";
+import { BasicStore } from '../shared/types';
 
 export const useInputs = () => {
 
@@ -23,7 +24,7 @@ export const useLocalState = () => {
     storeStateInitial: null as Record<string, unknown> | null,
     storeState: null as Record<string, unknown> | null,
     storeStateVersion: null as Record<string, unknown> | null,
-    storeRef: useRef<Store<Record<string, unknown>> | null>(null),
+    storeRef: useRef<BasicStore | null>(null),
     treeRef: useRef<HTMLDivElement | null>(null),
     idRefOuter: useRef(0),
     idRefInner: useRef(0),

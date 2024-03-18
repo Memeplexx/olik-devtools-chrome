@@ -1,11 +1,12 @@
 import { MouseEvent } from "react";
 import { Frag } from "../html/frag";
-import { is, silentlyApplyStateAction } from "../shared/functions";
+import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
 import { RenderNodeArgs, TreeProps, Type } from "./constants";
 import { BooleanNode, Node } from "./styles";
 import { DatePicker } from "./date-picker";
 import { CompactInput } from "./compact-input";
 import { Options } from "./options";
+import { BasicStore } from "../shared/types";
 
 
 export const getStateAsJsx = (
@@ -97,11 +98,11 @@ const renderNode = (
                   : is.undefined(item) ? `undefined`
                     : `object`;
   const nodeContent
-    = is.number(item) ? textNode(item, keyConcat, store, 'number')
-      : is.string(item) ? textNode(item, keyConcat, store, 'text')
-        : is.boolean(item) ? booleanNode(item, keyConcat, store)
-          : is.date(item) ? dateNode(item, keyConcat, store)
-            : is.null(item) ? textNode(item, keyConcat, store, 'text')
+    = is.number(item) ? textNode(item, keyConcat, store!, 'number')
+      : is.string(item) ? textNode(item, keyConcat, store!, 'text')
+        : is.boolean(item) ? booleanNode(item, keyConcat, store!)
+          : is.date(item) ? dateNode(item, keyConcat, store!)
+            : is.null(item) ? textNode(item, keyConcat, store!, 'text')
               : is.undefined(item) ? ''
                 : recurse(item, keyConcat);
   const content = (
@@ -177,6 +178,8 @@ const renderNode = (
                 {isContracted && content}
                 <Options
                   state={item}
+                  keyConcat={keyConcat}
+                  store={store}
                 />
               </>
             }
@@ -194,7 +197,7 @@ const renderNode = (
   )
 }
 
-const textNode = <T extends string | number | null>(item: T, key: string, store: TreeProps['store'], type: Type) => {
+const textNode = <T extends string | number | null>(item: T, key: string, store: BasicStore, type: Type) => {
   if (!store) { return item === null ? 'null' : type === 'text' ? `"${item}"` : item; }
   return (
     <CompactInput
@@ -207,7 +210,7 @@ const textNode = <T extends string | number | null>(item: T, key: string, store:
   )
 }
 
-const dateNode = (item: Date, key: string, store: TreeProps['store']) => {
+const dateNode = (item: Date, key: string, store: BasicStore) => {
   if (!store) { return item.toISOString(); }
   return (
     <DatePicker
@@ -219,7 +222,7 @@ const dateNode = (item: Date, key: string, store: TreeProps['store']) => {
   )
 }
 
-const booleanNode = (item: boolean, key: string, store: TreeProps['store']) => {
+const booleanNode = (item: boolean, key: string, store: BasicStore) => {
   if (!store) { return item.toString(); }
   return (
     <BooleanNode
@@ -229,9 +232,5 @@ const booleanNode = (item: boolean, key: string, store: TreeProps['store']) => {
       }}
     />
   )
-}
-
-const fixKey = (key: string) => {
-  return key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
 }
 

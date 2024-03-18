@@ -2,9 +2,11 @@ import { MouseEvent, useRef } from "react";
 import { FaCopy } from 'react-icons/fa';
 import { MdDelete } from 'react-icons/md';
 import { PopupOptions, PopupOption } from "./styles";
+import { TreeProps } from "./constants";
+import { fixKey, silentlyApplyStateAction } from "../shared/functions";
 
 
-export const Options = ({ state }: {state: unknown}) => {
+export const Options = ({ state, keyConcat, store }: {state: unknown, keyConcat: string, store: TreeProps['store']}) => {
   
   const ref = useRef<HTMLSpanElement>(null);
   if (!ref.current) {
@@ -18,6 +20,11 @@ export const Options = ({ state }: {state: unknown}) => {
   const onClickCopy = (e: MouseEvent) => {
     e.stopPropagation();
     navigator.clipboard.writeText(JSON.stringify(state, null, 2)).catch(console.error);
+    ref.current!.style.display = 'none';
+  }
+  const onClickDelete = (e: MouseEvent) => {
+    e.stopPropagation();
+    silentlyApplyStateAction(store!, [...fixKey(keyConcat).split('.'), `$delete()`]);
     ref.current!.style.display = 'none';
   }
   return (
@@ -41,6 +48,7 @@ export const Options = ({ state }: {state: unknown}) => {
                 delete
               </>
             }
+            onClick={onClickDelete}
           />
         </>
       }

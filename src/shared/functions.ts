@@ -1,5 +1,6 @@
-import { Store, deserialize } from "olik";
+import { deserialize } from "olik";
 import { useEffect, useMemo, useRef } from "react";
+import { BasicStore } from "./types";
 
 export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(props: P) => {
 	return useRef(() => {
@@ -85,7 +86,7 @@ export const dateToISOLikeButLocal = (date: Date) => {
   return isoLocal;
 }
 
-export const silentlyApplyStateAction = (store: Store<Record<string, unknown>>, query: string[]) => {
+export const silentlyApplyStateAction = (store: BasicStore, query: string[]) => {
   if (!chrome.runtime) {
     query.filter(e => !!e).forEach(key => {
       const arg = key.match(/\(([^)]*)\)/)?.[1];
@@ -94,9 +95,9 @@ export const silentlyApplyStateAction = (store: Store<Record<string, unknown>>, 
         const functionName = key.split('(')[0];
         const typedArg = deserialize(arg);
         const functionToCall = store[functionName] as unknown as ((arg?: unknown) => unknown);
-        store = functionToCall(typedArg) as Store<Record<string, unknown>>;
+        store = functionToCall(typedArg) as BasicStore;
       } else {
-        store = store[key] as unknown as Store<Record<string, unknown>>;
+        store = store[key] as unknown as BasicStore;
       }
     })
   } else {
@@ -106,4 +107,8 @@ export const silentlyApplyStateAction = (store: Store<Record<string, unknown>>, 
       .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: updateDiv, args: [query] }))
       .catch(console.error);
   }
+}
+
+export const fixKey = (key: string) => {
+  return key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
 }

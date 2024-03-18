@@ -1,8 +1,8 @@
-import { Store } from "olik";
+import { BasicStore } from "../shared/types";
 
 export interface StateProps {
   state: Record<string, unknown>,
   className?: string,
   query: string,
-  store: Store<Record<string, unknown>>,
+  store: BasicStore,
 }
