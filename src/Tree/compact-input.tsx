@@ -3,8 +3,18 @@ import { Instance } from "flatpickr/dist/types/instance";
 import { ForwardedRef, KeyboardEvent, forwardRef, useRef, useState } from "react";
 import { isoDateRegexPattern, useForwardedRef } from "../shared/functions";
 import { CompactInputProps } from "./constants";
-import { Input } from "./styles";
+import styled from "styled-components";
+import 'flatpickr/dist/flatpickr.css';
 
+
+const Input = styled.input`
+  :focus {
+    outline: 1px solid #add8e6;
+  }
+  :hover {
+    background-color: rgba(255,255,255,0.1);
+  }
+`;
 
 export const CompactInput = forwardRef(function CompactInput(
   props: CompactInputProps,

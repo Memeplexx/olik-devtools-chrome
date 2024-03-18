@@ -1,14 +1,15 @@
-import { ForwardedRef, forwardRef, useRef, useState } from "react";
-import { FaCopy } from "react-icons/fa";
-import { is, useForwardedRef } from "../shared/functions";
-import { PopupOption, PopupOptions } from "./styles";
 import { deserialize } from "olik";
-import { OptionsProps } from "./constants";
+import { ForwardedRef, forwardRef, useRef, useState } from "react";
+import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
+import { IoMdAdd } from "react-icons/io";
+import { is, useForwardedRef } from "../shared/functions";
 import { CompactInput } from "./compact-input";
+import { OptionsProps } from "./constants";
+import { PopupOption, PopupOptions } from "./styles";
 
 
 const Options = forwardRef(function Options(
-  { onAddToArray, onAddToObject, onCopy, onDelete, state, onHide }: OptionsProps & { onHide: () => unknown },
+  { onAddToArray, onAddToObject, onCopy, onDelete, onEditKey, state, onHide }: OptionsProps & { onHide: () => unknown },
   forwardedRef: ForwardedRef<HTMLSpanElement>
 ) {
   const ref = useForwardedRef<HTMLSpanElement>(forwardedRef);
@@ -32,6 +33,9 @@ const Options = forwardRef(function Options(
   const onClickAddToObject = () => {
     setShowInput(true);
     setTimeout(() => inputKeyRef.current!.focus());
+  }
+  const onClickEditKey = () => {
+    onEditKey();
   }
   const reset = () => {
     setShowInput(false);
@@ -85,7 +89,7 @@ const Options = forwardRef(function Options(
             children={
               <>
                 <FaCopy />
-                copy
+                copy node
               </>
             }
           />
@@ -94,8 +98,8 @@ const Options = forwardRef(function Options(
             onClick={onClickDelete}
             children={
               <>
-                <FaCopy />
-                delete
+                <FaTrash />
+                delete node
               </>
             }
           />
@@ -104,8 +108,8 @@ const Options = forwardRef(function Options(
             onClick={onClickAddToArray}
             children={
               <>
-                <FaCopy />
-                add
+                <IoMdAdd />
+                add array element
               </>
             }
           />
@@ -114,8 +118,18 @@ const Options = forwardRef(function Options(
             onClick={onClickAddToObject}
             children={
               <>
-                <FaCopy />
-                add
+                <IoMdAdd />
+                add to object
+              </>
+            }
+          />
+          <PopupOption
+            showIf={!showInput && is.record(state)}
+            onClick={onClickEditKey}
+            children={
+              <>
+                <FaEdit />
+                edit object key
               </>
             }
           />

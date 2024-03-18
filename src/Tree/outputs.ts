@@ -16,6 +16,8 @@ export const useOutputs = (props: TreeProps) => {
     onClickAddToObject: (keyConcat: string) => (newKey: string, val: unknown) => {
       const el = JSON.stringify({ [newKey]: val });
       silentlyApplyStateAction(props.store!, [...fixKey(keyConcat).split('.'), `$setNew(${el})`]);
-    }
+    },
+    onClickEditKey: (keyConcat: string) => () => {
+    },
   };
 }

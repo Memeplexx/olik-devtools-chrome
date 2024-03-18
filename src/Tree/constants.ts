@@ -46,6 +46,7 @@ export type OptionsProps = {
   onDelete: () => unknown,
   onAddToArray: (value: unknown) => void,
   onAddToObject: (key: string, value: unknown) => unknown,
+  onEditKey: () => unknown,
   state: unknown,
   ref?: RefObject<HTMLInputElement>,
 } & HTMLAttributes<HTMLSpanElement>;

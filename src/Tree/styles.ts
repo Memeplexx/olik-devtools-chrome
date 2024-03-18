@@ -1,8 +1,7 @@
 import styled, { css } from "styled-components/macro";
 import { possible } from "../html";
 import { NodeType } from "./constants";
-import { FaCalendar } from "react-icons/fa";
-
+import { CompactInput } from "./compact-input";
 
 
 
@@ -68,20 +67,14 @@ export const Node = styled(possible.span) <{ $clickable?: boolean, $unchanged?: 
   `}
 `;
 
-export const BooleanNode = styled.span`
-  cursor: pointer;
-  :hover {
-    background-color: rgba(255,255,255,0.1);
-  }
-`;
-
-export const Input = styled.input`
-  :focus {
-    outline: 1px solid #add8e6;
-  }
-  :hover {
-    background-color: rgba(255,255,255,0.1);
-  }
+export const KeyNode = styled(CompactInput)<{ $unchanged?: boolean }>`
+  color: #fff;
+  ${p => p.$unchanged && css`
+    color: gray!important;
+    * {
+      color: gray!important;
+    }
+  `}
 `;
 
 export const DatePickerContainer = styled.span`
@@ -101,6 +94,7 @@ export const PopupOptions = styled.span`
   border-top-right-radius: 3px;
   border-bottom-right-radius: 3px;
   border-bottom-left-radius: 3px;
+  width: 150px;
 `;
 
 export const PopupOption = styled(possible.span)`
@@ -114,10 +108,3 @@ export const PopupOption = styled(possible.span)`
     background-color: rgba(0,0,0,0.1);
   }
 `
-
-export const PopupInput = styled(possible.input)`
-  padding: 2px;
-  :hover {
-    background-color: rgba(0, 0, 0, 0.1);
-  }
-`;

@@ -5,7 +5,7 @@ import { CompactInput } from "./compact-input";
 import { NodeType, RenderNodeArgs, TreeProps } from "./constants";
 import { OptionsWrapper } from "./options";
 import { useOutputs } from "./outputs";
-import { Node } from "./styles";
+import { KeyNode, Node } from "./styles";
 
 
 export const Tree = (
@@ -118,7 +118,7 @@ const renderNode = (
         $block={!isPrimitive}
         $indent={!isPrimitive}
         children={
-          (is.recordOrArray(item) ? recurse(item, keyConcat) : !store ? nodeEl : (
+          is.recordOrArray(item) ? recurse(item, keyConcat) : !store ? nodeEl : (
             <CompactInput
               value={item === null ? 'null' : item === undefined ? '' : is.date(item) ? item.toISOString() : item.toString()}
               revertOnBlur={true}
@@ -126,7 +126,7 @@ const renderNode = (
                 silentlyApplyStateAction(store, [...fixKey(keyConcat).split('.'), `$set(${e.toString()})`]);
               }}
             />
-          ))
+          )
         }
       />
       <Node
@@ -165,12 +165,12 @@ const renderNode = (
                   showIf={showActionType}
                   $unchanged={isUnchanged}
                 />
-                <Node
-                  $type='key'
-                  children={key}
+                {hasObjectKey && !isTopLevel && !isHidden && <KeyNode
+                  disabled={!store}
+                  value={key?.toString() || ''}
                   $unchanged={isUnchanged}
-                  showIf={hasObjectKey && !isTopLevel && !isHidden}
-                />
+                  // showIf={hasObjectKey && !isTopLevel && !isHidden}
+                />}
                 <Node
                   $type='colon'
                   children=':'
@@ -195,6 +195,7 @@ const renderNode = (
                   onDelete={outputs.onClickDelete(keyConcat)}
                   onAddToArray={outputs.onClickAddToArray(keyConcat)}
                   onAddToObject={outputs.onClickAddToObject(keyConcat)}
+                  onEditKey={outputs.onClickEditKey(keyConcat)}
                   state={item}
                 />
               </>
