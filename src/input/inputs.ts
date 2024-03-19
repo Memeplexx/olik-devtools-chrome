@@ -5,7 +5,7 @@ import flatpickr from "flatpickr";
 import { CompactInputProps } from "./constants";
 
 export const useInputs = (
-  { value, onChange, onCancel, ...props }: CompactInputProps,
+  { value, onChange, ...props }: CompactInputProps,
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) => {
   const ref = useForwardedRef(forwardedRef);
@@ -14,6 +14,9 @@ export const useInputs = (
   const flatPickerRef = useRef<Instance | null>(null);
   const changed = useRef(false);
   const canceled = useRef(false);
+  const [state, setState] = useState({
+    size: 0,
+  });
   if (isDate && !flatPickerRef.current) {
     flatPickerRef.current = flatpickr(ref.current!, {
       enableTime: true,
@@ -36,9 +39,6 @@ export const useInputs = (
       resize();
     })
   }
-  const [state, setState] = useState({
-    size: 0,
-  });
   const resize = () => setState(s => ({
     ...s,
     size: Math.max(1, ref.current!.value.length),
@@ -51,5 +51,6 @@ export const useInputs = (
     canceled,
     isDate,
     valueBefore,
+    props,
   }
 }

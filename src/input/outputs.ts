@@ -12,7 +12,6 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
         inputs.ref.current!.blur();
         inputs.canceled.current = false;
         inputs.ref.current!.value = inputs.valueBefore.current;
-        props.onCancel?.();
       }
     },
     onKeyDown: (event: KeyboardEvent) => {

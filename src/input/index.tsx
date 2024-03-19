@@ -14,7 +14,7 @@ export const CompactInput = forwardRef(function CompactInput(
   const outputs = useOutputs(props, inputs);
   return (
     <Input
-      {...props}
+      {...inputs.props}
       ref={inputs.ref}
       onKeyDown={outputs.onKeyDown}
       onKeyUp={outputs.onKeyUp}
