@@ -1,13 +1,14 @@
-import { Children, ForwardedRef, RefObject, forwardRef, useRef } from "react";
+import { ForwardedRef, MouseEvent, RefObject, forwardRef } from "react";
+import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
+import { IoMdAdd } from "react-icons/io";
 import { Frag } from "../html/frag";
 import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
 import { CompactInput } from "./compact-input";
 import { RenderNodeArgs, RenderedNodeHandle, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
-import { Options } from "./options";
 import { useOutputs } from "./outputs";
 import { KeyNode, Node, PopupOption, PopupOptions } from "./styles";
-import { FaTrash } from "react-icons/fa";
+import { IconType } from "react-icons/lib";
 
 
 export const Tree = (
@@ -106,19 +107,19 @@ export const RenderedNode = forwardRef(function RenderedNode(
                   silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${e.toString()})`]);
                 }}
               />
-              <PopupOptions
-                showIf={!!props.isArrayElement && inputs.showArrayOptions}
-                children={
-                  <PopupOption
-                    onClick={outputs.onClickDeleteArrayElement(props.keyConcat)}
-                    children={
-                      <>
-                        <FaTrash />
-                        delete element
-                      </>
-                    }
-                  />
-                }
+              <Popup
+                items={[
+                  {
+                    onClick: outputs.onClickCopy,
+                    icon: FaCopy,
+                    text: 'copy node'
+                  },
+                  {
+                    onClick: outputs.onClickDeleteArrayElement,
+                    icon: FaTrash,
+                    text: 'delete node'
+                  },
+                ]}
               />
             </>
           )
@@ -191,15 +192,38 @@ export const RenderedNode = forwardRef(function RenderedNode(
                   $unchanged={inputs.isUnchanged}
                 />
                 {inputs.isContracted && content}
-                {inputs.showOptions && <Options
-                  onHide={outputs.onHideOptions}
-                  onCopy={outputs.onClickCopy(props.item)}
-                  onDelete={outputs.onClickDelete(props.keyConcat)}
-                  onAddToArray={outputs.onClickAddToArray(props.keyConcat)}
-                  onAddToObject={outputs.onClickAddToObject(props.keyConcat)}
-                  onEditKey={outputs.onClickEditKey}
-                  state={props.item}
-                />}
+                <Popup
+                  items={[
+                    {
+                      onClick: outputs.onClickEditKey,
+                      icon: FaEdit,
+                      text: 'edit object key',
+                      showIf: is.record(props.item)
+                    },
+                    {
+                      onClick: outputs.onClickCopy,
+                      icon: FaCopy,
+                      text: 'copy node'
+                    },
+                    {
+                      onClick: outputs.onClickDelete,
+                      icon: FaTrash,
+                      text: 'delete node'
+                    },
+                    {
+                      onClick: outputs.onClickAddToArray,
+                      icon: IoMdAdd,
+                      text: 'add array element',
+                      showIf: is.array(props.item)
+                    },
+                    {
+                      onClick: outputs.onClickAddToObject,
+                      icon: IoMdAdd,
+                      text: 'add to object',
+                      showIf: is.record(props.item)
+                    }
+                  ]}
+                />
               </>
             }
           />
@@ -215,3 +239,29 @@ export const RenderedNode = forwardRef(function RenderedNode(
     />
   )
 });
+
+const Popup = (props: {items: { onClick: (e: MouseEvent<HTMLSpanElement>) => void, icon: IconType, text: string, showIf?: boolean }[] }) => {
+  return (
+    <PopupOptions
+      children={
+        <>
+          {
+            props.items.map(prop => (
+              <PopupOption
+                key={prop.text}
+                showIf={prop.showIf}
+                onClick={prop.onClick}
+                children={
+                  <>
+                    <prop.icon />
+                    {prop.text}
+                  </>
+                }
+              />
+            ))
+          }
+        </>
+      }
+    />
+  )
+}

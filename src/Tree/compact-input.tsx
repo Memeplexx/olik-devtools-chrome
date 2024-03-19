@@ -81,7 +81,6 @@ export const CompactInput = forwardRef(function CompactInput(
       resize();
     })
   }
-
   return (
     <Input
       {...props}
