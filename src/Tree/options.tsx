@@ -1,57 +1,36 @@
-import { deserialize } from "olik";
-import { ForwardedRef, forwardRef, useRef, useState } from "react";
+import { ForwardedRef, forwardRef } from "react";
 import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { is, useForwardedRef } from "../shared/functions";
-import { CompactInput } from "./compact-input";
 import { OptionsProps } from "./constants";
 import { PopupOption, PopupOptions } from "./styles";
 
 
-const Options = forwardRef(function Options(
+export const Options = forwardRef(function Options(
   { onAddToArray, onAddToObject, onCopy, onDelete, onEditKey, state, onHide }: OptionsProps & { onHide: () => unknown },
   forwardedRef: ForwardedRef<HTMLSpanElement>
 ) {
   const ref = useForwardedRef<HTMLSpanElement>(forwardedRef);
-  const inputKeyRef = useRef<HTMLInputElement>(null);
-  const inputValRef = useRef<HTMLInputElement>(null);
-  const [showInput, setShowInput] = useState(false);
   const onClickCopy = () => {
     onCopy();
-    reset();
+    onHide();
   }
   const onClickDelete = () => {
     onDelete();
-    reset();
+    onHide();
   }
   const onClickAddToArray = () => {
     if (!is.array(state)) throw new Error('not an array');
     const val = getSimplifiedObjectPayload(state[0]);
     onAddToArray(val);
-    reset();
+    onHide();
   }
   const onClickAddToObject = () => {
-    setShowInput(true);
-    setTimeout(() => inputKeyRef.current!.focus());
+    onAddToObject();
+    onHide();
   }
   const onClickEditKey = () => {
     onEditKey();
-  }
-  const reset = () => {
-    setShowInput(false);
-    if (inputKeyRef.current && inputValRef.current) {
-      inputKeyRef.current.value = '';
-      inputValRef.current.value = '';
-    }
-    onHide();
-  }
-  const onChange = () => {
-    const key = inputKeyRef.current!.value;
-    const val = inputValRef.current!.value;
-    if (key && val) {
-      onAddToObject(key, deserialize(val));
-      reset();
-    }
   }
   const getSimplifiedObjectPayload = (state: unknown) => {
     const recurse = (val: unknown): unknown => {
@@ -84,47 +63,6 @@ const Options = forwardRef(function Options(
       children={
         <>
           <PopupOption
-            showIf={!showInput}
-            onClick={onClickCopy}
-            children={
-              <>
-                <FaCopy />
-                copy node
-              </>
-            }
-          />
-          <PopupOption
-            showIf={!showInput}
-            onClick={onClickDelete}
-            children={
-              <>
-                <FaTrash />
-                delete node
-              </>
-            }
-          />
-          <PopupOption
-            showIf={!showInput && is.array(state)}
-            onClick={onClickAddToArray}
-            children={
-              <>
-                <IoMdAdd />
-                add array element
-              </>
-            }
-          />
-          <PopupOption
-            showIf={!showInput && is.record(state)}
-            onClick={onClickAddToObject}
-            children={
-              <>
-                <IoMdAdd />
-                add to object
-              </>
-            }
-          />
-          <PopupOption
-            showIf={!showInput && is.record(state)}
             onClick={onClickEditKey}
             children={
               <>
@@ -134,22 +72,40 @@ const Options = forwardRef(function Options(
             }
           />
           <PopupOption
-            showIf={showInput}
+            onClick={onClickCopy}
             children={
               <>
-                {'{'}
-                <CompactInput
-                  ref={inputKeyRef}
-                  value={''}
-                  minWidth={5}
-                />
-                :
-                <CompactInput
-                  ref={inputValRef}
-                  onChange={onChange}
-                  value={''}
-                />
-                {'}'}
+                <FaCopy />
+                copy node
+              </>
+            }
+          />
+          <PopupOption
+            onClick={onClickDelete}
+            children={
+              <>
+                <FaTrash />
+                delete node
+              </>
+            }
+          />
+          <PopupOption
+            showIf={is.array(state)}
+            onClick={onClickAddToArray}
+            children={
+              <>
+                <IoMdAdd />
+                add array element
+              </>
+            }
+          />
+          <PopupOption
+            showIf={is.record(state)}
+            onClick={onClickAddToObject}
+            children={
+              <>
+                <IoMdAdd />
+                add to object
               </>
             }
           />
@@ -158,29 +114,3 @@ const Options = forwardRef(function Options(
     />
   );
 });
-
-export const OptionsWrapper = (props: OptionsProps) => {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  const refParent = useRef<HTMLElement | null>(null);
-  if (!ref.current) {
-    setTimeout(() => {
-      refParent.current = ref.current!.parentNode as HTMLElement;
-      refParent.current.style.position = 'relative';
-      refParent.current.addEventListener('mouseover', () => setShow(true));
-      refParent.current.addEventListener('mouseout', () => setShow(false));
-    })
-  }
-  return (
-    <span
-      ref={ref}
-      children={show && !!refParent.current && (
-        <Options
-          {...props}
-          ref={ref}
-          onHide={() => setShow(false)}
-        />
-      )}
-    />
-  )
-}

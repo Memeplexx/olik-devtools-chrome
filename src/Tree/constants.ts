@@ -1,6 +1,5 @@
 import { HTMLAttributes, InputHTMLAttributes, RefObject } from "react";
 import { BasicStore } from "../shared/types";
-import { useOutputs } from "./outputs";
 
 export interface TreeProps {
   state: unknown,
@@ -16,14 +15,14 @@ export interface TreeProps {
 export type RenderNodeArgs
   = TreeProps
   & {
-    recurse: (val: unknown, outerKey: string) => JSX.Element,
+    recurse: (val: unknown, outerKey: string, ref: RefObject<RenderedNodeHandle>, focusValueNode: () => unknown ) => JSX.Element,
     keyConcat: string,
     index: number,
     item: unknown,
     isLast: boolean,
     isTopLevel: boolean,
-    key?: string,
-    outputs: ReturnType<typeof useOutputs>,
+    objectKey?: string,
+    focusValueNode: () => void,
   }
 
 export type DatePickerProps = {
@@ -31,21 +30,27 @@ export type DatePickerProps = {
   onChange: (date: Date) => void,
 };
 
+export type RecurseArgs<S extends Record<string, unknown> | unknown> = {
+  val: S,
+  outerKey: string,
+  ref: RefObject<RenderedNodeHandle>,
+  focusValueNode: () => unknown,
+}
+
 export type Type = 'number' | 'text';
 
 export type CompactInputProps = {
   value: string,
   onChange?: (arg: string) => void,
+  onCancel?: () => void,
   ref?: RefObject<HTMLInputElement>,
-  minWidth?: number,
-  revertOnBlur?: boolean,
-} & InputHTMLAttributes<HTMLInputElement>;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'>;
 
 export type OptionsProps = {
   onCopy: () => unknown,
   onDelete: () => unknown,
   onAddToArray: (value: unknown) => void,
-  onAddToObject: (key: string, value: unknown) => unknown,
+  onAddToObject: () => unknown,
   onEditKey: () => unknown,
   state: unknown,
   ref?: RefObject<HTMLInputElement>,
@@ -65,3 +70,8 @@ export type NodeType =
   | 'comma'
   | 'parenthesis'
   | 'key';
+
+export interface RenderedNodeHandle {
+  focusChildKey: () => unknown;
+  focusChildValue: () => unknown;
+}

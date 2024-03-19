@@ -1,9 +1,10 @@
-import { MouseEvent } from "react";
+import { ForwardedRef, RefObject, forwardRef, useRef } from "react";
 import { Frag } from "../html/frag";
-import { decisionMap, fixKey, is, silentlyApplyStateAction } from "../shared/functions";
+import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
 import { CompactInput } from "./compact-input";
-import { NodeType, RenderNodeArgs, TreeProps } from "./constants";
-import { OptionsWrapper } from "./options";
+import { RenderNodeArgs, RenderedNodeHandle, TreeProps } from "./constants";
+import { useInputs } from "./inputs";
+import { Options } from "./options";
 import { useOutputs } from "./outputs";
 import { KeyNode, Node } from "./styles";
 
@@ -11,205 +12,183 @@ import { KeyNode, Node } from "./styles";
 export const Tree = (
   props: TreeProps
 ): JSX.Element => {
-  const outputs = useOutputs(props);
-  const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string): JSX.Element => {
+  const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string, ref: RefObject<RenderedNodeHandle>, focusValueNode: () => unknown ): JSX.Element => {
     if (is.array(val)) {
       return (
         <>
-          {val.map((item, index) => renderNode({
-            ...props,
-            recurse,
-            keyConcat: `${outerKey}.${index}`,
-            index,
-            item,
-            isLast: index === val.length - 1,
-            isTopLevel: false,
-            outputs,
-          }))}
+          {val.map((item, index) => (
+            <RenderedNode
+              key={index.toString()}
+              {...props}
+              recurse={recurse}
+              keyConcat={`${outerKey}.${index}`}
+              index={index}
+              item={item}
+              isLast={index === val.length - 1}
+              isTopLevel={false}
+              ref={ref}
+              focusValueNode={focusValueNode}
+            />
+          ))}
         </>
       );
     } else if (is.record(val)) {
       return (
         <>
-          {Object.keys(val).map((key, index, arr) => renderNode({
-            ...props,
-            recurse,
-            keyConcat: key === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`,
-            index,
-            item: val[key],
-            isLast: index === arr.length - 1,
-            isTopLevel: key === '',
-            key,
-            outputs,
-          }))}
+          {Object.keys(val).map((key, index, arr) => {
+            return (
+              <RenderedNode
+                {...props}
+                key={key.toString()}
+                recurse={recurse}
+                keyConcat={key === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`}
+                index={index}
+                item={val[key]}
+                isLast={index === arr.length - 1}
+                isTopLevel={key === ''}
+                objectKey={key}
+                ref={ref}
+                focusValueNode={focusValueNode}
+              />
+            )
+          })}
         </>
       );
     } else if (is.scalar(val)) {
-      return renderNode({
-        ...props,
-        recurse,
-        keyConcat: ``,
-        index: 0,
-        item: val,
-        isLast: true,
-        isTopLevel: true,
-        outputs,
-      });
+      return (
+        <RenderedNode
+          {...props}
+          recurse={recurse}
+          keyConcat={outerKey}
+          index={0}
+          item={val}
+          isLast={true}
+          isTopLevel={false}
+          ref={ref}
+          focusValueNode={focusValueNode}
+        />
+      );
     } else {
       throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
   };
-  return recurse(is.recordOrArray(props.state) ? { '': props.state } : props.state, '');
+  return recurse(is.recordOrArray(props.state) ? { '': props.state } : props.state, '', { current: null }, () => null);
 }
 
-const renderNode = (
-  {
-    unchanged,
-    contractedKeys,
-    recurse,
-    keyConcat,
-    index,
-    item,
-    isLast,
-    isTopLevel,
-    key,
-    actionType,
-    hideUnchanged,
-    onClickNodeKey,
-    store,
-    outputs,
-  }: RenderNodeArgs
-) => {
-  const isPrimitive = !is.array(item) && !is.record(item);
-  const hasObjectKey = key !== undefined;
-  const isUnchanged = unchanged.includes(keyConcat);
-  const isContracted = contractedKeys.includes(keyConcat);
-  const isEmpty = is.array(item) ? !item.length : is.record(item) ? !Object.keys(item).length : false;
-  const isHidden = isUnchanged && hideUnchanged;
-  const showActionType = isTopLevel && !!actionType;
-  const handleNodeClick = (key: string) => (event: MouseEvent) => {
-    event.stopPropagation();
-    onClickNodeKey(key);
-  }
-  const nodeType = decisionMap([
-    [() => is.array(item), 'array'],
-    [() => is.record(item), 'object'],
-    [() => is.number(item), 'number'],
-    [() => is.string(item), 'string'],
-    [() => is.boolean(item), 'boolean'],
-    [() => is.date(item), 'date'],
-    [() => is.null(item), 'null'],
-    [() => is.undefined(item), 'undefined'],
-  ]) as NodeType;
-  const nodeEl = decisionMap([
-    [() => is.null(item), () => 'null'],
-    [() => is.undefined(item), () => ''],
-    [() => is.number(item), () => (item as number).toString()],
-    [() => is.string(item), () => `"${(item as string).toString()}"`],
-    [() => is.date(item), () => (item as Date).toISOString()],
-    [() => true, () => item],
-  ])() as JSX.Element;
+export const RenderedNode = forwardRef(function RenderedNode(
+  props: RenderNodeArgs,
+  forwardedRef: ForwardedRef<RenderedNodeHandle>
+) {
+  const inputs = useInputs(props, forwardedRef);
+  const outputs = useOutputs(props, inputs);
   const content = (
     <>
       <Node
-        $type={nodeType}
-        showIf={!isContracted && !isEmpty && !isHidden}
-        $unchanged={isUnchanged}
-        $block={!isPrimitive}
-        $indent={!isPrimitive}
+        $type={inputs.nodeType}
+        showIf={!inputs.isContracted && !inputs.isEmpty && !inputs.isHidden}
+        $unchanged={inputs.isUnchanged}
+        $block={!inputs.isPrimitive}
+        $indent={!inputs.isPrimitive}
         children={
-          is.recordOrArray(item) ? recurse(item, keyConcat) : !store ? nodeEl : (
+          is.recordOrArray(props.item) ? props.recurse(props.item, props.keyConcat, inputs.childNodeRef, outputs.onFocusValueNode) : !props.store ? inputs.nodeEl : (
             <CompactInput
-              value={item === null ? 'null' : item === undefined ? '' : is.date(item) ? item.toISOString() : item.toString()}
-              revertOnBlur={true}
+              ref={inputs.valNodeRef}
+              value={props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString()}
               onChange={function onChangeInputNode(e) {
-                silentlyApplyStateAction(store, [...fixKey(keyConcat).split('.'), `$set(${e.toString()})`]);
+                silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${e.toString()})`]);
               }}
             />
           )
         }
       />
       <Node
-        $type={nodeType}
-        children={is.array(item) ? ']' : '}'}
-        $unchanged={isUnchanged}
-        showIf={!isHidden && !isPrimitive}
+        $type={inputs.nodeType}
+        children={is.array(props.item) ? ']' : '}'}
+        $unchanged={inputs.isUnchanged}
+        showIf={!inputs.isHidden && !inputs.isPrimitive}
       />
       <Node
         $type='parenthesis'
         children=')'
-        showIf={showActionType}
-        $unchanged={isUnchanged}
+        showIf={inputs.showActionType}
+        $unchanged={inputs.isUnchanged}
       />
     </>
   );
   return (
     <Frag
-      key={index}
+      key={props.index}
       children={
         <>
           <Node
+            style={{ position: 'relative' }}
+            ref={inputs.nodeRef}
             $clickable={true}
-            onClick={handleNodeClick(keyConcat)}
+            onClick={outputs.handleNodeClick(props.keyConcat)}
+            onMouseOver={outputs.onMouseOverRootNode}
+            onMouseOut={outputs.onMouseOutRootNode}
             children={
               <>
                 <Node
                   $type='actionType'
-                  children={actionType}
-                  showIf={showActionType}
-                  $unchanged={isUnchanged}
+                  children={props.actionType}
+                  showIf={inputs.showActionType}
+                  $unchanged={inputs.isUnchanged}
                 />
                 <Node
                   $type='parenthesis'
                   children='('
-                  showIf={showActionType}
-                  $unchanged={isUnchanged}
+                  showIf={inputs.showActionType}
+                  $unchanged={inputs.isUnchanged}
                 />
-                {hasObjectKey && !isTopLevel && !isHidden && <KeyNode
-                  disabled={!store}
-                  value={key?.toString() || ''}
-                  $unchanged={isUnchanged}
-                  // showIf={hasObjectKey && !isTopLevel && !isHidden}
+                {inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden && <KeyNode
+                  ref={inputs.keyNodeRef}
+                  readOnly={!props.store || !inputs.editObjectKey}
+                  value={props.objectKey?.toString() || ''}
+                  $unchanged={inputs.isUnchanged}
+                  onChange={outputs.onKeyChange}
+                // showIf={hasObjectKey && !isTopLevel && !isHidden}
                 />}
                 <Node
                   $type='colon'
                   children=':'
-                  $unchanged={isUnchanged}
-                  showIf={hasObjectKey && !isTopLevel && !isHidden}
+                  $unchanged={inputs.isUnchanged}
+                  showIf={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
                 />
                 <Node
-                  $type={nodeType}
-                  children={is.array(item) ? '[' : '{'}
-                  $unchanged={isUnchanged}
-                  showIf={!isHidden && !isPrimitive}
+                  $type={inputs.nodeType}
+                  children={is.array(props.item) ? '[' : '{'}
+                  $unchanged={inputs.isUnchanged}
+                  showIf={!inputs.isHidden && !inputs.isPrimitive}
                 />
                 <Node
-                  $type={nodeType}
+                  $type={inputs.nodeType}
                   children='...'
-                  showIf={isContracted && !isHidden}
-                  $unchanged={isUnchanged}
+                  showIf={inputs.isContracted && !inputs.isHidden}
+                  $unchanged={inputs.isUnchanged}
                 />
-                {isContracted && content}
-                <OptionsWrapper
-                  onCopy={outputs.onClickCopy(item)}
-                  onDelete={outputs.onClickDelete(keyConcat)}
-                  onAddToArray={outputs.onClickAddToArray(keyConcat)}
-                  onAddToObject={outputs.onClickAddToObject(keyConcat)}
-                  onEditKey={outputs.onClickEditKey(keyConcat)}
-                  state={item}
-                />
+                {inputs.isContracted && content}
+                {inputs.showOptions && <Options
+                  onHide={outputs.onHideOptions}
+                  onCopy={outputs.onClickCopy(props.item)}
+                  onDelete={outputs.onClickDelete(props.keyConcat)}
+                  onAddToArray={outputs.onClickAddToArray(props.keyConcat)}
+                  onAddToObject={outputs.onClickAddToObject(props.keyConcat)}
+                  onEditKey={outputs.onClickEditKey}
+                  state={props.item}
+                />}
               </>
             }
           />
-          {!isContracted && content}
+          {!inputs.isContracted && content}
           <Node
             $type='comma'
             children=','
-            showIf={!isLast && !isHidden}
-            $unchanged={isUnchanged}
+            showIf={!props.isLast && !inputs.isHidden}
+            $unchanged={inputs.isUnchanged}
           />
         </>
       }
     />
   )
-}
+});
