@@ -83,7 +83,7 @@ export const DatePickerContainer = styled.span`
   }
 `;
 
-export const PopupOptions = styled.span`
+export const PopupOptions = styled(possible.span)`
   position: absolute;
   left: calc(100%);
   top: 0;

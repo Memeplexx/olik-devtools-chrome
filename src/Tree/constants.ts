@@ -23,6 +23,7 @@ export type RenderNodeArgs
     isTopLevel: boolean,
     objectKey?: string,
     focusValueNode: () => void,
+    isArrayElement?: boolean,
   }
 
 export type DatePickerProps = {

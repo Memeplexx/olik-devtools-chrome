@@ -1,5 +1,5 @@
 import { MouseEvent } from "react";
-import { fixKey, silentlyApplyStateAction } from "../shared/functions";
+import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
 import { RenderNodeArgs } from "./constants";
 import { useInputs } from "./inputs";
 
@@ -28,6 +28,10 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     handleNodeClick: (key: string) => (event: MouseEvent) => {
       event.stopPropagation();
       props.onClickNodeKey(key);
+      inputs.setState(s => ({ ...s, showOptions: false }))
+    },
+    handleValueClick: () => {
+      inputs.setState(s => ({ ...s, showArrayOptions: false }))
     },
     onMouseOverRootNode: () => {
       inputs.setState(s => ({ ...s, showOptions: true }));
@@ -35,15 +39,26 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onMouseOutRootNode: () => {
       inputs.setState(s => ({ ...s, showOptions: false }));
     },
+    onMouseOverValueNode: () => {
+      if (!props.isArrayElement) { return; }
+      inputs.setState(s => ({ ...s, showArrayOptions: true }));
+    },
+    onMouseOutValueNode: () => {
+      if (!props.isArrayElement) { return; }
+      inputs.setState(s => ({ ...s, showArrayOptions: false }));
+    },
     onHideOptions: () => {
       inputs.setState(s => ({ ...s, showOptions: false }));
     },
     onKeyChange: (keyDraft: string) => {
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${keyDraft})`]);
-      setTimeout(() => setTimeout(() => props.focusValueNode() ));
+      setTimeout(() => setTimeout(() => props.focusValueNode()));
     },
     onFocusValueNode: () => {
       inputs.childNodeRef.current?.focusChildValue();
+    },
+    onClickDeleteArrayElement: (key: string) => () => {
+      silentlyApplyStateAction(props.store!, [...fixKey(key).split('.'), `$delete()`]);
     }
   };
 }

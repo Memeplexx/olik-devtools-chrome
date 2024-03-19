@@ -1,4 +1,4 @@
-import { ForwardedRef, RefObject, forwardRef, useRef } from "react";
+import { Children, ForwardedRef, RefObject, forwardRef, useRef } from "react";
 import { Frag } from "../html/frag";
 import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
 import { CompactInput } from "./compact-input";
@@ -6,19 +6,21 @@ import { RenderNodeArgs, RenderedNodeHandle, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
 import { Options } from "./options";
 import { useOutputs } from "./outputs";
-import { KeyNode, Node } from "./styles";
+import { KeyNode, Node, PopupOption, PopupOptions } from "./styles";
+import { FaTrash } from "react-icons/fa";
 
 
 export const Tree = (
   props: TreeProps
 ): JSX.Element => {
-  const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string, ref: RefObject<RenderedNodeHandle>, focusValueNode: () => unknown ): JSX.Element => {
+  const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string, ref: RefObject<RenderedNodeHandle>, focusValueNode: () => unknown): JSX.Element => {
     if (is.array(val)) {
       return (
         <>
           {val.map((item, index) => (
             <RenderedNode
-              key={index.toString()}
+              // key={index.toString()}
+              key={JSON.stringify(item)}
               {...props}
               recurse={recurse}
               keyConcat={`${outerKey}.${index}`}
@@ -28,6 +30,7 @@ export const Tree = (
               isTopLevel={false}
               ref={ref}
               focusValueNode={focusValueNode}
+              isArrayElement={true}
             />
           ))}
         </>
@@ -63,7 +66,7 @@ export const Tree = (
           index={0}
           item={val}
           isLast={true}
-          isTopLevel={false}
+          isTopLevel={true}
           ref={ref}
           focusValueNode={focusValueNode}
         />
@@ -89,15 +92,35 @@ export const RenderedNode = forwardRef(function RenderedNode(
         $unchanged={inputs.isUnchanged}
         $block={!inputs.isPrimitive}
         $indent={!inputs.isPrimitive}
+        style={{ position: 'relative' }}
+        onMouseOver={outputs.onMouseOverValueNode}
+        onMouseOut={outputs.onMouseOutValueNode}
         children={
           is.recordOrArray(props.item) ? props.recurse(props.item, props.keyConcat, inputs.childNodeRef, outputs.onFocusValueNode) : !props.store ? inputs.nodeEl : (
-            <CompactInput
-              ref={inputs.valNodeRef}
-              value={props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString()}
-              onChange={function onChangeInputNode(e) {
-                silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${e.toString()})`]);
-              }}
-            />
+            <>
+              <CompactInput
+                ref={inputs.valNodeRef}
+                onClick={outputs.handleValueClick}
+                value={props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString()}
+                onChange={function onChangeInputNode(e) {
+                  silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${e.toString()})`]);
+                }}
+              />
+              <PopupOptions
+                showIf={!!props.isArrayElement && inputs.showArrayOptions}
+                children={
+                  <PopupOption
+                    onClick={outputs.onClickDeleteArrayElement(props.keyConcat)}
+                    children={
+                      <>
+                        <FaTrash />
+                        delete element
+                      </>
+                    }
+                  />
+                }
+              />
+            </>
           )
         }
       />
