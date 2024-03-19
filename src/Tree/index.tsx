@@ -1,14 +1,14 @@
-import { ForwardedRef, MouseEvent, RefObject, forwardRef } from "react";
+import { ForwardedRef, RefObject, forwardRef } from "react";
 import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
+import { IconType } from "react-icons/lib";
 import { Frag } from "../html/frag";
-import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
 import { CompactInput } from "../input";
+import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
 import { RenderNodeArgs, RenderedNodeHandle, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
 import { KeyNode, Node, PopupOption, PopupOptions } from "./styles";
-import { IconType } from "react-icons/lib";
 
 
 export const Tree = (
@@ -200,7 +200,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
                       onClick: outputs.onClickEditKey,
                       icon: FaEdit,
                       text: 'edit object key',
-                      showIf: is.record(props.item)
+                      showIf: is.record(props.item) && !props.isTopLevel
                     },
                     {
                       onClick: outputs.onClickCopy,
@@ -210,7 +210,8 @@ export const RenderedNode = forwardRef(function RenderedNode(
                     {
                       onClick: outputs.onClickDelete,
                       icon: FaTrash,
-                      text: 'delete node'
+                      text: 'delete node',
+                      showIf: !props.isTopLevel
                     },
                     {
                       onClick: outputs.onClickAddToArray,
@@ -242,7 +243,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
   )
 });
 
-const Popup = (props: { children: { onClick: (e: MouseEvent<HTMLSpanElement>) => void, icon: IconType, text: string, showIf?: boolean }[], showIf?: boolean }) => {
+const Popup = (props: { children: { onClick: () => void, icon: IconType, text: string, showIf?: boolean }[], showIf?: boolean }) => {
   return (
     <PopupOptions
       showIf={props.showIf}
@@ -251,7 +252,10 @@ const Popup = (props: { children: { onClick: (e: MouseEvent<HTMLSpanElement>) =>
           <PopupOption
             key={prop.text}
             showIf={prop.showIf}
-            onClick={prop.onClick}
+            onClick={e => {
+              e.stopPropagation();
+              prop.onClick()
+            }}
             children={
               <>
                 <prop.icon />
