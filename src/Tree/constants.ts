@@ -1,4 +1,4 @@
-import { HTMLAttributes, InputHTMLAttributes, RefObject } from "react";
+import { HTMLAttributes, RefObject } from "react";
 import { BasicStore } from "../shared/types";
 
 export interface TreeProps {
@@ -26,26 +26,12 @@ export type RenderNodeArgs
     isArrayElement?: boolean,
   }
 
-export type DatePickerProps = {
-  value: Date,
-  onChange: (date: Date) => void,
-};
-
 export type RecurseArgs<S extends Record<string, unknown> | unknown> = {
   val: S,
   outerKey: string,
   ref: RefObject<RenderedNodeHandle>,
   focusValueNode: () => unknown,
 }
-
-export type Type = 'number' | 'text';
-
-export type CompactInputProps = {
-  value: string,
-  onChange?: (arg: string) => void,
-  onCancel?: () => void,
-  ref?: RefObject<HTMLInputElement>,
-} & Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'>;
 
 export type OptionsProps = {
   onCopy: () => unknown,

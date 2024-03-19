@@ -3,7 +3,7 @@ import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { Frag } from "../html/frag";
 import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
-import { CompactInput } from "./compact-input";
+import { CompactInput } from "../input";
 import { RenderNodeArgs, RenderedNodeHandle, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
@@ -108,7 +108,8 @@ export const RenderedNode = forwardRef(function RenderedNode(
                 }}
               />
               <Popup
-                items={[
+                showIf={!!props.isArrayElement && inputs.showArrayOptions}
+                children={[
                   {
                     onClick: outputs.onClickCopy,
                     icon: FaCopy,
@@ -193,7 +194,8 @@ export const RenderedNode = forwardRef(function RenderedNode(
                 />
                 {inputs.isContracted && content}
                 <Popup
-                  items={[
+                  showIf={inputs.showOptions}
+                  children={[
                     {
                       onClick: outputs.onClickEditKey,
                       icon: FaEdit,
@@ -240,27 +242,24 @@ export const RenderedNode = forwardRef(function RenderedNode(
   )
 });
 
-const Popup = (props: {items: { onClick: (e: MouseEvent<HTMLSpanElement>) => void, icon: IconType, text: string, showIf?: boolean }[] }) => {
+const Popup = (props: { children: { onClick: (e: MouseEvent<HTMLSpanElement>) => void, icon: IconType, text: string, showIf?: boolean }[], showIf?: boolean }) => {
   return (
     <PopupOptions
+      showIf={props.showIf}
       children={
-        <>
-          {
-            props.items.map(prop => (
-              <PopupOption
-                key={prop.text}
-                showIf={prop.showIf}
-                onClick={prop.onClick}
-                children={
-                  <>
-                    <prop.icon />
-                    {prop.text}
-                  </>
-                }
-              />
-            ))
-          }
-        </>
+        props.children.map(prop => (
+          <PopupOption
+            key={prop.text}
+            showIf={prop.showIf}
+            onClick={prop.onClick}
+            children={
+              <>
+                <prop.icon />
+                {prop.text}
+              </>
+            }
+          />
+        ))
       }
     />
   )

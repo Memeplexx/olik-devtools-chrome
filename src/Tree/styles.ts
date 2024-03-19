@@ -1,7 +1,7 @@
 import styled, { css } from "styled-components/macro";
 import { possible } from "../html";
 import { NodeType } from "./constants";
-import { CompactInput } from "./compact-input";
+import { CompactInput } from "../input";
 
 
 
@@ -75,12 +75,6 @@ export const KeyNode = styled(CompactInput)<{ $unchanged?: boolean }>`
       color: gray!important;
     }
   `}
-`;
-
-export const DatePickerContainer = styled.span`
-  :hover {
-    background-color: rgba(255,255,255,0.1);
-  }
 `;
 
 export const PopupOptions = styled(possible.span)`
