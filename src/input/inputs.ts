@@ -37,9 +37,11 @@ export const useInputs = (
     ...s,
     size: Math.max(1, ref.current!.value.length),
   }));
-  if (ref.current && ref.current.value !== value.toString()) {
-    ref.current.value = value.toString();
-    resize();
+  if (ref.current?.value !== value.toString()) {
+    setTimeout(() => {
+      ref.current!.value = value.toString();
+      resize();
+    });
   }
   return {
     ref,
