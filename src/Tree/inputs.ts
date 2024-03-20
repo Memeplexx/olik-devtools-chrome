@@ -7,11 +7,9 @@ export const useInputs = (
   forwardedRef: ForwardedRef<RenderedNodeHandle>
 ) => {
   const ref = useForwardedRef(forwardedRef);
-  // const nodeRef = useRef<HTMLElement>(null);
   const keyNodeRef = useRef<HTMLInputElement>(null);
   const valNodeRef = useRef<HTMLInputElement>(null);
   const childNodeRef = useRef<RenderedNodeHandle>(null);
-  // const childNodeRef = useForwardedRef<RenderedNodeHandle>(forwardedRef);
   const [state, setState] = useState({ showOptions: false, showArrayOptions: false, editObjectKey: false, addingNewObject: false });
   const isPrimitive = !is.array(props.item) && !is.record(props.item);
   const hasObjectKey = props.objectKey !== undefined;
@@ -33,6 +31,7 @@ export const useInputs = (
   const nodeEl = decisionMap([
     [() => is.null(props.item), () => 'null'],
     [() => is.undefined(props.item), () => ''],
+    [() => is.boolean(props.item), () => (props.item as boolean).toString()],
     [() => is.number(props.item), () => (props.item as number).toString()],
     [() => is.string(props.item), () => `"${(props.item as string).toString()}"`],
     [() => is.date(props.item), () => (props.item as Date).toISOString()],
@@ -53,7 +52,6 @@ export const useInputs = (
     }
   }), []);
   return {
-    // nodeRef,
     keyNodeRef,
     valNodeRef,
     childNodeRef,

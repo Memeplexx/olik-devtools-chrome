@@ -1,6 +1,6 @@
 import { StateAction, deserialize, readState, updateFunctions } from "olik";
 import { ForwardedRef, useState } from "react";
-import { getStateIdToPathMap, is, useForwardedRef } from "../shared/functions";
+import { getStateIdToPathMap, useForwardedRef } from "../shared/functions";
 import { Tree } from "../tree";
 import { StateProps } from "./constants";
 
