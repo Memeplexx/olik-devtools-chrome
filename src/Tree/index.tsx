@@ -14,7 +14,7 @@ import { KeyNode, Node, PopupOption, PopupOptions } from "./styles";
 export const Tree = (
   props: TreeProps
 ): JSX.Element => {
-  const recurse = ({ focusValueNode, outerKey, ref, val }: RecurseArgs): JSX.Element => {
+  const recurse = ({ outerKey, val, childNodeRef }: RecurseArgs): JSX.Element => {
     if (is.array(val)) {
       return (
         <>
@@ -28,9 +28,8 @@ export const Tree = (
               item={item}
               isLast={index === val.length - 1}
               isTopLevel={false}
-              ref={ref}
-              focusValueNode={focusValueNode}
               isArrayElement={true}
+              ref={childNodeRef}
             />
           ))}
         </>
@@ -38,7 +37,7 @@ export const Tree = (
     } else if (is.record(val)) {
       return (
         <>
-          {Object.keys(val).map((key, index, arr) => {
+          {Object.keys(val).sort((a, b) => a.localeCompare(b)).map((key, index, arr) => {
             return (
               <RenderedNode
                 {...props}
@@ -50,8 +49,7 @@ export const Tree = (
                 isLast={index === arr.length - 1}
                 isTopLevel={key === ''}
                 objectKey={key}
-                ref={ref}
-                focusValueNode={focusValueNode}
+                ref={childNodeRef}
               />
             )
           })}
@@ -67,15 +65,14 @@ export const Tree = (
           item={val}
           isLast={true}
           isTopLevel={true}
-          ref={ref}
-          focusValueNode={focusValueNode}
+          ref={childNodeRef}
         />
       );
     } else {
       throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
   };
-  return recurse({val: is.recordOrArray(props.state) ? { '': props.state } : props.state, outerKey: '', ref: { current: null }, focusValueNode: () => null});
+  return recurse({val: is.recordOrArray(props.state) ? { '': props.state } : props.state, outerKey: '', childNodeRef: { current: null }});
 }
 
 export const RenderedNode = forwardRef(function RenderedNode(
@@ -96,7 +93,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
         onMouseOver={outputs.onMouseOverValueNode}
         onMouseOut={outputs.onMouseOutValueNode}
         children={
-          is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat, ref: inputs.childNodeRef, focusValueNode: outputs.onFocusValueNode }) : !props.store ? inputs.nodeEl : (
+          is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat, childNodeRef: inputs.childNodeRef }) : !props.store ? inputs.nodeEl : (
             <>
               <CompactInput
                 ref={inputs.valNodeRef}
@@ -145,7 +142,6 @@ export const RenderedNode = forwardRef(function RenderedNode(
       children={
         <>
           <Node
-            ref={inputs.nodeRef}
             $clickable
             $relative
             onClick={outputs.handleNodeClick(props.keyConcat)}
@@ -171,7 +167,6 @@ export const RenderedNode = forwardRef(function RenderedNode(
                   value={props.objectKey?.toString() || ''}
                   $unchanged={inputs.isUnchanged}
                   onChange={outputs.onKeyChange}
-                // showIf={hasObjectKey && !isTopLevel && !isHidden}
                 />}
                 <Node
                   $type='colon'
@@ -199,7 +194,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
                       onClick: outputs.onClickEditKey,
                       icon: FaEdit,
                       text: 'edit object key',
-                      showIf: is.record(props.item) && !props.isTopLevel
+                      showIf: /*is.record(props.item) &&*/ !props.isTopLevel
                     },
                     {
                       onClick: outputs.onClickCopy,

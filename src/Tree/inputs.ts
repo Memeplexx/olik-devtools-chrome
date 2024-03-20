@@ -1,15 +1,17 @@
 import { ForwardedRef, useImperativeHandle, useRef, useState } from "react";
-import { decisionMap, is } from "../shared/functions";
+import { decisionMap, is, useForwardedRef } from "../shared/functions";
 import { NodeType, RenderNodeArgs, RenderedNodeHandle } from "./constants";
 
 export const useInputs = (
   props: RenderNodeArgs,
   forwardedRef: ForwardedRef<RenderedNodeHandle>
 ) => {
-  const nodeRef = useRef<HTMLElement>(null);
+  const ref = useForwardedRef(forwardedRef);
+  // const nodeRef = useRef<HTMLElement>(null);
   const keyNodeRef = useRef<HTMLInputElement>(null);
   const valNodeRef = useRef<HTMLInputElement>(null);
   const childNodeRef = useRef<RenderedNodeHandle>(null);
+  // const childNodeRef = useForwardedRef<RenderedNodeHandle>(forwardedRef);
   const [state, setState] = useState({ showOptions: false, showArrayOptions: false, editObjectKey: false, addingNewObject: false });
   const isPrimitive = !is.array(props.item) && !is.record(props.item);
   const hasObjectKey = props.objectKey !== undefined;
@@ -40,21 +42,22 @@ export const useInputs = (
     focusChildKey: () => {
       setState(s => ({ ...s, editObjectKey: true }));
       setTimeout(() => {
-        keyNodeRef.current?.focus();
-        keyNodeRef.current?.select();
+        // keyNodeRef.current?.focus();
+        // keyNodeRef.current?.select();
       })
     },
     focusChildValue: () => {
       setTimeout(() => {
-        valNodeRef.current?.focus();
+        // valNodeRef.current?.focus();
       })
     }
   }), []);
   return {
-    nodeRef,
+    // nodeRef,
     keyNodeRef,
     valNodeRef,
     childNodeRef,
+    ref,
     isPrimitive,
     hasObjectKey,
     isContracted,

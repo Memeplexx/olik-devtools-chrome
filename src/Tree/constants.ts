@@ -22,15 +22,13 @@ export type RenderNodeArgs
     isLast: boolean,
     isTopLevel: boolean,
     objectKey?: string,
-    focusValueNode: () => void,
     isArrayElement?: boolean,
   }
 
 export type RecurseArgs = {
   val: unknown,
   outerKey: string,
-  ref: RefObject<RenderedNodeHandle>,
-  focusValueNode: () => unknown,
+  childNodeRef: RefObject<RenderedNodeHandle>,
 }
 
 export type NodeType =

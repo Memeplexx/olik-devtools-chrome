@@ -22,7 +22,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onClickAddToObject: () => {
       inputs.setState(s => ({ ...s, addingNewObject: true, showOptions: false }));
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setNew(${JSON.stringify({ '<key>': '<value>' })})`]);
-      setTimeout(() => setTimeout(() => inputs.childNodeRef.current!.focusChildKey()));
+      // setTimeout(() => setTimeout(() => inputs.childNodeRef.current!.focusChildKey()));
     },
     onClickEditKey: () => {
       inputs.setState(s => ({ ...s, editObjectKey: true, showOptions: false }));
@@ -56,10 +56,13 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     },
     onKeyChange: (keyDraft: string) => {
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${keyDraft})`]);
-      setTimeout(() => setTimeout(() => props.focusValueNode()));
+      // setTimeout(() => setTimeout(() => props.focusValueNode()));
+
+      inputs.valNodeRef.current!.focus();
+      inputs.valNodeRef.current!.select();
     },
     onFocusValueNode: () => {
-      inputs.childNodeRef.current?.focusChildValue();
+      // inputs.childNodeRef.current?.focusChildValue();
     },
     onClickDeleteArrayElement: () => {
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);
