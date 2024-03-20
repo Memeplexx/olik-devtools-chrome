@@ -18,16 +18,18 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onClickAddToArray: () => {
       if (!is.array(props.item)) { throw new Error(); }
       const el = JSON.stringify(getSimplifiedObjectPayload(props.item[0]));
-      props.stateIdToPathMap.set(`${props.keyConcat}.${props.item.length}`, Math.random().toString());
+      updateObjectPayloadKeys(props);
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$push(${el})`]);
       inputs.setState(s => ({ ...s, showOptions: false }));
-      setTimeout(() => setTimeout(() => inputs.childNodeRef.current!.focusChildValue()));
+      const k = `[data-key="${props.keyConcat}.${props.item.length}"]`;
+      setTimeout(() => setTimeout(() => setTimeout(() => document.querySelector<HTMLInputElement>(k)?.focus())));
     },
     onClickAddToObject: () => {
       inputs.setState(s => ({ ...s, addingNewObject: true, showOptions: false }));
       props.stateIdToPathMap.set(`${props.keyConcat}.<key>`, Math.random().toString());
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setNew(${JSON.stringify({ '<key>': '<value>' })})`]);
-      setTimeout(() => setTimeout(() => inputs.childNodeRef.current!.focusChildKey()));
+      const k = `[data-key="${props.keyConcat}.<key>"]`;
+      setTimeout(() => setTimeout(() => setTimeout(() => document.querySelector<HTMLInputElement>(k)!.focus())));
     },
     onClickEditKey: () => {
       inputs.setState(s => ({ ...s, editObjectKey: true, showOptions: false }));
@@ -76,6 +78,27 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);
     }
   };
+}
+
+const updateObjectPayloadKeys = (props: { stateIdToPathMap: Map<string, string>, keyConcat: string, item: unknown }) => {
+  if (!is.array(props.item)) { throw new Error(); } // should never happen
+  props.stateIdToPathMap.set(`${props.keyConcat}.${props.item.length}`, Math.random().toString());
+  const recurse = (a: unknown, outerKey: string) => {
+    if (is.array(a)) {
+      a.forEach((e, i) => {
+        const key = `${outerKey}.${i}`;
+        props.stateIdToPathMap.set(key, Math.random().toString());
+        recurse(e, key);
+      });
+    } else if (is.record(a)) {
+      Object.keys(a).forEach(k => {
+        const key = `${outerKey}.${k}`;
+        props.stateIdToPathMap.set(key, Math.random().toString());
+        recurse(a[k], key);
+      });
+    }
+  }
+  recurse(props.item[0], `${props.keyConcat}.${props.item.length}`);
 }
 
 const getSimplifiedObjectPayload = (state: unknown) => {

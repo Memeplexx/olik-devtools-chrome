@@ -104,6 +104,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
               <CompactInput
                 ref={inputs.valNodeRef}
                 onClick={outputs.handleValueClick}
+                data-key={props.keyConcat}
                 value={props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString()}
                 onChange={function onChangeInputNode(e) {
                   silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${e.toString()})`]);
@@ -168,6 +169,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
                   $unchanged={inputs.isUnchanged}
                 />
                 {inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden && <KeyNode
+                  data-key={props.keyConcat}
                   ref={inputs.keyNodeRef}
                   readOnly={!props.store || !inputs.editObjectKey}
                   value={props.objectKey?.toString() || ''}

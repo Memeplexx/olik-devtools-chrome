@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { possible } from "../html";
 
 export const Input = styled.input<{ $initialized: boolean }>`
   display: ${p => p.$initialized ? 'inline' : 'none'};
@@ -10,4 +11,7 @@ export const Input = styled.input<{ $initialized: boolean }>`
     background-color: rgba(255,255,255,0.1);
   }
   text-align: center;
+`;
+
+export const Quote = styled(possible.span)`
 `;
