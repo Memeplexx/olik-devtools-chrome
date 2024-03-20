@@ -1,4 +1,4 @@
-import { HTMLAttributes, RefObject } from "react";
+import { RefObject } from "react";
 import { BasicStore } from "../shared/types";
 
 export interface TreeProps {
@@ -15,7 +15,7 @@ export interface TreeProps {
 export type RenderNodeArgs
   = TreeProps
   & {
-    recurse: (val: unknown, outerKey: string, ref: RefObject<RenderedNodeHandle>, focusValueNode: () => unknown ) => JSX.Element,
+    recurse: (arg: RecurseArgs) => JSX.Element,
     keyConcat: string,
     index: number,
     item: unknown,
@@ -26,22 +26,12 @@ export type RenderNodeArgs
     isArrayElement?: boolean,
   }
 
-export type RecurseArgs<S extends Record<string, unknown> | unknown> = {
-  val: S,
+export type RecurseArgs = {
+  val: unknown,
   outerKey: string,
   ref: RefObject<RenderedNodeHandle>,
   focusValueNode: () => unknown,
 }
-
-export type OptionsProps = {
-  onCopy: () => unknown,
-  onDelete: () => unknown,
-  onAddToArray: (value: unknown) => void,
-  onAddToObject: () => unknown,
-  onEditKey: () => unknown,
-  state: unknown,
-  ref?: RefObject<HTMLInputElement>,
-} & HTMLAttributes<HTMLSpanElement>;
 
 export type NodeType =
   | 'array'

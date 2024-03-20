@@ -1,11 +1,11 @@
-import { ForwardedRef, RefObject, forwardRef } from "react";
+import { ForwardedRef, forwardRef } from "react";
 import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { IconType } from "react-icons/lib";
 import { Frag } from "../html/frag";
 import { CompactInput } from "../input";
 import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
-import { RenderNodeArgs, RenderedNodeHandle, TreeProps } from "./constants";
+import { RecurseArgs, RenderNodeArgs, RenderedNodeHandle, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
 import { KeyNode, Node, PopupOption, PopupOptions } from "./styles";
@@ -14,13 +14,12 @@ import { KeyNode, Node, PopupOption, PopupOptions } from "./styles";
 export const Tree = (
   props: TreeProps
 ): JSX.Element => {
-  const recurse = <S extends Record<string, unknown> | unknown>(val: S, outerKey: string, ref: RefObject<RenderedNodeHandle>, focusValueNode: () => unknown): JSX.Element => {
+  const recurse = ({ focusValueNode, outerKey, ref, val }: RecurseArgs): JSX.Element => {
     if (is.array(val)) {
       return (
         <>
           {val.map((item, index) => (
             <RenderedNode
-              // key={index.toString()}
               key={JSON.stringify(item)}
               {...props}
               recurse={recurse}
@@ -76,7 +75,7 @@ export const Tree = (
       throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
   };
-  return recurse(is.recordOrArray(props.state) ? { '': props.state } : props.state, '', { current: null }, () => null);
+  return recurse({val: is.recordOrArray(props.state) ? { '': props.state } : props.state, outerKey: '', ref: { current: null }, focusValueNode: () => null});
 }
 
 export const RenderedNode = forwardRef(function RenderedNode(
@@ -97,7 +96,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
         onMouseOver={outputs.onMouseOverValueNode}
         onMouseOut={outputs.onMouseOutValueNode}
         children={
-          is.recordOrArray(props.item) ? props.recurse(props.item, props.keyConcat, inputs.childNodeRef, outputs.onFocusValueNode) : !props.store ? inputs.nodeEl : (
+          is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat, ref: inputs.childNodeRef, focusValueNode: outputs.onFocusValueNode }) : !props.store ? inputs.nodeEl : (
             <>
               <CompactInput
                 ref={inputs.valNodeRef}
