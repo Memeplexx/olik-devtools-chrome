@@ -93,7 +93,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
         $unchanged={inputs.isUnchanged}
         $block={!inputs.isPrimitive}
         $indent={!inputs.isPrimitive}
-        style={{ position: 'relative' }}
+        $relative
         onMouseOver={outputs.onMouseOverValueNode}
         onMouseOut={outputs.onMouseOutValueNode}
         children={
@@ -146,9 +146,9 @@ export const RenderedNode = forwardRef(function RenderedNode(
       children={
         <>
           <Node
-            style={{ position: 'relative' }}
             ref={inputs.nodeRef}
-            $clickable={true}
+            $clickable
+            $relative
             onClick={outputs.handleNodeClick(props.keyConcat)}
             onMouseOver={outputs.onMouseOverRootNode}
             onMouseOut={outputs.onMouseOutRootNode}

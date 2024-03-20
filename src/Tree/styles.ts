@@ -5,7 +5,7 @@ import { CompactInput } from "../input";
 
 
 
-export const Node = styled(possible.span) <{ $clickable?: boolean, $unchanged?: boolean, $indent?: boolean, $block?: boolean, $type?: NodeType }>`
+export const Node = styled(possible.span) <{ $clickable?: boolean, $unchanged?: boolean, $indent?: boolean, $block?: boolean, $type?: NodeType, $relative?: boolean }>`
   ${p => p.$type === 'array' && css`
     color: red;
   `}
@@ -64,6 +64,9 @@ export const Node = styled(possible.span) <{ $clickable?: boolean, $unchanged?: 
     * {
       color: gray!important;
     }
+  `}
+  ${p => p.$relative && css`
+    position: relative;
   `}
 `;
 
