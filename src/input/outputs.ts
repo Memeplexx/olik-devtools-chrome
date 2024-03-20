@@ -24,6 +24,9 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
       }
     },
     onBlur: (event: FocusEvent<HTMLInputElement>) => {
+      if (inputs.calendarOpened.current) {
+        return;
+      }
       if (inputs.canceled.current || inputs.ref.current!.value === inputs.valueBefore.current) {
         return;
       }
