@@ -33,16 +33,14 @@ export const useInputs = (
     flatPickerRef.current.destroy();
     flatPickerRef.current = null;
   }
-  if (!ref.current) {
-    setTimeout(() => {
-      ref.current!.value = value.toString();
-      resize();
-    })
-  }
   const resize = () => setState(s => ({
     ...s,
     size: Math.max(1, ref.current!.value.length),
   }));
+  if (ref.current && ref.current.value !== value.toString()) {
+    ref.current.value = value.toString();
+    resize();
+  }
   return {
     ref,
     state,
