@@ -14,24 +14,30 @@ import { KeyNode, Node, PopupOption, PopupOptions } from "./styles";
 export const Tree = (
   props: TreeProps
 ): JSX.Element => {
+  if (props.stateIdToPathMap.size === 0) {
+    return <></>;
+  }
   const recurse = ({ outerKey, val, childNodeRef }: RecurseArgs): JSX.Element => {
+    
     if (is.array(val)) {
       return (
         <>
-          {val.map((item, index) => (
-            <RenderedNode
-              key={JSON.stringify(item)}
-              {...props}
-              recurse={recurse}
-              keyConcat={`${outerKey}.${index}`}
-              index={index}
-              item={item}
-              isLast={index === val.length - 1}
-              isTopLevel={false}
-              isArrayElement={true}
-              ref={childNodeRef}
-            />
-          ))}
+          {val.map((item, index) => {
+            return (
+              <RenderedNode
+                key={props.stateIdToPathMap.get(`${outerKey}.${index}`)}
+                {...props}
+                recurse={recurse}
+                keyConcat={`${outerKey}.${index}`}
+                index={index}
+                item={item}
+                isLast={index === val.length - 1}
+                isTopLevel={false}
+                isArrayElement={true}
+                ref={childNodeRef}
+              />
+            );
+          })}
         </>
       );
     } else if (is.record(val)) {
@@ -41,7 +47,7 @@ export const Tree = (
             return (
               <RenderedNode
                 {...props}
-                key={key.toString()}
+                key={props.stateIdToPathMap.get(key === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`)}
                 recurse={recurse}
                 keyConcat={key === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`}
                 index={index}
@@ -167,6 +173,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
                   value={props.objectKey?.toString() || ''}
                   $unchanged={inputs.isUnchanged}
                   onChange={outputs.onKeyChange}
+                  onFocus={outputs.onFocusObjectKey}
                 />}
                 <Node
                   $type='colon'

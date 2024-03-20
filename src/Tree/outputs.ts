@@ -10,19 +10,24 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       inputs.setState(s => ({ ...s, showOptions: false }));
     },
     onClickDelete: () => {
+      const parentKey = props.keyConcat.split('.').slice(0, -1).join('.');
+      [...props.stateIdToPathMap.keys()].filter(k => new RegExp(`^${parentKey}\\.[0-9]+$`).test(k)).forEach(k => props.stateIdToPathMap.set(k, Math.random().toString()));
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);
       inputs.setState(s => ({ ...s, showOptions: false }));
     },
     onClickAddToArray: () => {
       if (!is.array(props.item)) { throw new Error(); }
       const el = JSON.stringify(getSimplifiedObjectPayload(props.item[0]));
+      props.stateIdToPathMap.set(`${props.keyConcat}.${props.item.length}`, Math.random().toString());
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$push(${el})`]);
       inputs.setState(s => ({ ...s, showOptions: false }));
+      setTimeout(() => setTimeout(() => inputs.childNodeRef.current!.focusChildValue()));
     },
     onClickAddToObject: () => {
       inputs.setState(s => ({ ...s, addingNewObject: true, showOptions: false }));
+      props.stateIdToPathMap.set(`${props.keyConcat}.<key>`, Math.random().toString());
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setNew(${JSON.stringify({ '<key>': '<value>' })})`]);
-      // setTimeout(() => setTimeout(() => inputs.childNodeRef.current!.focusChildKey()));
+      setTimeout(() => setTimeout(() => inputs.childNodeRef.current!.focusChildKey()));
     },
     onClickEditKey: () => {
       inputs.setState(s => ({ ...s, editObjectKey: true, showOptions: false }));
@@ -55,16 +60,19 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       inputs.setState(s => ({ ...s, showOptions: false }));
     },
     onKeyChange: (keyDraft: string) => {
+      const parentKey = props.keyConcat.split('.').slice(0, -1).join('.');
+      props.stateIdToPathMap.set(`${parentKey}.${keyDraft}`, props.stateIdToPathMap.get(props.keyConcat)!);
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${keyDraft})`]);
-      // setTimeout(() => setTimeout(() => props.focusValueNode()));
-
-      inputs.valNodeRef.current!.focus();
-      inputs.valNodeRef.current!.select();
+    },
+    onFocusObjectKey: () => {
+      inputs.setState(s => ({ ...s, editObjectKey: true }));
     },
     onFocusValueNode: () => {
       // inputs.childNodeRef.current?.focusChildValue();
     },
     onClickDeleteArrayElement: () => {
+      const parentKey = props.keyConcat.split('.').slice(0, -1).join('.');
+      [...props.stateIdToPathMap.keys()].filter(k => new RegExp(`^${parentKey}\\.[0-9]+$`).test(k)).forEach(k => props.stateIdToPathMap.set(k, Math.random().toString()));
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);
     }
   };

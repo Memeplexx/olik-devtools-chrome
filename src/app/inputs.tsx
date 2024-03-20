@@ -1,7 +1,7 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { StateAction, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { is, isoDateRegexPattern } from "../shared/functions";
+import { getStateIdToPathMap, is, isoDateRegexPattern } from "../shared/functions";
 import { BasicStore } from '../shared/types';
 import { Tree } from "../tree";
 import { Item, ItemWrapper, Message, State } from "./constants";
@@ -244,6 +244,7 @@ const getTypeJsx = (arg: {
               onClickNodeKey,
               unchanged,
               hideUnchanged: false,
+              stateIdToPathMap: getStateIdToPathMap(arg.stateAfter),
             }),
             jsxPruned: Tree({
               actionType,
@@ -252,6 +253,7 @@ const getTypeJsx = (arg: {
               onClickNodeKey,
               unchanged,
               hideUnchanged: true,
+              stateIdToPathMap: getStateIdToPathMap(arg.stateAfter),
             }),
           } satisfies Item
         })
@@ -265,6 +267,7 @@ const getTypeJsx = (arg: {
     unchanged,
     onClickNodeKey,
     hideUnchanged: arg.hideUnchanged,
+    stateIdToPathMap: getStateIdToPathMap(arg.payload),
   });
 }
 

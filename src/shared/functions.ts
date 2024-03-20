@@ -118,3 +118,23 @@ export const decisionMap = function <K, V>(map: readonly (readonly [K, V])[]): V
 		...new Map(map).entries()
 	].find(([k]) => (typeof k === 'function' ? k() : k))![1];
 }
+
+export const getStateIdToPathMap = (state: unknown) => {
+  const map = new Map<string, string>();
+	map.set('', Math.random().toString());
+  const recurse = (val: unknown, outerKey: string) => {
+    if (is.array(val)) {
+      val.forEach((item, index) => {
+				map.set(`${outerKey}.${index}`, Math.random().toString());
+        recurse(item, `${outerKey}.${index}`);
+      });
+    } else if (is.record(val)) {
+      Object.keys(val).forEach(key => {
+				map.set(key === '' ? outerKey : `${outerKey}.${key}`, Math.random().toString());
+        recurse(val[key], key === '' ? outerKey : `${outerKey}.${key}`);
+      });
+    }
+  };
+  recurse(state, '');
+  return map;
+}

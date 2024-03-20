@@ -1,6 +1,6 @@
 import { StateAction, deserialize, readState, updateFunctions } from "olik";
 import { ForwardedRef, useState } from "react";
-import { useForwardedRef } from "../shared/functions";
+import { getStateIdToPathMap, is, useForwardedRef } from "../shared/functions";
 import { Tree } from "../tree";
 import { StateProps } from "./constants";
 
@@ -17,7 +17,11 @@ const useLocalState = (props: StateProps, ref: ForwardedRef<HTMLDivElement>) => 
   const [state, setState] = useState({
     containerRef: useForwardedRef<HTMLDivElement>(ref),
     contractedKeys: new Array<string>(),
+    stateIdToPathMap: new Map<string, string>(),
   });
+  if (props.state && state.stateIdToPathMap.size === 0) {
+    setState(s => ({ ...s, stateIdToPathMap: getStateIdToPathMap(props.state) }));
+  }
   return { ...props, ...state, setState };
 }
 
@@ -58,3 +62,4 @@ const doReadState = (type: string, state: unknown) => {
   stateActions.push({ name: '$state' });
   return readState({ state, stateActions, cursor: { index: 0 } });
 }
+

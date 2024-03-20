@@ -26,9 +26,10 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
       props.onChange!(event.target.value);
       props.onBlur?.(event);
     },
-    onFocus: () => {
+    onFocus: (e: FocusEvent<HTMLInputElement>) => {
       inputs.ref.current!.select();
       inputs.valueBefore.current = inputs.ref.current!.value;
+      props.onFocus && props.onFocus(e);
     },
   }
 }

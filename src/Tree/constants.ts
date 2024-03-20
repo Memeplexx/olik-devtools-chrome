@@ -10,6 +10,7 @@ export interface TreeProps {
   unchanged: string[],
   hideUnchanged?: boolean,
   store?: BasicStore,
+  stateIdToPathMap: Map<string, string>,
 }
 
 export type RenderNodeArgs

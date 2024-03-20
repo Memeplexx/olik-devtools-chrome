@@ -42,13 +42,13 @@ export const useInputs = (
     focusChildKey: () => {
       setState(s => ({ ...s, editObjectKey: true }));
       setTimeout(() => {
-        // keyNodeRef.current?.focus();
-        // keyNodeRef.current?.select();
+        keyNodeRef.current?.focus();
+        keyNodeRef.current?.select();
       })
     },
     focusChildValue: () => {
       setTimeout(() => {
-        // valNodeRef.current?.focus();
+        valNodeRef.current?.focus();
       })
     }
   }), []);
