@@ -10,7 +10,9 @@ export const useInputs = (
   const keyNodeRef = useRef<HTMLInputElement>(null);
   const valNodeRef = useRef<HTMLInputElement>(null);
   const childNodeRef = useRef<RenderedNodeHandle>(null);
-  const [state, setState] = useState({ showOptions: false, showArrayOptions: false, editObjectKey: false, addingNewObject: false });
+  const [state, setState] = useState({ showOptions: false, showArrayOptions: false, editObjectKey: false, addingNewObject: false, keyValue: props.objectKey, 
+    valueValue: props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString()
+  });
   const isPrimitive = !is.array(props.item) && !is.record(props.item);
   const hasObjectKey = props.objectKey !== undefined;
   const isUnchanged = props.unchanged.includes(props.keyConcat);

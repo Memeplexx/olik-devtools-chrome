@@ -10,6 +10,8 @@ export const CompactInput = forwardRef(function CompactInput(
   props: CompactInputProps,
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { onComplete, ...inputProps } = props;
   const inputs = useInputs(props, forwardedRef);
   const outputs = useOutputs(props, inputs);
   return (
@@ -19,11 +21,11 @@ export const CompactInput = forwardRef(function CompactInput(
         children='"'
       />
       <Input
-        {...inputs.props}
+        {...inputProps}
         ref={inputs.ref}
         onKeyDown={outputs.onKeyDown}
         onKeyUp={outputs.onKeyUp}
-        onChange={inputs.resize}
+        onChange={outputs.onChange}
         size={inputs.state.size}
         onBlur={outputs.onBlur}
         onFocus={outputs.onFocus}

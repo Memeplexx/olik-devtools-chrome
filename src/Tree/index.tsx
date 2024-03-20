@@ -104,9 +104,10 @@ export const RenderedNode = forwardRef(function RenderedNode(
                 ref={inputs.valNodeRef}
                 onClick={outputs.handleValueClick}
                 data-key={props.keyConcat}
-                value={props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString()}
-                onChange={function onChangeInputNode(e) {
-                  silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${e.toString()})`]);
+                value={inputs.valueValue}
+                onChange={outputs.onValueChange}
+                onComplete={function onBlurInputNode(e) {
+                  silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${e})`]);
                 }}
               />
               <Popup
@@ -171,10 +172,11 @@ export const RenderedNode = forwardRef(function RenderedNode(
                   data-key={props.keyConcat}
                   ref={inputs.keyNodeRef}
                   readOnly={!props.store || !inputs.editObjectKey}
-                  value={props.objectKey?.toString() || ''}
+                  value={inputs.keyValue}
                   $unchanged={inputs.isUnchanged}
-                  onChange={outputs.onKeyChange}
+                  onComplete={outputs.onKeyComplete}
                   onFocus={outputs.onFocusObjectKey}
+                  onChange={outputs.onKeyChange}
                 />}
                 <Node
                   $type='colon'

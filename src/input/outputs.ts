@@ -1,4 +1,4 @@
-import { FocusEvent, KeyboardEvent } from "react";
+import { ChangeEvent, FocusEvent, KeyboardEvent } from "react";
 import { useInputs } from "./inputs";
 import { CompactInputProps } from "./constants";
 
@@ -14,6 +14,10 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
         inputs.ref.current!.value = inputs.valueBefore.current;
       }
     },
+    onChange: (event: ChangeEvent<HTMLInputElement>) => {
+      inputs.resize();
+      props.onChange?.(event);
+    },
     onKeyDown: (event: KeyboardEvent) => {
       if (inputs.isDate) {
         event.preventDefault();
@@ -23,8 +27,8 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
       if (inputs.canceled.current || inputs.ref.current!.value === inputs.valueBefore.current) {
         return;
       }
-      props.onChange!(event.target.value);
       props.onBlur?.(event);
+      props.onComplete(inputs.ref.current!.value);
     },
     onFocus: (e: FocusEvent<HTMLInputElement>) => {
       inputs.ref.current!.select();

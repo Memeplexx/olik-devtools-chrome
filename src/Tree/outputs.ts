@@ -1,4 +1,4 @@
-import { MouseEvent } from "react";
+import { ChangeEvent, MouseEvent } from "react";
 import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
 import { RenderNodeArgs } from "./constants";
 import { useInputs } from "./inputs";
@@ -61,16 +61,19 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onHideOptions: () => {
       inputs.setState(s => ({ ...s, showOptions: false }));
     },
-    onKeyChange: (keyDraft: string) => {
+    onKeyComplete: (keyDraft: string) => {
       const parentKey = props.keyConcat.split('.').slice(0, -1).join('.');
       props.stateIdToPathMap.set(`${parentKey}.${keyDraft}`, props.stateIdToPathMap.get(props.keyConcat)!);
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${keyDraft})`]);
     },
+    onKeyChange: (event: ChangeEvent<HTMLInputElement>) => {
+      inputs.setState(s => ({ ...s, keyValue: event.target.value }));
+    },
+    onValueChange: (event: ChangeEvent<HTMLInputElement>) => {
+      inputs.setState(s => ({ ...s, valueValue: event.target.value }));
+    },
     onFocusObjectKey: () => {
       inputs.setState(s => ({ ...s, editObjectKey: true }));
-    },
-    onFocusValueNode: () => {
-      // inputs.childNodeRef.current?.focusChildValue();
     },
     onClickDeleteArrayElement: () => {
       const parentKey = props.keyConcat.split('.').slice(0, -1).join('.');

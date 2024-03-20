@@ -5,14 +5,13 @@ import flatpickr from "flatpickr";
 import { CompactInputProps } from "./constants";
 
 export const useInputs = (
-  { value, onChange, ...props }: CompactInputProps,
+  props: CompactInputProps,
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) => {
   const ref = useForwardedRef(forwardedRef);
   const valueBefore = useRef('');
   const isDate = isoDateRegexPattern.test(ref.current?.value ?? '');
   const flatPickerRef = useRef<Instance | null>(null);
-  const changed = useRef(false);
   const canceled = useRef(false);
   const [state, setState] = useState({
     size: 0,
@@ -20,13 +19,11 @@ export const useInputs = (
   if (isDate && !flatPickerRef.current) {
     flatPickerRef.current = flatpickr(ref.current!, {
       enableTime: true,
-      defaultDate: value,
+      defaultDate: props.value as string,
       formatDate: d => d.toISOString(),
-      onChange: () => changed.current = true,
-      onOpen: () => changed.current = false,
       onClose: function onChangeFlatpickr(s) {
-        if (!changed.current) { return; }
-        onChange?.(s[0].toISOString());
+        if (valueBefore.current === ref.current!.value) { return; }
+        props.onComplete(s[0].toISOString());
       },
     })
   } else if (flatPickerRef.current && !isDate) {
@@ -37,9 +34,8 @@ export const useInputs = (
     ...s,
     size: Math.max(1, ref.current!.value.length),
   }));
-  if (ref.current?.value !== value.toString()) {
+  if (ref.current?.value !== props.value) {
     setTimeout(() => {
-      ref.current!.value = value.toString();
       resize();
     });
   }
