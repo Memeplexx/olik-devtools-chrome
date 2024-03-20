@@ -18,7 +18,6 @@ export const Tree = (
     return <></>;
   }
   const recurse = ({ outerKey, val, childNodeRef }: RecurseArgs): JSX.Element => {
-    
     if (is.array(val)) {
       return (
         <>
@@ -203,7 +202,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
                       onClick: outputs.onClickEditKey,
                       icon: FaEdit,
                       text: 'edit object key',
-                      showIf: /*is.record(props.item) &&*/ !props.isTopLevel
+                      showIf: !props.isTopLevel
                     },
                     {
                       onClick: outputs.onClickCopy,
