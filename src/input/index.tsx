@@ -11,13 +11,13 @@ export const CompactInput = forwardRef(function CompactInput(
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { onComplete, ...inputProps } = props;
+  const { onUpdate, ...inputProps } = props;
   const inputs = useInputs(props, forwardedRef);
   const outputs = useOutputs(props, inputs);
   return (
     <>
       <Quote 
-        showIf={inputs.type.current === 'text' && !!props.showQuotes}
+        showIf={inputs.showQuotes.current}
         children='"'
       />
       <Input
@@ -29,10 +29,10 @@ export const CompactInput = forwardRef(function CompactInput(
         size={Math.max(1, (props.value as string).length)}
         onBlur={outputs.onBlur}
         onFocus={outputs.onFocus}
-        $initialized={!!inputs.ref.current}
+        $initialized={inputs.init}
       />
       <Quote 
-        showIf={inputs.type.current === 'text' && !!props.showQuotes}
+        showIf={inputs.showQuotes.current}
         children='"'
       />
     </>

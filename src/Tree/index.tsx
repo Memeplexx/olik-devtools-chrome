@@ -107,7 +107,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
                 value={inputs.valueValue}
                 onChange={outputs.onValueChange}
                 showQuotes={true}
-                onComplete={function onBlurInputNode(e) {
+                onUpdate={function onUpdate(e) {
                   silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${e})`]);
                 }}
               />
@@ -175,7 +175,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
                   readOnly={!props.store || !inputs.editObjectKey}
                   value={inputs.keyValue}
                   $unchanged={inputs.isUnchanged}
-                  onComplete={outputs.onKeyComplete}
+                  onUpdate={outputs.onKeyUpdate}
                   onFocus={outputs.onFocusObjectKey}
                   onChange={outputs.onKeyChange}
                 />}

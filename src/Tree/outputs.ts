@@ -61,9 +61,10 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onHideOptions: () => {
       inputs.setState(s => ({ ...s, showOptions: false }));
     },
-    onKeyComplete: (keyDraft: string) => {
+    onKeyUpdate: (keyDraft: string) => {
       const parentKey = props.keyConcat.split('.').slice(0, -1).join('.');
       props.stateIdToPathMap.set(`${parentKey}.${keyDraft}`, props.stateIdToPathMap.get(props.keyConcat)!);
+      // console.log(props.stateIdToPathMap);
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${keyDraft})`]);
     },
     onKeyChange: (event: ChangeEvent<HTMLInputElement>) => {

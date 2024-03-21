@@ -11,7 +11,7 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
         inputs.canceled.current = true;
         inputs.ref.current!.blur();
         inputs.canceled.current = false;
-        inputs.ref.current!.value = inputs.valueBefore.current;
+        manuallyFireChangeEvent(inputs);
       }
     },
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
@@ -30,7 +30,7 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
         return;
       }
       props.onBlur?.(event);
-      props.onComplete(inputs.ref.current!.value);
+      props.onUpdate(inputs.ref.current!.value);
     },
     onFocus: (e: FocusEvent<HTMLInputElement>) => {
       inputs.ref.current!.select();
@@ -38,4 +38,16 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
       props.onFocus && props.onFocus(e);
     },
   }
+}
+
+/**
+ * We need this because the `onChange` event is not fired when the value is changed programmatically.
+ * https://stackoverflow.com/a/46012210/1087131
+ * @param inputs 
+ */
+const manuallyFireChangeEvent = (inputs: ReturnType<typeof useInputs>) => {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
+  nativeInputValueSetter.call(inputs.ref.current!, inputs.valueBefore.current);
+  inputs.ref.current!.dispatchEvent(new Event('input', { bubbles: true }));
 }

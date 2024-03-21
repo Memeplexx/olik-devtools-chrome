@@ -1,6 +1,6 @@
 import { Instance } from "flatpickr/dist/types/instance";
 import { isoDateRegexPattern, useForwardedRef } from "../shared/functions";
-import { ForwardedRef, useRef } from "react";
+import { ForwardedRef, useRef, useState } from "react";
 import flatpickr from "flatpickr";
 import { CompactInputProps } from "./constants";
 
@@ -10,7 +10,8 @@ export const useInputs = (
 ) => {
   const ref = useForwardedRef(forwardedRef);
   const valueBefore = useRef('');
-  const type = useRef<'text' | 'number' | 'date' | 'null'>('text');
+  const type = useRef<'text' | 'number' | 'date' | 'null' | 'boolean'>('text');
+  const showQuotes = useRef(false);
   const flatPickerRef = useRef<Instance | null>(null);
   const canceled = useRef(false);
   const calendarOpened = useRef(false);
@@ -20,11 +21,14 @@ export const useInputs = (
       type.current = 'date';
     } else if (!isNaN(Number(props.value))) {
       type.current = 'number';
+    } else if (props.value === 'true' || props.value === 'false') {
+      type.current = 'boolean';
     } else if ('null' === props.value) {
       type.current = 'null';
     } else {
       type.current = 'text';
     }
+    showQuotes.current = type.current === 'text' && !!props.showQuotes;
   }
   if (type.current === 'date' && !flatPickerRef.current && ref.current) {
     flatPickerRef.current = flatpickr(ref.current, {
@@ -41,12 +45,16 @@ export const useInputs = (
       onClose: function onChangeFlatpickr(s) {
         if (!dateChanged.current) { return; }
         setTimeout(() => calendarOpened.current = false);
-        props.onComplete(s[0].toISOString());
+        props.onUpdate(s[0].toISOString());
       },
     })
   } else if (flatPickerRef.current && type.current !== 'date') {
     flatPickerRef.current.destroy();
     flatPickerRef.current = null;
+  }
+  const [init, setInit] = useState(false);
+  if (!ref.current) {
+    setTimeout(() => setInit(true));
   }
   return {
     ref,
@@ -55,5 +63,7 @@ export const useInputs = (
     type,
     valueBefore,
     props,
+    showQuotes,
+    init,
   }
 }
