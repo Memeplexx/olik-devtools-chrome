@@ -20,16 +20,19 @@ export const useLocalState = () => {
     storeStateInitial: null as Record<string, unknown> | null,
     storeState: null as Record<string, unknown> | null,
     storeStateVersion: null as Record<string, unknown> | null,
-    storeRef: useRef<BasicStore | null>(null),
-    treeRef: useRef<HTMLDivElement | null>(null),
-    idRefOuter: useRef(0),
-    idRefInner: useRef(0),
     selectedId: null as number | null,
     items: new Array<ItemWrapper>(),
     hideUnchanged: false,
     query: '',
   });
-  return { ...state, setState };
+  return {
+    ...state,
+    setState,
+    storeRef: useRef<BasicStore | null>(null),
+    treeRef: useRef<HTMLDivElement | null>(null),
+    idRefOuter: useRef(0),
+    idRefInner: useRef(0),
+  };
 }
 
 const instantiateStore = (arg: State) => {
@@ -59,7 +62,7 @@ const useMessageHandler = (props: State) => {
   const processEvent = useCallback((incoming: Message) => setState(s => {
     if (!incoming.action) { return s; }
     if (incoming.action.type === '$load()') {
-      s.storeRef.current = null;
+      props.storeRef.current = null;
       return { ...s, storeFullyInitialized: false, items: [] };
     }
     const itemsFlattened = s.items.flatMap(ss => ss.items);
@@ -71,7 +74,7 @@ const useMessageHandler = (props: State) => {
       setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
       libState.disableDevtoolsDispatch = false;
     }
-    const fullStateAfter = s.storeRef.current!.$state;
+    const fullStateAfter = props.storeRef.current!.$state;
     const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
     const doReadState = (state: Record<string, unknown>) => {
       let stateActions = new Array<StateAction>();
@@ -97,15 +100,15 @@ const useMessageHandler = (props: State) => {
     const currentEvent = getCleanStackTrace(incoming.trace);
     const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
     const getNewItem = () => ({
-      id: ++s.idRefInner.current,
+      id: ++props.idRefInner.current,
       jsx: getTypeJsx({
         type: incoming.action.type,
         payload,
         stateBefore,
         stateAfter,
         setState,
-        idOuter: s.idRefOuter.current,
-        idInner: s.idRefInner.current,
+        idOuter: props.idRefOuter.current,
+        idInner: props.idRefInner.current,
         hideUnchanged: false,
       }),
       jsxPruned: getTypeJsx({
@@ -114,8 +117,8 @@ const useMessageHandler = (props: State) => {
         stateBefore,
         stateAfter,
         setState,
-        idOuter: s.idRefOuter.current,
-        idInner: s.idRefInner.current,
+        idOuter: props.idRefOuter.current,
+        idInner: props.idRefInner.current,
         hideUnchanged: true,
       }),
       state: fullStateAfter,
@@ -138,14 +141,14 @@ const useMessageHandler = (props: State) => {
         ] : [
           ...s.items,
           {
-            id: ++s.idRefOuter.current,
+            id: ++props.idRefOuter.current,
             event: currentEvent,
             items: [getNewItem()],
             visible: true
           }
         ],
     };
-  }), [setState]);
+  }), [props.idRefInner, props.idRefOuter, props.storeRef, setState]);
 
   useEffect(() => {
     if (!props.storeFullyInitialized) { return; }
