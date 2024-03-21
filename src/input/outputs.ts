@@ -23,12 +23,9 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
       }
     },
     onBlur: (event: FocusEvent<HTMLInputElement>) => {
-      if (inputs.calendarOpened.current) {
-        return;
-      }
-      if (inputs.canceled.current || inputs.ref.current!.value === inputs.valueBefore.current) {
-        return;
-      }
+      if (inputs.calendarOpened.current) { return; }
+      if (inputs.canceled.current) { return; }
+      if (inputs.ref.current!.value === inputs.valueBefore.current) { return; }
       props.onBlur?.(event);
       props.onUpdate(inputs.ref.current!.value);
     },

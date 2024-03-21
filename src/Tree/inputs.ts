@@ -1,89 +1,78 @@
-import { ForwardedRef, useImperativeHandle, useRef, useState } from "react";
-import { decisionMap, is, useForwardedRef } from "../shared/functions";
-import { NodeType, RenderNodeArgs, RenderedNodeHandle } from "./constants";
+import { useMemo, useRef, useState } from "react";
+import { decisionMap, is } from "../shared/functions";
+import { NodeType, RenderNodeArgs } from "./constants";
 
 export const useInputs = (
   props: RenderNodeArgs,
-  forwardedRef: ForwardedRef<RenderedNodeHandle>
 ) => {
-  const ref = useForwardedRef(forwardedRef);
-  const keyNodeRef = useRef<HTMLInputElement>(null);
-  const valNodeRef = useRef<HTMLInputElement>(null);
-  const childNodeRef = useRef<RenderedNodeHandle>(null);
-  const prevStateRef = useRef(props.state);
-  const valueValue = props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString();
+  const localState = useLocalState(props);
+  const derivedState = useDerivedState(props);
+  useValueUpdater(localState, props);
+  return {
+    ...localState,
+    ...derivedState,
+  };
+}
+
+export const useLocalState = (
+  props: RenderNodeArgs,
+) => {
   const [state, setState] = useState({
     showOptions: false,
     showArrayOptions: false,
-    editObjectKey: false,
-    addingNewObject: false,
-    keyValue: props.objectKey, 
-    valueValue
+    isEditingObjectKey: false,
+    keyValue: props.objectKey,
+    valueValue: props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString(),
+    keyNodeRef: useRef<HTMLInputElement>(null),
   });
+  return { ...state, setState };
+}
+
+const useDerivedState = (
+  props: RenderNodeArgs,
+) => {
+  return {
+    isPrimitive: !is.array(props.item) && !is.record(props.item),
+    hasObjectKey: props.objectKey !== undefined,
+    isUnchanged: props.unchanged.includes(props.keyConcat),
+    isContracted: props.contractedKeys.includes(props.keyConcat),
+    isEmpty: is.array(props.item) ? !props.item.length : is.record(props.item) ? !Object.keys(props.item).length : false,
+    isHidden: props.unchanged.includes(props.keyConcat) && props.hideUnchanged,
+    showActionType: props.isTopLevel && !!props.actionType,
+    nodeType: useMemo(() => decisionMap([
+      [() => is.array(props.item), 'array'],
+      [() => is.record(props.item), 'object'],
+      [() => is.number(props.item), 'number'],
+      [() => is.string(props.item), 'string'],
+      [() => is.boolean(props.item), 'boolean'],
+      [() => is.date(props.item), 'date'],
+      [() => is.null(props.item), 'null'],
+      [() => is.undefined(props.item), 'undefined'],
+    ]) as NodeType, [props.item]),
+    nodeEl: useMemo(() => decisionMap([
+      [() => is.null(props.item), () => 'null'],
+      [() => is.undefined(props.item), () => ''],
+      [() => is.boolean(props.item), () => (props.item as boolean).toString()],
+      [() => is.number(props.item), () => (props.item as number).toString()],
+      [() => is.string(props.item), () => `"${(props.item as string).toString()}"`],
+      [() => is.date(props.item), () => (props.item as Date).toISOString()],
+      [() => true, () => props.item],
+    ])() as JSX.Element, [props.item]),
+  }
+}
+
+const useValueUpdater = (
+  localState: ReturnType<typeof useLocalState>,
+  props: RenderNodeArgs,
+) => {
+  const prevStateRef = useRef(props.state);
+  const prevObjectKeyRef = useRef(props.objectKey);
+  if (prevObjectKeyRef.current !== props.objectKey) {
+    localState.setState(s => ({ ...s, keyValue: props.objectKey }));
+    prevObjectKeyRef.current = props.objectKey;
+  }
   if (prevStateRef.current !== props.state) {
-    if (state.keyValue !== props.objectKey) {
-      setState(s => ({ ...s, keyValue: props.objectKey }));
-    }
-    if (state.valueValue !== valueValue) {
-      setState(s => ({ ...s, valueValue }));
-    }
+    localState.setState(s => ({ ...s, valueValue: props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString() }));
     prevStateRef.current = props.state;
   }
-  const isPrimitive = !is.array(props.item) && !is.record(props.item);
-  const hasObjectKey = props.objectKey !== undefined;
-  const isUnchanged = props.unchanged.includes(props.keyConcat);
-  const isContracted = props.contractedKeys.includes(props.keyConcat);
-  const isEmpty = is.array(props.item) ? !props.item.length : is.record(props.item) ? !Object.keys(props.item).length : false;
-  const isHidden = isUnchanged && props.hideUnchanged;
-  const showActionType = props.isTopLevel && !!props.actionType;
-  const nodeType = decisionMap([
-    [() => is.array(props.item), 'array'],
-    [() => is.record(props.item), 'object'],
-    [() => is.number(props.item), 'number'],
-    [() => is.string(props.item), 'string'],
-    [() => is.boolean(props.item), 'boolean'],
-    [() => is.date(props.item), 'date'],
-    [() => is.null(props.item), 'null'],
-    [() => is.undefined(props.item), 'undefined'],
-  ]) as NodeType;
-  const nodeEl = decisionMap([
-    [() => is.null(props.item), () => 'null'],
-    [() => is.undefined(props.item), () => ''],
-    [() => is.boolean(props.item), () => (props.item as boolean).toString()],
-    [() => is.number(props.item), () => (props.item as number).toString()],
-    [() => is.string(props.item), () => `"${(props.item as string).toString()}"`],
-    [() => is.date(props.item), () => (props.item as Date).toISOString()],
-    [() => true, () => props.item],
-  ])() as JSX.Element;
-  useImperativeHandle(forwardedRef, () => ({
-    focusChildKey: () => {
-      setState(s => ({ ...s, editObjectKey: true }));
-      setTimeout(() => {
-        keyNodeRef.current?.focus();
-        keyNodeRef.current?.select();
-      })
-    },
-    focusChildValue: () => {
-      setTimeout(() => {
-        valNodeRef.current?.focus();
-      })
-    }
-  }), []);
-  return {
-    keyNodeRef,
-    valNodeRef,
-    childNodeRef,
-    ref,
-    isPrimitive,
-    hasObjectKey,
-    isContracted,
-    isEmpty,
-    isHidden,
-    isUnchanged,
-    showActionType,
-    nodeType,
-    nodeEl,
-    ...state,
-    setState,
-  };
 }

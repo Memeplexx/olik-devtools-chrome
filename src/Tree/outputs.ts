@@ -25,7 +25,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       setTimeout(() => setTimeout(() => setTimeout(() => document.querySelector<HTMLInputElement>(k)?.focus())));
     },
     onClickAddToObject: () => {
-      inputs.setState(s => ({ ...s, addingNewObject: true, showOptions: false }));
+      inputs.setState(s => ({ ...s, showOptions: false }));
       props.stateIdToPathMap.set(`${props.keyConcat}.<key>`, Math.random().toString());
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setNew(${JSON.stringify({ '<key>': '<value>' })})`]);
       const k = `[data-key="${props.keyConcat}.<key>"]`;
@@ -74,7 +74,10 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       inputs.setState(s => ({ ...s, valueValue: event.target.value }));
     },
     onFocusObjectKey: () => {
-      inputs.setState(s => ({ ...s, editObjectKey: true }));
+      inputs.setState(s => ({ ...s, isEditingObjectKey: true }));
+    },
+    onBlurObjectKey: () => {
+      inputs.setState(s => ({ ...s, isEditingObjectKey: false }));
     },
     onClickDeleteArrayElement: () => {
       const parentKey = props.keyConcat.split('.').slice(0, -1).join('.');

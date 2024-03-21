@@ -9,7 +9,7 @@ export const useInputs = (
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) => {
   const localState = useLocalState(forwardedRef);
-  useUpdateTypeOnValueChange(props, localState);
+  useValueChangeListener(props, localState);
   useDatePicker(props, localState);
   useShowOnInit(localState);
   return localState;
@@ -39,7 +39,7 @@ const useLocalState = (
   return { ...state, setState };
 }
 
-const useUpdateTypeOnValueChange = (
+const useValueChangeListener = (
   props: CompactInputProps,
   localState: ReturnType<typeof useLocalState>,
 ) => {

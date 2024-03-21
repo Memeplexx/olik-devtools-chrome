@@ -1,11 +1,10 @@
-import { ForwardedRef, forwardRef } from "react";
 import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { IconType } from "react-icons/lib";
 import { Frag } from "../html/frag";
 import { CompactInput } from "../input";
 import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
-import { RecurseArgs, RenderNodeArgs, RenderedNodeHandle, TreeProps } from "./constants";
+import { RecurseArgs, RenderNodeArgs, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
 import { KeyNode, Node, PopupOption, PopupOptions } from "./styles";
@@ -17,7 +16,7 @@ export const Tree = (
   if (props.stateIdToPathMap.size === 0) {
     return <></>;
   }
-  const recurse = ({ outerKey, val, childNodeRef }: RecurseArgs): JSX.Element => {
+  const recurse = ({ outerKey, val }: RecurseArgs): JSX.Element => {
     if (is.array(val)) {
       return (
         <>
@@ -33,7 +32,6 @@ export const Tree = (
                 isLast={index === val.length - 1}
                 isTopLevel={false}
                 isArrayElement={true}
-                ref={childNodeRef}
               />
             );
           })}
@@ -42,7 +40,7 @@ export const Tree = (
     } else if (is.record(val)) {
       return (
         <>
-          {Object.keys(val)/*.sort((a, b) => a.localeCompare(b))*/.map((key, index, arr) => {
+          {Object.keys(val).map((key, index, arr) => {
             return (
               <RenderedNode
                 {...props}
@@ -54,7 +52,6 @@ export const Tree = (
                 isLast={index === arr.length - 1}
                 isTopLevel={key === ''}
                 objectKey={key}
-                ref={childNodeRef}
               />
             )
           })}
@@ -70,21 +67,19 @@ export const Tree = (
           item={val}
           isLast={true}
           isTopLevel={true}
-          ref={childNodeRef}
         />
       );
     } else {
       throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
   };
-  return recurse({val: is.recordOrArray(props.state) ? { '': props.state } : props.state, outerKey: '', childNodeRef: { current: null }});
+  return recurse({val: is.recordOrArray(props.state) ? { '': props.state } : props.state, outerKey: ''});
 }
 
-export const RenderedNode = forwardRef(function RenderedNode(
+export const RenderedNode = function RenderedNode(
   props: RenderNodeArgs,
-  forwardedRef: ForwardedRef<RenderedNodeHandle>
 ) {
-  const inputs = useInputs(props, forwardedRef);
+  const inputs = useInputs(props);
   const outputs = useOutputs(props, inputs);
   const content = (
     <>
@@ -98,10 +93,9 @@ export const RenderedNode = forwardRef(function RenderedNode(
         onMouseOver={outputs.onMouseOverValueNode}
         onMouseOut={outputs.onMouseOutValueNode}
         children={
-          is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat, childNodeRef: inputs.childNodeRef }) : !props.store ? inputs.nodeEl : (
+          is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.store ? inputs.nodeEl : (
             <>
               <CompactInput
-                ref={inputs.valNodeRef}
                 onClick={outputs.handleValueClick}
                 data-key={props.keyConcat}
                 value={inputs.valueValue}
@@ -172,11 +166,12 @@ export const RenderedNode = forwardRef(function RenderedNode(
                 {inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden && <KeyNode
                   data-key={props.keyConcat}
                   ref={inputs.keyNodeRef}
-                  readOnly={!props.store || !inputs.editObjectKey}
+                  readOnly={!props.store || !inputs.isEditingObjectKey}
                   value={inputs.keyValue}
                   $unchanged={inputs.isUnchanged}
                   onUpdate={outputs.onKeyUpdate}
                   onFocus={outputs.onFocusObjectKey}
+                  onBlur={outputs.onBlurObjectKey}
                   onChange={outputs.onKeyChange}
                 />}
                 <Node
@@ -246,7 +241,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
       }
     />
   )
-});
+}
 
 const Popup = (props: { children: { onClick: () => void, icon: IconType, text: string, showIf?: boolean }[], showIf?: boolean }) => {
   return (

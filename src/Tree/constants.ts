@@ -1,4 +1,3 @@
-import { RefObject } from "react";
 import { BasicStore } from "../shared/types";
 
 export interface TreeProps {
@@ -29,7 +28,6 @@ export type RenderNodeArgs
 export type RecurseArgs = {
   val: unknown,
   outerKey: string,
-  childNodeRef: RefObject<RenderedNodeHandle>,
 }
 
 export type NodeType =
@@ -47,7 +45,3 @@ export type NodeType =
   | 'parenthesis'
   | 'key';
 
-export interface RenderedNodeHandle {
-  focusChildKey: () => unknown;
-  focusChildValue: () => unknown;
-}
