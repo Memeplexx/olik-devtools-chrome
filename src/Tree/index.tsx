@@ -41,7 +41,7 @@ export const Tree = (
             return (
               <RenderedNode
                 {...props}
-                key={key}
+                key={index.toString()}
                 recurse={recurse}
                 keyConcat={key === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`}
                 index={index}
