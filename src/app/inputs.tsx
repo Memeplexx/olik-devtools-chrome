@@ -7,13 +7,9 @@ import { Tree } from "../tree";
 import { Item, ItemWrapper, Message, State } from "./constants";
 
 export const useInputs = () => {
-
   const localState = useLocalState();
-
   instantiateStore(localState);
-
   useMessageHandler(localState);
-
   return localState;
 }
 
