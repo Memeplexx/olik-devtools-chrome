@@ -5,7 +5,7 @@ import { NodeType, RenderNodeArgs } from "./constants";
 export const useInputs = (
   props: RenderNodeArgs,
 ) => {
-  const localState = useLocalState(props);
+  const localState = useLocalState();
   const derivedState = useDerivedState(props);
   useValueUpdater(localState, props);
   return {
@@ -14,18 +14,19 @@ export const useInputs = (
   };
 }
 
-export const useLocalState = (
-  props: RenderNodeArgs,
-) => {
+export const useLocalState = () => {
   const [state, setState] = useState({
     showOptions: false,
     showArrayOptions: false,
     isEditingObjectKey: false,
-    keyValue: props.objectKey,
+    keyValue: '',
     valueValue: '',
-    keyNodeRef: useRef<HTMLInputElement>(null),
   });
-  return { ...state, setState };
+  return {
+    ...state,
+    setState,
+    keyNodeRef: useRef<HTMLInputElement>(null),
+  };
 }
 
 const useDerivedState = (
@@ -34,11 +35,19 @@ const useDerivedState = (
   return {
     isPrimitive: !is.array(props.item) && !is.record(props.item),
     hasObjectKey: props.objectKey !== undefined,
-    isUnchanged: props.unchanged.includes(props.keyConcat),
-    isContracted: props.contractedKeys.includes(props.keyConcat),
-    isEmpty: is.array(props.item) ? !props.item.length : is.record(props.item) ? !Object.keys(props.item).length : false,
-    isHidden: props.unchanged.includes(props.keyConcat) && props.hideUnchanged,
     showActionType: props.isTopLevel && !!props.actionType,
+    isUnchanged: useMemo(() => {
+      return props.unchanged.includes(props.keyConcat);
+    }, [props.keyConcat, props.unchanged]),
+    isContracted: useMemo(() => {
+      return props.contractedKeys.includes(props.keyConcat);
+    }, [props.contractedKeys, props.keyConcat]),
+    isHidden: useMemo(() => {
+      return props.unchanged.includes(props.keyConcat) && props.hideUnchanged;
+    }, [props.hideUnchanged, props.keyConcat, props.unchanged]),
+    isEmpty: useMemo(() => {
+      return is.array(props.item) ? !props.item.length : is.record(props.item) ? !Object.keys(props.item).length : false;
+    }, [props.item]),
     nodeType: useMemo(() => decisionMap([
       [() => is.array(props.item), 'array'],
       [() => is.record(props.item), 'object'],
@@ -70,6 +79,6 @@ const useValueUpdater = (
     setState(s => ({ ...s, valueValue: props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString() }));
   }, [props.item, setState]);
   useMemo(() => {
-    setState(s => ({ ...s, keyValue: props.objectKey }));
+    setState(s => ({ ...s, keyValue: props.objectKey! }));
   }, [props.objectKey, setState]);
 }

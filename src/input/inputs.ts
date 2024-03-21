@@ -27,16 +27,19 @@ const useLocalState = (
 ) => {
   const [state, setState] = useState({
     show: false,
+    showQuotes: false,
+  });
+  return {
+    ...state,
+    setState,
     ref: useForwardedRef(forwardedRef),
     valueBefore: useRef(''),
     type: useRef<'text' | 'number' | 'date' | 'null' | 'boolean'>('text'),
-    showQuotes: useRef(false),
     flatPickerRef: useRef<Instance | null>(null),
     canceled: useRef(false),
     calendarOpened: useRef(false),
     dateChanged: useRef(false),
-  });
-  return { ...state, setState };
+  };
 }
 
 const useValueChangeListener = (
@@ -46,7 +49,7 @@ const useValueChangeListener = (
   if (localState.ref.current?.value === props.value) { return; }
   if (isoDateRegexPattern.test((props.value as string) ?? '')) {
     localState.type.current = 'date';
-  } else if (!isNaN(Number(props.value))) {
+  } else if (props.value !== '' && !isNaN(Number(props.value))) {
     localState.type.current = 'number';
   } else if (props.value === 'true' || props.value === 'false') {
     localState.type.current = 'boolean';
@@ -55,7 +58,10 @@ const useValueChangeListener = (
   } else {
     localState.type.current = 'text';
   }
-  localState.showQuotes.current = localState.type.current === 'text' && !!props.showQuotes;
+  const showQuotes = localState.type.current === 'text' && !!props.showQuotes;
+  if (localState.showQuotes !== showQuotes) {
+    localState.setState({ ...localState, showQuotes });
+  }
 }
 
 const useDatePicker = (

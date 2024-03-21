@@ -17,7 +17,7 @@ export const CompactInput = forwardRef(function CompactInput(
   return (
     <>
       <Quote 
-        showIf={inputs.showQuotes.current}
+        showIf={inputs.showQuotes}
         children='"'
       />
       <Input
@@ -32,7 +32,7 @@ export const CompactInput = forwardRef(function CompactInput(
         $initialized={inputs.show}
       />
       <Quote 
-        showIf={inputs.showQuotes.current}
+        showIf={inputs.showQuotes}
         children='"'
       />
     </>
