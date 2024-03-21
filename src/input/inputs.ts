@@ -8,62 +8,80 @@ export const useInputs = (
   props: CompactInputProps,
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) => {
-  const ref = useForwardedRef(forwardedRef);
-  const valueBefore = useRef('');
-  const type = useRef<'text' | 'number' | 'date' | 'null' | 'boolean'>('text');
-  const showQuotes = useRef(false);
-  const flatPickerRef = useRef<Instance | null>(null);
-  const canceled = useRef(false);
-  const calendarOpened = useRef(false);
-  const dateChanged = useRef(false);
-  if (ref.current?.value !== props.value) {
-    if (isoDateRegexPattern.test((props.value as string) ?? '')) {
-      type.current = 'date';
-    } else if (!isNaN(Number(props.value))) {
-      type.current = 'number';
-    } else if (props.value === 'true' || props.value === 'false') {
-      type.current = 'boolean';
-    } else if ('null' === props.value) {
-      type.current = 'null';
-    } else {
-      type.current = 'text';
-    }
-    showQuotes.current = type.current === 'text' && !!props.showQuotes;
+  const localState = useLocalState(forwardedRef);
+  useUpdateTypeOnValueChange(props, localState);
+  useDatePicker(props, localState);
+  useShowOnInit(localState);
+  return localState;
+}
+
+const useShowOnInit = (
+  localState: ReturnType<typeof useLocalState>,
+) => {
+  if (localState.ref.current) { return; }
+  setTimeout(() => localState.setState(s => ({ ...s, show: true })));
+}
+
+const useLocalState = (
+  forwardedRef: ForwardedRef<HTMLInputElement>
+) => {
+  const [state, setState] = useState({
+    show: false,
+    ref: useForwardedRef(forwardedRef),
+    valueBefore: useRef(''),
+    type: useRef<'text' | 'number' | 'date' | 'null' | 'boolean'>('text'),
+    showQuotes: useRef(false),
+    flatPickerRef: useRef<Instance | null>(null),
+    canceled: useRef(false),
+    calendarOpened: useRef(false),
+    dateChanged: useRef(false),
+  });
+  return { ...state, setState };
+}
+
+const useUpdateTypeOnValueChange = (
+  props: CompactInputProps,
+  localState: ReturnType<typeof useLocalState>,
+) => {
+  if (localState.ref.current?.value === props.value) { return; }
+  if (isoDateRegexPattern.test((props.value as string) ?? '')) {
+    localState.type.current = 'date';
+  } else if (!isNaN(Number(props.value))) {
+    localState.type.current = 'number';
+  } else if (props.value === 'true' || props.value === 'false') {
+    localState.type.current = 'boolean';
+  } else if ('null' === props.value) {
+    localState.type.current = 'null';
+  } else {
+    localState.type.current = 'text';
   }
-  if (type.current === 'date' && !flatPickerRef.current && ref.current) {
-    flatPickerRef.current = flatpickr(ref.current, {
+  localState.showQuotes.current = localState.type.current === 'text' && !!props.showQuotes;
+}
+
+const useDatePicker = (
+  props: CompactInputProps,
+  localState: ReturnType<typeof useLocalState>
+) => {
+  if (localState.type.current === 'date' && !localState.flatPickerRef.current && localState.ref.current) {
+    localState.flatPickerRef.current = flatpickr(localState.ref.current, {
       enableTime: true,
       defaultDate: props.value as string,
       formatDate: d => d.toISOString(),
       onOpen: () => {
-        dateChanged.current = false;
-        calendarOpened.current = true;
+        localState.dateChanged.current = false;
+        localState.calendarOpened.current = true;
       },
       onChange: () => {
-        dateChanged.current = true;
+        localState.dateChanged.current = true;
       },
       onClose: function onChangeFlatpickr(s) {
-        if (!dateChanged.current) { return; }
-        setTimeout(() => calendarOpened.current = false);
+        if (!localState.dateChanged.current) { return; }
+        setTimeout(() => localState.calendarOpened.current = false);
         props.onUpdate(s[0].toISOString());
       },
     })
-  } else if (flatPickerRef.current && type.current !== 'date') {
-    flatPickerRef.current.destroy();
-    flatPickerRef.current = null;
-  }
-  const [init, setInit] = useState(false);
-  if (!ref.current) {
-    setTimeout(() => setInit(true));
-  }
-  return {
-    ref,
-    canceled,
-    calendarOpened,
-    type,
-    valueBefore,
-    props,
-    showQuotes,
-    init,
+  } else if (localState.flatPickerRef.current && localState.type.current !== 'date') {
+    localState.flatPickerRef.current.destroy();
+    localState.flatPickerRef.current = null;
   }
 }

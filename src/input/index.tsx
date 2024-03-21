@@ -29,7 +29,7 @@ export const CompactInput = forwardRef(function CompactInput(
         size={Math.max(1, (props.value as string).length)}
         onBlur={outputs.onBlur}
         onFocus={outputs.onFocus}
-        $initialized={inputs.init}
+        $initialized={inputs.show}
       />
       <Quote 
         showIf={inputs.showQuotes.current}
