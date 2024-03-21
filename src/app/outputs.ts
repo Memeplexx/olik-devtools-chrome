@@ -3,29 +3,29 @@ import { useInputs } from "./inputs";
 import { silentlyApplyStateAction } from "../shared/functions";
 
 
-export const useOutputs = (props: ReturnType<typeof useInputs>) => {
+export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
   return {
     onClickHideIneffectiveActions: () => {
-      props.setState(s => ({ ...s, hideUnchanged: !props.hideUnchanged }));
+      inputs.setState({ hideUnchanged: !inputs.hideUnchanged });
     },
     onClickItem: (selectedId: number) => () => {
-      const itemsFlattened = props.items.flatMap(i => i.items);
-      if (props.selectedId === selectedId) {
-        props.setState(s => ({ ...s, selectedId: null }));
-        silentlyUpdateAppStoreState(props, itemsFlattened[itemsFlattened.length - 1].state);
+      const itemsFlattened = inputs.items.flatMap(i => i.items);
+      if (inputs.selectedId === selectedId) {
+        inputs.setState({ selectedId: null });
+        silentlyUpdateAppStoreState(inputs, itemsFlattened[itemsFlattened.length - 1].state);
       } else {
-        props.setState(s => ({ ...s, selectedId, storeStateVersion: itemsFlattened.find(i => i.id === selectedId)!.state }));
-        silentlyUpdateAppStoreState(props, itemsFlattened.find(i => i.id === selectedId)!.state);
+        inputs.setState({ selectedId, storeStateVersion: itemsFlattened.find(i => i.id === selectedId)!.state });
+        silentlyUpdateAppStoreState(inputs, itemsFlattened.find(i => i.id === selectedId)!.state);
       }
     },
     onClickClear: () => {
-      props.setState(s => ({ ...s, items: s.items.map(i => ({ ...i, visible: false } ) ) }));
+      inputs.setState(s => ({ ...s, items: s.items.map(i => ({ ...i, visible: false } ) ) }));
     },
     onEditorChange: (query: string) => {
-      props.setState(s => ({ ...s, query }));
+      inputs.setState({ query });
     },
     onEditorEnter: (query: string) => {
-      silentlyApplyStateAction(props.storeRef.current!, query.split('.'));
+      silentlyApplyStateAction(inputs.storeRef.current!, query.split('.'));
     },
   }
 }

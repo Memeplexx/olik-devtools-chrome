@@ -7,105 +7,75 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
   return {
     onClickCopy: () => {
       navigator.clipboard.writeText(JSON.stringify(props.item, null, 2)).catch(console.error);
-      inputs.setState(s => ({ ...s, showOptions: false }));
+      inputs.setState({ showOptions: false });
     },
     onClickDelete: () => {
-      const parentKey = props.keyConcat.split('.').slice(0, -1).join('.');
-      [...props.stateIdToPathMap.keys()].filter(k => new RegExp(`^${parentKey}\\.[0-9]+$`).test(k)).forEach(k => props.stateIdToPathMap.set(k, Math.random().toString()));
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);
-      inputs.setState(s => ({ ...s, showOptions: false }));
+      inputs.setState({ showOptions: false });
     },
     onClickAddToArray: () => {
       if (!is.array(props.item)) { throw new Error(); }
       const el = JSON.stringify(getSimplifiedObjectPayload(props.item[0]));
-      updateObjectPayloadKeys(props);
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$push(${el})`]);
-      inputs.setState(s => ({ ...s, showOptions: false }));
+      inputs.setState({ showOptions: false });
       const k = `[data-key="${props.keyConcat}.${props.item.length}"]`;
       setTimeout(() => setTimeout(() => setTimeout(() => document.querySelector<HTMLInputElement>(k)?.focus())));
     },
     onClickAddToObject: () => {
-      inputs.setState(s => ({ ...s, showOptions: false }));
-      props.stateIdToPathMap.set(`${props.keyConcat}.<key>`, Math.random().toString());
+      inputs.setState({ showOptions: false });
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setNew(${JSON.stringify({ '<key>': '<value>' })})`]);
       const k = `[data-key="${props.keyConcat}.<key>"]`;
       setTimeout(() => setTimeout(() => setTimeout(() => document.querySelector<HTMLInputElement>(k)!.focus())));
     },
     onClickEditKey: () => {
-      inputs.setState(s => ({ ...s, editObjectKey: true, showOptions: false }));
+      inputs.setState({ showOptions: false });
       inputs.keyNodeRef.current!.focus();
     },
     handleNodeClick: (key: string) => (event: MouseEvent) => {
       event.stopPropagation();
       props.onClickNodeKey(key);
-      inputs.setState(s => ({ ...s, showOptions: false }))
+      inputs.setState({ showOptions: false })
     },
     handleValueClick: () => {
-      inputs.setState(s => ({ ...s, showArrayOptions: false }))
+      inputs.setState(({ showArrayOptions: false }))
     },
     onMouseOverRootNode: () => {
       if (props.actionType) { return; }
-      inputs.setState(s => ({ ...s, showOptions: true }));
+      inputs.setState({ showOptions: true });
     },
     onMouseOutRootNode: () => {
-      inputs.setState(s => ({ ...s, showOptions: false }));
+      inputs.setState({ showOptions: false });
     },
     onMouseOverValueNode: () => {
       if (!props.isArrayElement) { return; }
-      inputs.setState(s => ({ ...s, showArrayOptions: true }));
+      inputs.setState({ showArrayOptions: true });
     },
     onMouseOutValueNode: () => {
       if (!props.isArrayElement) { return; }
-      inputs.setState(s => ({ ...s, showArrayOptions: false }));
+      inputs.setState({ showArrayOptions: false });
     },
     onHideOptions: () => {
-      inputs.setState(s => ({ ...s, showOptions: false }));
+      inputs.setState(({ showOptions: false }));
     },
     onKeyUpdate: (keyDraft: string) => {
-      const parentKey = props.keyConcat.split('.').slice(0, -1).join('.');
-      props.stateIdToPathMap.set(`${parentKey}.${keyDraft}`, props.stateIdToPathMap.get(props.keyConcat)!);
-      // console.log(props.stateIdToPathMap);
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${keyDraft})`]);
     },
     onKeyChange: (event: ChangeEvent<HTMLInputElement>) => {
-      inputs.setState(s => ({ ...s, keyValue: event.target.value }));
+      inputs.setState({ keyValue: event.target.value });
     },
     onValueChange: (event: ChangeEvent<HTMLInputElement>) => {
-      inputs.setState(s => ({ ...s, valueValue: event.target.value }));
+      inputs.setState({ valueValue: event.target.value });
     },
     onFocusObjectKey: () => {
-      inputs.setState(s => ({ ...s, isEditingObjectKey: true }));
+      inputs.setState({ isEditingObjectKey: true });
     },
     onBlurObjectKey: () => {
-      inputs.setState(s => ({ ...s, isEditingObjectKey: false }));
+      inputs.setState({ isEditingObjectKey: false });
     },
     onClickDeleteArrayElement: () => {
-      const parentKey = props.keyConcat.split('.').slice(0, -1).join('.');
-      [...props.stateIdToPathMap.keys()].filter(k => new RegExp(`^${parentKey}\\.[0-9]+$`).test(k)).forEach(k => props.stateIdToPathMap.set(k, Math.random().toString()));
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);
     }
   };
-}
-
-const updateObjectPayloadKeys = (props: { stateIdToPathMap: Map<string, string>, keyConcat: string, item: unknown }) => {
-  if (!is.array(props.item)) { throw new Error(); } // should never happen
-  props.stateIdToPathMap.set(`${props.keyConcat}.${props.item.length}`, Math.random().toString());
-  const recurse = (a: unknown, outerKey: string) => {
-    if (is.array(a)) {
-      a.forEach((e, i) => {
-        const key = `${outerKey}.${i}`;
-        props.stateIdToPathMap.set(key, Math.random().toString());
-        recurse(e, key);
-      });
-    } else if (is.record(a)) {
-      Object.keys(a).forEach(k => {
-        const key = `${outerKey}.${k}`;
-        props.stateIdToPathMap.set(key, Math.random().toString());
-        recurse(a[k], key);
-      });
-    }
-  }
-  recurse(props.item[0], `${props.keyConcat}.${props.item.length}`);
 }
 
 const getSimplifiedObjectPayload = (state: unknown) => {

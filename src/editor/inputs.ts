@@ -1,47 +1,49 @@
-import { useRef, useState } from "react";
-import { editor, IDisposable } from 'monaco-editor';
-import { EditorProps, State, editorRefOptions, editorTheme } from "./constants";
-import * as olikTypeDefsText from '../../node_modules/olik/dist/type.d.ts?raw';
+import { IDisposable, editor } from 'monaco-editor';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
-import { is } from "../shared/functions";
+import { useRef } from "react";
+import * as olikTypeDefsText from '../../node_modules/olik/dist/type.d.ts?raw';
+import { is, useRecord } from "../shared/functions";
+import { EditorProps, State, editorRefOptions, editorTheme } from "./constants";
 
 const olikTypeDefsAsString = olikTypeDefsText.default.replace(/\n|\r/g, "");
 
 const lineHeight = 18;
 
 export const useInputs = (props: EditorProps) => {
-  const localState = useLocalState(props);
-  instantiateEditor(localState);
+  const localState = useLocalState();
+  instantiateEditor(props, localState);
   respondToEditorScrollChanges(localState);
-  respondToEditorTextChanges(localState);
-  respondToEditorEnterKeyup(localState);
-  useStateChangeResponder(localState);
+  respondToEditorTextChanges(props, localState);
+  respondToEditorEnterKeyup(props, localState);
+  useStateChangeResponder(props, localState);
   return localState;
 }
 
-export const useLocalState = (props: EditorProps) => {
-  const [state, setState] = useState({
+export const useLocalState = () => {
+  const record = useRecord({
     defaultEditorValue: '',
-    divEl: useRef<HTMLDivElement>(null),
-    editorRef: useRef<editor.IStandaloneCodeEditor | null>(null),
     onDidScrollChange: null as null | IDisposable,
     onDidChangeModelContent: null as null | IDisposable,
     onKeyUp: null as null | IDisposable,
   });
-  return { ...props, ...state, setState };
+  return {
+    ...record,
+    divEl: useRef<HTMLDivElement>(null),
+    editorRef: useRef<editor.IStandaloneCodeEditor | null>(null),
+  };
 }
 
-const instantiateEditor = (arg: State) => {
-  if (!arg.divEl.current || arg.editorRef.current || !arg.state) { return; }
+const instantiateEditor = (props: EditorProps, state: State) => {
+  if (!state.divEl.current || state.editorRef.current || !props.state) { return; }
   self.MonacoEnvironment = { getWorker: () => new tsWorker() };
   editor.defineTheme('olik-editor-theme', editorTheme);
-  arg.editorRef.current = editor.create(arg.divEl.current, editorRefOptions);
-  arg.editorRef.current.setScrollPosition({ scrollTop: lineHeight });
-  const defaultEditorValue = reGenerateTypeDefinitions(arg);
-  arg.editorRef.current.setValue(defaultEditorValue);
+  state.editorRef.current = editor.create(state.divEl.current, editorRefOptions);
+  state.editorRef.current.setScrollPosition({ scrollTop: lineHeight });
+  const defaultEditorValue = reGenerateTypeDefinitions(props, state);
+  state.editorRef.current.setValue(defaultEditorValue);
 }
 
-const reGenerateTypeDefinitions = (arg: State) => {
+const reGenerateTypeDefinitions = (props: EditorProps, state: State) => {
   const recurse = (val: unknown): string => {
     if (is.primitive(val)) {
       return `"${typeof val}"`;
@@ -57,71 +59,56 @@ const reGenerateTypeDefinitions = (arg: State) => {
       throw new Error(`Unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
   }
-  const typeDef = recurse(arg.state!);
+  const typeDef = recurse(props.state);
   // console.log(JSON.stringify(JSON.parse(typeDef), null, 2)); // un-comment to debug
   const defaultEditorValue = [olikTypeDefsAsString + `; const store: Store<${typeDef.replace(/"/g, '')}>;`, 'store.'].join('\n');
-  arg.setState(s => ({ ...s, defaultEditorValue }));
+  state.setState({ defaultEditorValue })
   return defaultEditorValue;
 }
 
-const respondToEditorScrollChanges = (arg: State) => {
-  if (!arg.editorRef.current || arg.onDidScrollChange) { return; }
-  const onDidScrollChange = arg.editorRef.current.onDidScrollChange(() => {
-    if (arg.editorRef.current!.getScrollTop() === lineHeight) { return; }
-    arg.editorRef.current!.setScrollPosition({ scrollTop: lineHeight });
-    arg.editorRef.current!.setPosition({ lineNumber: 2, column: arg.editorRef.current!.getValue().length + 1 });
+const respondToEditorScrollChanges = (state: State) => {
+  if (!state.editorRef.current || state.onDidScrollChange) { return; }
+  const onDidScrollChange = state.editorRef.current.onDidScrollChange(() => {
+    if (state.editorRef.current!.getScrollTop() === lineHeight) { return; }
+    state.editorRef.current!.setScrollPosition({ scrollTop: lineHeight });
+    state.editorRef.current!.setPosition({ lineNumber: 2, column: state.editorRef.current!.getValue().length + 1 });
   })
-  arg.setState(s => ({
-    ...s,
-    onDidScrollChange
-  }));
+  state.setState({ onDidScrollChange });
 }
 
-const respondToEditorTextChanges = (arg: State) => {
-  if (!arg.editorRef.current || arg.onDidChangeModelContent) { return; }
-  const onDidChangeModelContent = arg.editorRef.current.onDidChangeModelContent(() => {
-    arg.setState(s => {
-      const lines = s.editorRef.current!.getValue().split('\n')!;
-      if (lines.length === 1 || lines.length > 2 || !lines[1].startsWith('store.')) {
-        s.editorRef.current!.setValue(s.defaultEditorValue);
-      } else {
-        const lastLine = s.editorRef.current!.getModel()!.getLineContent(2);
-        arg.onChange(lastLine.substring('store.'.length));
-      }
-      return s;
-    })
+const respondToEditorTextChanges = (props: EditorProps, state: State) => {
+  if (!state.editorRef.current || state.onDidChangeModelContent) { return; }
+  const onDidChangeModelContent = state.editorRef.current.onDidChangeModelContent(() => {
+    const lines = state.editorRef.current!.getValue().split('\n')!;
+    if (lines.length === 1 || lines.length > 2 || !lines[1].startsWith('store.')) {
+      state.editorRef.current!.setValue(state.defaultEditorValue);
+    } else {
+      const lastLine = state.editorRef.current!.getModel()!.getLineContent(2);
+      props.onChange(lastLine.substring('store.'.length));
+    }
   });
-  arg.setState(s => ({
-    ...s,
-    onDidChangeModelContent
-  }));
+  state.setState({ onDidChangeModelContent });
 }
 
-const respondToEditorEnterKeyup = (arg: State) => {
-  if (!arg.editorRef.current || arg.onKeyUp) { return; }
-  const onKeyUp = arg.editorRef.current.onKeyDown((e) => {
+const respondToEditorEnterKeyup = (props: EditorProps, state: State) => {
+  if (!state.editorRef.current || state.onKeyUp) { return; }
+  const onKeyUp = state.editorRef.current.onKeyDown((e) => {
     if (e.code !== 'Enter') { return; }
     e.preventDefault();
     const hasError = editor.getModelMarkers({}).some(e => e.startLineNumber === 2);
     if (hasError) { return; }
-    const lastLine = arg.editorRef.current!.getModel()!.getLineContent(2);
-    arg.onEnter(lastLine.substring('store.'.length));
+    const lastLine = state.editorRef.current!.getModel()!.getLineContent(2);
+    props.onEnter(lastLine.substring('store.'.length));
   });
-  arg.setState(s => ({
-    ...s,
-    onKeyUp
-  }));
+  state.setState({ onKeyUp });
 }
 
-const useStateChangeResponder = (arg: State) => {
-  const previousStateRef = useRef(arg.state);
-  if (!arg.state) { return; }
-  if (arg.state !== previousStateRef.current) {
-    arg.setState(s => {
-      reGenerateTypeDefinitions(arg);
-      setTimeout(() => s.editorRef.current!.setValue(s.defaultEditorValue));
-      return s;
-    });
-    previousStateRef.current = arg.state;
+const useStateChangeResponder = (props: EditorProps, state: State) => {
+  const previousStateRef = useRef(props.state);
+  if (!props.state) { return; }
+  if (props.state !== previousStateRef.current) {
+    const defaultEditorValue = reGenerateTypeDefinitions(props, state);
+    setTimeout(() => state.editorRef.current!.setValue(defaultEditorValue));
+    previousStateRef.current = props.state;
   }
 }

@@ -1,31 +1,29 @@
 import { StateAction, deserialize, readState, updateFunctions } from "olik";
-import { ForwardedRef, useState } from "react";
-import { getStateIdToPathMap, useForwardedRef } from "../shared/functions";
+import { ForwardedRef } from "react";
+import { useForwardedRef, useRecord } from "../shared/functions";
 import { Tree } from "../tree";
 import { StateProps } from "./constants";
 
 
 export const useInputs = (props: StateProps, ref: ForwardedRef<HTMLDivElement>) => {
-  const localState = useLocalState(props, ref);
+  const localState = useLocalState(ref);
   return {
     ...localState,
-    data: tryReadState(localState),
+    data: tryReadState({ ...props, ...localState }),
   };
 }
 
-const useLocalState = (props: StateProps, ref: ForwardedRef<HTMLDivElement>) => {
-  const [state, setState] = useState({
-    containerRef: useForwardedRef<HTMLDivElement>(ref),
+const useLocalState = (ref: ForwardedRef<HTMLDivElement>) => {
+  const record = useRecord({
     contractedKeys: new Array<string>(),
-    stateIdToPathMap: new Map<string, string>(),
   });
-  if (props.state && state.stateIdToPathMap.size === 0) {
-    setState(s => ({ ...s, stateIdToPathMap: getStateIdToPathMap(props.state) }));
+  return {
+    ...record,
+    containerRef: useForwardedRef<HTMLDivElement>(ref),
   }
-  return { ...props, ...state, setState };
 }
 
-const tryReadState = (arg: ReturnType<typeof useLocalState> & { query: string }): JSX.Element => {
+const tryReadState = (arg: ReturnType<typeof useLocalState> & StateProps): JSX.Element => {
   const onClickNodeKey = (key: string) => arg.setState(s => ({
     ...s,
     contractedKeys: s.contractedKeys.includes(key)

@@ -1,5 +1,5 @@
 import { deserialize } from "olik";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BasicStore } from "./types";
 
 export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(props: P) => {
@@ -119,22 +119,16 @@ export const decisionMap = function <K, V>(map: readonly (readonly [K, V])[]): V
 	].find(([k]) => (typeof k === 'function' ? k() : k))![1];
 }
 
-export const getStateIdToPathMap = (state: unknown) => {
-  const map = new Map<string, string>();
-	map.set('', Math.random().toString());
-  const recurse = (val: unknown, outerKey: string) => {
-    if (is.array(val)) {
-      val.forEach((item, index) => {
-				map.set(`${outerKey}.${index}`, Math.random().toString());
-        recurse(item, `${outerKey}.${index}`);
-      });
-    } else if (is.record(val)) {
-      Object.keys(val).forEach(key => {
-				map.set(key === '' ? outerKey : `${outerKey}.${key}`, Math.random().toString());
-        recurse(val[key], key === '' ? outerKey : `${outerKey}.${key}`);
-      });
-    }
-  };
-  recurse(state, '');
-  return map;
+export const useRecord = <R extends Record<string, unknown>>(record: R) => {
+	const [state, setState] = useState(record);
+	return {
+		...state, 
+		setState: useCallback((arg: Partial<R> | ((r: R) => Partial<R>)) => {
+			if (is.function(arg)) {
+				setState(s => ({ ...s, ...arg(s) as Partial<R> }));
+			} else {
+				setState(s => ({ ...s, ...arg }));
+			}
+		}, []),
+	};
 }

@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from "react";
-import { decisionMap, is } from "../shared/functions";
+import { useMemo, useRef } from "react";
+import { decisionMap, is, useRecord } from "../shared/functions";
 import { NodeType, RenderNodeArgs } from "./constants";
 
 export const useInputs = (
@@ -15,7 +15,7 @@ export const useInputs = (
 }
 
 export const useLocalState = () => {
-  const [state, setState] = useState({
+  const record = useRecord({
     showOptions: false,
     showArrayOptions: false,
     isEditingObjectKey: false,
@@ -23,8 +23,7 @@ export const useLocalState = () => {
     valueValue: '',
   });
   return {
-    ...state,
-    setState,
+    ...record,
     keyNodeRef: useRef<HTMLInputElement>(null),
   };
 }
@@ -76,9 +75,9 @@ const useValueUpdater = (
 ) => {
   const setState = localState.setState;
   useMemo(() => {
-    setState(s => ({ ...s, valueValue: props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString() }));
+    setState({ valueValue: props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString() });
   }, [props.item, setState]);
   useMemo(() => {
-    setState(s => ({ ...s, keyValue: props.objectKey! }));
+    setState({ keyValue: props.objectKey! });
   }, [props.objectKey, setState]);
 }

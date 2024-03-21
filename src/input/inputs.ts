@@ -1,6 +1,6 @@
 import { Instance } from "flatpickr/dist/types/instance";
-import { isoDateRegexPattern, useForwardedRef } from "../shared/functions";
-import { ForwardedRef, useRef, useState } from "react";
+import { isoDateRegexPattern, useForwardedRef, useRecord } from "../shared/functions";
+import { ForwardedRef, useRef } from "react";
 import flatpickr from "flatpickr";
 import { CompactInputProps } from "./constants";
 
@@ -19,19 +19,18 @@ const useShowOnInit = (
   localState: ReturnType<typeof useLocalState>,
 ) => {
   if (localState.ref.current) { return; }
-  setTimeout(() => localState.setState(s => ({ ...s, show: true })));
+  setTimeout(() => localState.setState({ show: true }));
 }
 
 const useLocalState = (
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) => {
-  const [state, setState] = useState({
+  const record = useRecord({
     show: false,
     showQuotes: false,
   });
   return {
-    ...state,
-    setState,
+    ...record,
     ref: useForwardedRef(forwardedRef),
     valueBefore: useRef(''),
     type: useRef<'text' | 'number' | 'date' | 'null' | 'boolean'>('text'),
@@ -60,7 +59,7 @@ const useValueChangeListener = (
   }
   const showQuotes = localState.type.current === 'text' && !!props.showQuotes;
   if (localState.showQuotes !== showQuotes) {
-    localState.setState({ ...localState, showQuotes });
+    localState.setState({ showQuotes });
   }
 }
 

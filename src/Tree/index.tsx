@@ -13,9 +13,6 @@ import { KeyNode, Node, PopupOption, PopupOptions } from "./styles";
 export const Tree = (
   props: TreeProps
 ): JSX.Element => {
-  if (props.stateIdToPathMap.size === 0) {
-    return <></>;
-  }
   const recurse = ({ outerKey, val }: RecurseArgs): JSX.Element => {
     if (is.array(val)) {
       return (
@@ -23,7 +20,7 @@ export const Tree = (
           {val.map((item, index) => {
             return (
               <RenderedNode
-                key={props.stateIdToPathMap.get(`${outerKey}.${index}`)}
+                key={index.toString()}
                 {...props}
                 recurse={recurse}
                 keyConcat={`${outerKey}.${index}`}
@@ -44,7 +41,7 @@ export const Tree = (
             return (
               <RenderedNode
                 {...props}
-                key={props.stateIdToPathMap.get(key === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`)}
+                key={key}
                 recurse={recurse}
                 keyConcat={key === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`}
                 index={index}

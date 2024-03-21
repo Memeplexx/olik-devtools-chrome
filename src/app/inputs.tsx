@@ -1,7 +1,7 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { StateAction, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { getStateIdToPathMap, is, isoDateRegexPattern } from "../shared/functions";
+import { useCallback, useEffect, useRef } from "react";
+import { is, isoDateRegexPattern, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
 import { Tree } from "../tree";
 import { Item, ItemWrapper, Message, State } from "./constants";
@@ -14,7 +14,7 @@ export const useInputs = () => {
 }
 
 export const useLocalState = () => {
-  const [state, setState] = useState({
+  const record = useRecord({
     error: '',
     storeFullyInitialized: false,
     storeStateInitial: null as Record<string, unknown> | null,
@@ -26,8 +26,7 @@ export const useLocalState = () => {
     query: '',
   });
   return {
-    ...state,
-    setState,
+    ...record,
     storeRef: useRef<BasicStore | null>(null),
     treeRef: useRef<HTMLDivElement | null>(null),
     idRefOuter: useRef(0),
@@ -40,15 +39,13 @@ const instantiateStore = (arg: State) => {
   if (!chrome.runtime) {
     arg.storeRef.current = getStore<Record<string, unknown>>(); // get store from demo app
     setTimeout(() => {
-      arg.setState(s => ({ ...s, storeFullyInitialized: true }))
+      arg.setState({ storeFullyInitialized: true });
       document.getElementById('olik-init')!.innerHTML = 'done';
     });
   } else {
     libState.initialState = undefined;
     arg.storeRef.current = createStore<Record<string, unknown>>({});
-    arg.setState(s => {
-      return { ...s, storeFullyInitialized: true };
-    });
+    arg.setState({ storeFullyInitialized: true });
     const notifyAppOfInitialization = () => document.getElementById('olik-init')!.innerHTML = 'done';
     chrome.tabs
       .query({ active: true })
@@ -63,7 +60,7 @@ const useMessageHandler = (props: State) => {
     if (!incoming.action) { return s; }
     if (incoming.action.type === '$load()') {
       props.storeRef.current = null;
-      return { ...s, storeFullyInitialized: false, items: [] };
+      return { storeFullyInitialized: false, items: [] };
     }
     const itemsFlattened = s.items.flatMap(ss => ss.items);
     const fullStateBefore = !itemsFlattened.length ? {} : itemsFlattened[itemsFlattened.length - 1].state;
@@ -128,7 +125,6 @@ const useMessageHandler = (props: State) => {
       date,
     } satisfies Item);
     return {
-      ...s,
       storeState: fullStateAfter,
       items: currentEvent.toString() === previousEvent.toString()
         ? [
@@ -226,14 +222,12 @@ const getTypeJsx = (arg: {
   }
 
   const onClickNodeKey = (key: string) => arg.setState(s => ({
-    ...s,
     items: s.items.map(itemOuter => {
       if (itemOuter.id !== arg.idOuter) { return itemOuter; }
       return {
         ...itemOuter,
         items: itemOuter.items.map(itemInner => {
           if (itemInner.id !== arg.idInner) { return itemInner; }
-          const stateIdToPathMap = getStateIdToPathMap(arg.stateAfter);
           const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
           return {
             ...itemInner,
@@ -245,7 +239,6 @@ const getTypeJsx = (arg: {
               onClickNodeKey,
               unchanged,
               hideUnchanged: false,
-              stateIdToPathMap,
             }),
             jsxPruned: Tree({
               actionType,
@@ -254,7 +247,6 @@ const getTypeJsx = (arg: {
               onClickNodeKey,
               unchanged,
               hideUnchanged: true,
-              stateIdToPathMap,
             }),
           } satisfies Item
         })
@@ -268,7 +260,6 @@ const getTypeJsx = (arg: {
     unchanged,
     onClickNodeKey,
     hideUnchanged: arg.hideUnchanged,
-    stateIdToPathMap: getStateIdToPathMap(arg.payload),
   });
 }
 
