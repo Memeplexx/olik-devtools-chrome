@@ -7,7 +7,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
   return {
     onClickCopy: () => {
       navigator.clipboard.writeText(JSON.stringify(props.item, null, 2)).catch(console.error);
-      inputs.setState({ showOptions: false });
+      inputs.setState({ showOptions: false, showArrayOptions: false });
     },
     onClickDelete: () => {
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);
@@ -74,6 +74,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     },
     onClickDeleteArrayElement: () => {
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);
+      inputs.setState({ showArrayOptions: false });
     }
   };
 }
