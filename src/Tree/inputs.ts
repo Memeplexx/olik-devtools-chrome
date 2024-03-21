@@ -22,7 +22,7 @@ export const useLocalState = (
     showArrayOptions: false,
     isEditingObjectKey: false,
     keyValue: props.objectKey,
-    valueValue: props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString(),
+    valueValue: '',
     keyNodeRef: useRef<HTMLInputElement>(null),
   });
   return { ...state, setState };
@@ -65,14 +65,11 @@ const useValueUpdater = (
   localState: ReturnType<typeof useLocalState>,
   props: RenderNodeArgs,
 ) => {
-  const prevStateRef = useRef(props.state);
-  const prevObjectKeyRef = useRef(props.objectKey);
-  if (prevObjectKeyRef.current !== props.objectKey) {
-    localState.setState(s => ({ ...s, keyValue: props.objectKey }));
-    prevObjectKeyRef.current = props.objectKey;
-  }
-  if (prevStateRef.current !== props.state) {
-    localState.setState(s => ({ ...s, valueValue: props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString() }));
-    prevStateRef.current = props.state;
-  }
+  const setState = localState.setState;
+  useMemo(() => {
+    setState(s => ({ ...s, valueValue: props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString() }));
+  }, [props.item, setState]);
+  useMemo(() => {
+    setState(s => ({ ...s, keyValue: props.objectKey }));
+  }, [props.objectKey, setState]);
 }

@@ -32,7 +32,7 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
     onFocus: (e: FocusEvent<HTMLInputElement>) => {
       inputs.ref.current!.select();
       inputs.valueBefore.current = inputs.ref.current!.value;
-      props.onFocus && props.onFocus(e);
+      props.onFocus?.(e);
     },
   }
 }

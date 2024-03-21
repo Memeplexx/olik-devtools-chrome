@@ -57,6 +57,7 @@ const instantiateStore = (arg: State) => {
 const useMessageHandler = (props: State) => {
   const { setState } = props;
   const processEvent = useCallback((incoming: Message) => setState(s => {
+    if (!incoming.action) { return s; }
     if (incoming.action.type === '$load()') {
       s.storeRef.current = null;
       return { ...s, storeFullyInitialized: false, items: [] };
@@ -229,6 +230,7 @@ const getTypeJsx = (arg: {
         ...itemOuter,
         items: itemOuter.items.map(itemInner => {
           if (itemInner.id !== arg.idInner) { return itemInner; }
+          const stateIdToPathMap = getStateIdToPathMap(arg.stateAfter);
           const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
           return {
             ...itemInner,
@@ -240,7 +242,7 @@ const getTypeJsx = (arg: {
               onClickNodeKey,
               unchanged,
               hideUnchanged: false,
-              stateIdToPathMap: getStateIdToPathMap(arg.stateAfter),
+              stateIdToPathMap,
             }),
             jsxPruned: Tree({
               actionType,
@@ -249,7 +251,7 @@ const getTypeJsx = (arg: {
               onClickNodeKey,
               unchanged,
               hideUnchanged: true,
-              stateIdToPathMap: getStateIdToPathMap(arg.stateAfter),
+              stateIdToPathMap,
             }),
           } satisfies Item
         })
