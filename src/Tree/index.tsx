@@ -204,7 +204,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
                       onClick: outputs.onClickEditKey,
                       icon: FaEdit,
                       text: 'edit object key',
-                      showIf: !props.isTopLevel
+                      showIf: inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden
                     },
                     {
                       onClick: outputs.onClickCopy,

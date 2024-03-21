@@ -34,7 +34,6 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onClickEditKey: () => {
       inputs.setState(s => ({ ...s, editObjectKey: true, showOptions: false }));
       inputs.keyNodeRef.current!.focus();
-      inputs.keyNodeRef.current!.select();
     },
     handleNodeClick: (key: string) => (event: MouseEvent) => {
       event.stopPropagation();
@@ -45,6 +44,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       inputs.setState(s => ({ ...s, showArrayOptions: false }))
     },
     onMouseOverRootNode: () => {
+      if (props.actionType) { return; }
       inputs.setState(s => ({ ...s, showOptions: true }));
     },
     onMouseOutRootNode: () => {
