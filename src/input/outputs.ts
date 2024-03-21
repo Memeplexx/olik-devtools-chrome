@@ -15,11 +15,10 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
       }
     },
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      inputs.resize();
       props.onChange?.(event);
     },
     onKeyDown: (event: KeyboardEvent) => {
-      if (inputs.isDate) {
+      if (inputs.type.current === 'date') {
         event.preventDefault();
       }
     },

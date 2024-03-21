@@ -106,6 +106,7 @@ export const RenderedNode = forwardRef(function RenderedNode(
                 data-key={props.keyConcat}
                 value={inputs.valueValue}
                 onChange={outputs.onValueChange}
+                showQuotes={true}
                 onComplete={function onBlurInputNode(e) {
                   silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${e})`]);
                 }}

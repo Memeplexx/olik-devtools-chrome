@@ -17,7 +17,7 @@ export const CompactInput = forwardRef(function CompactInput(
   return (
     <>
       <Quote 
-        showIf={inputs.ref.current?.value === ''}
+        showIf={inputs.type.current === 'text' && !!props.showQuotes}
         children='"'
       />
       <Input
@@ -26,13 +26,13 @@ export const CompactInput = forwardRef(function CompactInput(
         onKeyDown={outputs.onKeyDown}
         onKeyUp={outputs.onKeyUp}
         onChange={outputs.onChange}
-        size={inputs.state.size}
+        size={Math.max(1, (props.value as string).length)}
         onBlur={outputs.onBlur}
         onFocus={outputs.onFocus}
         $initialized={!!inputs.ref.current}
       />
       <Quote 
-        showIf={inputs.ref.current?.value === ''}
+        showIf={inputs.type.current === 'text' && !!props.showQuotes}
         children='"'
       />
     </>

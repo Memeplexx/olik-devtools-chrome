@@ -1,6 +1,6 @@
 import { Instance } from "flatpickr/dist/types/instance";
 import { isoDateRegexPattern, useForwardedRef } from "../shared/functions";
-import { ForwardedRef, useRef, useState } from "react";
+import { ForwardedRef, useRef } from "react";
 import flatpickr from "flatpickr";
 import { CompactInputProps } from "./constants";
 
@@ -10,16 +10,24 @@ export const useInputs = (
 ) => {
   const ref = useForwardedRef(forwardedRef);
   const valueBefore = useRef('');
-  const isDate = isoDateRegexPattern.test(ref.current?.value ?? '');
+  const type = useRef<'text' | 'number' | 'date' | 'null'>('text');
   const flatPickerRef = useRef<Instance | null>(null);
   const canceled = useRef(false);
   const calendarOpened = useRef(false);
   const dateChanged = useRef(false);
-  const [state, setState] = useState({
-    size: 0,
-  });
-  if (isDate && !flatPickerRef.current) {
-    flatPickerRef.current = flatpickr(ref.current!, {
+  if (ref.current?.value !== props.value) {
+    if (isoDateRegexPattern.test((props.value as string) ?? '')) {
+      type.current = 'date';
+    } else if (!isNaN(Number(props.value))) {
+      type.current = 'number';
+    } else if ('null' === props.value) {
+      type.current = 'null';
+    } else {
+      type.current = 'text';
+    }
+  }
+  if (type.current === 'date' && !flatPickerRef.current && ref.current) {
+    flatPickerRef.current = flatpickr(ref.current, {
       enableTime: true,
       defaultDate: props.value as string,
       formatDate: d => d.toISOString(),
@@ -36,27 +44,15 @@ export const useInputs = (
         props.onComplete(s[0].toISOString());
       },
     })
-  } else if (flatPickerRef.current && !isDate) {
+  } else if (flatPickerRef.current && type.current !== 'date') {
     flatPickerRef.current.destroy();
     flatPickerRef.current = null;
   }
-  const resize = () => setState(s => ({
-    ...s,
-    size: Math.max(1, ref.current!.value.length),
-  }));
-  if (ref.current?.value !== props.value) {
-    setTimeout(() => {
-      resize();
-    });
-  }
   return {
     ref,
-    state,
-    setState,
-    resize,
     canceled,
     calendarOpened,
-    isDate,
+    type,
     valueBefore,
     props,
   }
