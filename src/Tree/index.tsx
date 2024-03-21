@@ -42,7 +42,7 @@ export const Tree = (
     } else if (is.record(val)) {
       return (
         <>
-          {Object.keys(val).sort((a, b) => a.localeCompare(b)).map((key, index, arr) => {
+          {Object.keys(val)/*.sort((a, b) => a.localeCompare(b))*/.map((key, index, arr) => {
             return (
               <RenderedNode
                 {...props}
