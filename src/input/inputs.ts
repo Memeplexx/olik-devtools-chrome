@@ -9,6 +9,7 @@ export const useInputs = <V extends InputValue>(
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) => {
   const localState = useLocalState(props, forwardedRef);
+  useInitializer(localState);
   useDatePicker(props, localState);
   return localState;
 }
@@ -21,38 +22,40 @@ const useLocalState = <V extends InputValue>(
     initialized: false,
     isFocused: false,
   })
-  const setState = localState.setState;
-  useEffect(() => {
-    setState({ initialized: true });
-  }, [setState]);
-  const valueAsString = useMemo(() => decisionMap(
-    [() => is.null(props.value), () => 'null'],
-    [() => is.undefined(props.value), () => ''],
-    [() => is.boolean(props.value), () => (props.value as boolean).toString()],
-    [() => is.number(props.value), () => (props.value as number).toString()],
-    [() => is.string(props.value), () => (props.value as string).toString()],
-    [() => is.date(props.value), () => (props.value as Date).toISOString()],
-  ), [props.value]);
-  const inputType = useMemo(() => decisionMap(
-    [() => is.number(props.value), () => 'number'],
-    [() => true, () => 'string'],
-  ), [props.value]);
-  const max = useMemo(() => decisionMap(
-    [() => is.number(props.value), () => props.value as number],
-    [() => true, () => 0],
-  ), [props.value]);
   return {
     ...localState,
-    valueAsString,
-    inputType,
-    max,
     ref: useForwardedRef(forwardedRef),
     valueBefore: useRef(''),
     flatPickerRef: useRef<Instance | null>(null),
     canceled: useRef(false),
     calendarOpened: useRef(false),
     dateChanged: useRef(false),
+    inputType: useMemo(() => decisionMap(
+      [() => is.number(props.value), () => 'number'],
+      [() => true, () => 'string'],
+    ), [props.value]),
+    max: useMemo(() => decisionMap(
+      [() => is.number(props.value), () => props.value as number],
+      [() => true, () => 0],
+    ), [props.value]),
+    valueAsString: useMemo(() => decisionMap(
+      [() => is.null(props.value), () => 'null'],
+      [() => is.undefined(props.value), () => ''],
+      [() => is.boolean(props.value), () => (props.value as boolean).toString()],
+      [() => is.number(props.value), () => (props.value as number).toString()],
+      [() => is.string(props.value), () => (props.value as string).toString()],
+      [() => is.date(props.value), () => (props.value as Date).toISOString()],
+    ), [props.value]),
   };
+}
+
+const useInitializer = (
+  localState: ReturnType<typeof useLocalState>
+) => {
+  const setState = localState.setState;
+  useEffect(() => {
+    setState({ initialized: true });
+  }, [setState]);
 }
 
 const useDatePicker = <V extends InputValue>(
