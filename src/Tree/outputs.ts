@@ -58,9 +58,6 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onHideOptions: () => {
       inputs.setState(({ showOptions: false }));
     },
-    onKeyUpdate: (keyDraft: InputValue) => {
-      silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${keyDraft!.toString()})`]);
-    },
     onChangeKey: (keyValue: InputValue) => {
       inputs.setState({ keyValue: keyValue as string });
     },
@@ -77,8 +74,9 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onFocusObjectKey: () => {
       inputs.setState({ isEditingObjectKey: true });
     },
-    onBlurObjectKey: () => {
+    onUpdateObjectKey: (value: InputValue) => {
       inputs.setState({ isEditingObjectKey: false });
+      silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${value!.toString()})`]);
     },
     onClickDeleteArrayElement: () => {
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);

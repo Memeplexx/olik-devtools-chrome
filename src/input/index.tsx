@@ -49,7 +49,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
             children='"'
           />
           <PopupList
-            showIf={props.showPopup && inputs.isFocused}
+            showIf={props.allowTypeSelectorPopup && inputs.isFocused}
             children={[
               ...(props.additionalOptions || []),
               ...types.map(type => ({

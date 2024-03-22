@@ -98,7 +98,7 @@ export const RenderedNode = function RenderedNode(
                 value={inputs.valueValue}
                 onChange={outputs.onChangeValue}
                 showQuotes={true}
-                showPopup={true}
+                allowTypeSelectorPopup={true}
                 type={inputs.valueType}
                 onChangeType={outputs.onChangeValueType}
                 onUpdate={outputs.onUpdateValue}
@@ -164,11 +164,11 @@ export const RenderedNode = function RenderedNode(
                   readOnly={!props.store || !inputs.isEditingObjectKey}
                   value={inputs.keyValue}
                   $unchanged={inputs.isUnchanged}
-                  onUpdate={outputs.onKeyUpdate}
+                  onUpdate={outputs.onUpdateObjectKey}
                   onFocus={outputs.onFocusObjectKey}
-                  onBlur={outputs.onBlurObjectKey}
+                  
                   onChange={outputs.onChangeKey}
-                  showPopup={false}
+                  allowTypeSelectorPopup={false}
                   showQuotes={false}
                   type={'string'}
                 />}

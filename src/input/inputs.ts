@@ -66,7 +66,7 @@ const useDatePicker = <V extends InputValue>(
       onChange: () => {
         localState.dateChanged.current = true;
       },
-      onClose: function onChangeFlatpickr(s) {
+      onClose: (s) => {
         if (!localState.dateChanged.current) { return; }
         setTimeout(() => localState.calendarOpened.current = false);
         props.onUpdate(s[0] as V);

@@ -16,6 +16,6 @@ export type CompactInputProps<V extends InputValue> = {
   onUpdate: (value: V) => void,
   onChangeType?: (type: ValueType) => void,
   showQuotes?: boolean,
-  showPopup: boolean,
+  allowTypeSelectorPopup: boolean,
   additionalOptions?: PopupListProps['children'],
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'type' | 'onChange'>;
