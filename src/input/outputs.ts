@@ -18,7 +18,7 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
       props.onChange?.(event);
     },
     onKeyDown: (event: KeyboardEvent) => {
-      if (inputs.type.current !== 'date') { return; }
+      if (inputs.type !== 'date') { return; }
       event.preventDefault();
     },
     onBlur: (event: FocusEvent<HTMLInputElement>) => {

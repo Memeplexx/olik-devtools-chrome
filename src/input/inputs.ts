@@ -1,39 +1,37 @@
-import { Instance } from "flatpickr/dist/types/instance";
-import { isoDateRegexPattern, useForwardedRef, useRecord } from "../shared/functions";
-import { ForwardedRef, useRef } from "react";
 import flatpickr from "flatpickr";
+import { Instance } from "flatpickr/dist/types/instance";
+import { ForwardedRef, useMemo, useRef } from "react";
+import { decisionMap, isoDateRegexPattern, useForwardedRef } from "../shared/functions";
 import { CompactInputProps } from "./constants";
 
 export const useInputs = (
   props: CompactInputProps,
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) => {
-  const localState = useLocalState(forwardedRef);
-  useValueChangeListener(props, localState);
+  const localState = useLocalState(props, forwardedRef);
   useDatePicker(props, localState);
-  useShowOnInit(localState);
   return localState;
 }
 
-const useShowOnInit = (
-  localState: ReturnType<typeof useLocalState>,
-) => {
-  if (localState.ref.current) { return; }
-  setTimeout(() => localState.setState({ show: true }));
-}
-
 const useLocalState = (
+  props: CompactInputProps,
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) => {
-  const record = useRecord({
-    show: false,
-    showQuotes: false,
-  });
+  const type = useMemo(() => decisionMap(
+    [() => isoDateRegexPattern.test((props.value as string) ?? ''), 'date'],
+    [() => props.value !== '' && !isNaN(Number(props.value)), 'number'],
+    [() => props.value === 'true' || props.value === 'false', 'boolean'],
+    [() => 'null' === props.value, 'null'],
+    [() => true, 'text'],
+  ), [props.value]);
+  const showQuotes = useMemo(() => {
+    return type === 'text' && !!props.showQuotes;
+  }, [type, props.showQuotes]);
   return {
-    ...record,
+    type,
+    showQuotes,
     ref: useForwardedRef(forwardedRef),
     valueBefore: useRef(''),
-    type: useRef<'text' | 'number' | 'date' | 'null' | 'boolean'>('text'),
     flatPickerRef: useRef<Instance | null>(null),
     canceled: useRef(false),
     calendarOpened: useRef(false),
@@ -41,33 +39,11 @@ const useLocalState = (
   };
 }
 
-const useValueChangeListener = (
+const useDatePicker = (
   props: CompactInputProps,
   localState: ReturnType<typeof useLocalState>,
 ) => {
-  if (localState.ref.current?.value === props.value) { return; }
-  if (isoDateRegexPattern.test((props.value as string) ?? '')) {
-    localState.type.current = 'date';
-  } else if (props.value !== '' && !isNaN(Number(props.value))) {
-    localState.type.current = 'number';
-  } else if (props.value === 'true' || props.value === 'false') {
-    localState.type.current = 'boolean';
-  } else if ('null' === props.value) {
-    localState.type.current = 'null';
-  } else {
-    localState.type.current = 'text';
-  }
-  const showQuotes = localState.type.current === 'text' && !!props.showQuotes;
-  if (localState.showQuotes !== showQuotes) {
-    localState.setState({ showQuotes });
-  }
-}
-
-const useDatePicker = (
-  props: CompactInputProps,
-  localState: ReturnType<typeof useLocalState>
-) => {
-  if (localState.type.current === 'date' && !localState.flatPickerRef.current && localState.ref.current) {
+  if (localState.type === 'date' && !localState.flatPickerRef.current && localState.ref.current) {
     localState.flatPickerRef.current = flatpickr(localState.ref.current, {
       enableTime: true,
       defaultDate: props.value as string,
@@ -85,7 +61,7 @@ const useDatePicker = (
         props.onUpdate(s[0].toISOString());
       },
     })
-  } else if (localState.flatPickerRef.current && localState.type.current !== 'date') {
+  } else if (localState.flatPickerRef.current && localState.type !== 'date') {
     localState.flatPickerRef.current.destroy();
     localState.flatPickerRef.current = null;
   }

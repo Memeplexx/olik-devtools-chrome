@@ -47,7 +47,7 @@ const useDerivedState = (
     isEmpty: useMemo(() => {
       return is.array(props.item) ? !props.item.length : is.record(props.item) ? !Object.keys(props.item).length : false;
     }, [props.item]),
-    nodeType: useMemo(() => decisionMap([
+    nodeType: useMemo(() => decisionMap(
       [() => is.array(props.item), 'array'],
       [() => is.record(props.item), 'object'],
       [() => is.number(props.item), 'number'],
@@ -56,8 +56,8 @@ const useDerivedState = (
       [() => is.date(props.item), 'date'],
       [() => is.null(props.item), 'null'],
       [() => is.undefined(props.item), 'undefined'],
-    ]) as NodeType, [props.item]),
-    nodeEl: useMemo(() => decisionMap([
+    ) as NodeType, [props.item]),
+    nodeEl: useMemo(() => decisionMap(
       [() => is.null(props.item), () => 'null'],
       [() => is.undefined(props.item), () => ''],
       [() => is.boolean(props.item), () => (props.item as boolean).toString()],
@@ -65,7 +65,7 @@ const useDerivedState = (
       [() => is.string(props.item), () => `"${(props.item as string).toString()}"`],
       [() => is.date(props.item), () => (props.item as Date).toISOString()],
       [() => true, () => props.item],
-    ])() as JSX.Element, [props.item]),
+    )() as JSX.Element, [props.item]),
   }
 }
 

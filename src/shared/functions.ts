@@ -113,7 +113,7 @@ export const fixKey = (key: string) => {
 	return key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
 }
 
-export const decisionMap = function <K, V>(map: readonly (readonly [K, V])[]): V {
+export const decisionMap = function <K, V>(...map: readonly (readonly [K, V])[]): V {
 	return [
 		...new Map(map).entries()
 	].find(([k]) => (typeof k === 'function' ? k() : k))![1];
