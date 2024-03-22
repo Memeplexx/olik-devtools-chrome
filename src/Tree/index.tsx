@@ -1,13 +1,12 @@
 import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { Frag } from "../html/frag";
-import { CompactInput } from "../input";
 import { PopupList } from "../popup-list";
 import { is } from "../shared/functions";
 import { RecurseArgs, RenderNodeArgs, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
-import { KeyNode, Node } from "./styles";
+import { ActionType, BraceNode, ChildNode, Colon, CommaNode, Ellipses, KeyNode, ParentNode, ParenthesisNode, ValueNode } from "./styles";
 
 
 export const Tree = (
@@ -80,19 +79,17 @@ export const RenderedNode = function RenderedNode(
   const outputs = useOutputs(props, inputs);
   const content = (
     <>
-      <Node
+      <ChildNode
         $type={inputs.nodeType}
         showIf={!inputs.isContracted && !inputs.isEmpty && !inputs.isHidden}
         $unchanged={inputs.isUnchanged}
-        $block={!inputs.isPrimitive}
-        $indent={!inputs.isPrimitive}
-        $relative
         onMouseOver={outputs.onMouseOverValueNode}
         onMouseOut={outputs.onMouseOutValueNode}
         children={
           is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.store ? inputs.nodeEl : (
             <>
-              <CompactInput
+              <ValueNode
+                $type={inputs.nodeType}
                 onClick={outputs.handleValueClick}
                 data-key={props.keyConcat}
                 value={inputs.valueValue}
@@ -119,13 +116,13 @@ export const RenderedNode = function RenderedNode(
           )
         }
       />
-      <Node
+      <BraceNode
         $type={inputs.nodeType}
         children={is.array(props.item) ? ']' : '}'}
         $unchanged={inputs.isUnchanged}
         showIf={!inputs.isHidden && !inputs.isPrimitive}
       />
-      <Node
+      <ParenthesisNode
         $type='parenthesis'
         children=')'
         showIf={inputs.showActionType}
@@ -138,21 +135,19 @@ export const RenderedNode = function RenderedNode(
       key={props.index}
       children={
         <>
-          <Node
-            $clickable
-            $relative
+          <ParentNode
             onClick={outputs.handleNodeClick(props.keyConcat)}
             onMouseOver={outputs.onMouseOverRootNode}
             onMouseOut={outputs.onMouseOutRootNode}
             children={
               <>
-                <Node
+                <ActionType
                   $type='actionType'
                   children={props.actionType}
                   showIf={inputs.showActionType}
                   $unchanged={inputs.isUnchanged}
                 />
-                <Node
+                <ParenthesisNode
                   $type='parenthesis'
                   children='('
                   showIf={inputs.showActionType}
@@ -166,25 +161,23 @@ export const RenderedNode = function RenderedNode(
                   $unchanged={inputs.isUnchanged}
                   onUpdate={outputs.onUpdateObjectKey}
                   onFocus={outputs.onFocusObjectKey}
-                  
                   onChange={outputs.onChangeKey}
                   allowTypeSelectorPopup={false}
                   showQuotes={false}
                   type={'string'}
                 />}
-                <Node
-                  $type='colon'
+                <Colon
                   children=':'
                   $unchanged={inputs.isUnchanged}
                   showIf={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
                 />
-                <Node
+                <BraceNode
                   $type={inputs.nodeType}
                   children={is.array(props.item) ? '[' : '{'}
                   $unchanged={inputs.isUnchanged}
                   showIf={!inputs.isHidden && !inputs.isPrimitive}
                 />
-                <Node
+                <Ellipses
                   $type={inputs.nodeType}
                   children='...'
                   showIf={inputs.isContracted && !inputs.isHidden}
@@ -229,7 +222,7 @@ export const RenderedNode = function RenderedNode(
             }
           />
           {!inputs.isContracted && content}
-          <Node
+          <CommaNode
             $type='comma'
             children=','
             showIf={!props.isLast && !inputs.isHidden}

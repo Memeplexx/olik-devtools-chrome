@@ -5,79 +5,79 @@ import { CompactInput } from "../input";
 
 
 
-export const Node = styled(possible.span) <{ $clickable?: boolean, $unchanged?: boolean, $indent?: boolean, $block?: boolean, $type?: NodeType, $relative?: boolean }>`
-  ${p => p.$type === 'array' && css`
-    color: red;
-  `}
-  ${p => p.$type === 'object' && css`
-    color: violet;
-  `}
-  ${p => p.$type === 'number' && css`
-    color: darkorange;
-  `}
-  ${p => p.$type === 'string' && css`
-    color: green;
-  `}
-  ${p => p.$type === 'date' && css`
-    color: deepskyblue;
-  `}
-  ${p => p.$type === 'boolean' && css`
-    color: lightblue;
-  `}
-  ${p => p.$type === 'actionType' && css`
-    color: #fff;
-  `}
-  ${p => p.$type === 'null' && css`
-    color: magenta;
-  `}
-  ${p => p.$type === 'key' && css`
-    color: #fff;
-  `}
-  ${p => p.$type === 'parenthesis' && css`
-    color: #fff;
-  `}
-  ${p => p.$type === 'colon' && css`
-    color: #fff;
-    padding-right: 4px;
-  `}
-  ${p => p.$type === 'comma' && css`
-    color: #fff;
-    &:after {
-      content: ' ';
-      display: block;
+const typeMap = {
+  array: 'red',
+  object: 'violet',
+  number: 'darkorange',
+  string: 'green',
+  date: 'deepskyblue',
+  boolean: 'lightblue',
+  null: 'magenta',
+} as {[k in NodeType]: string};
+
+export const CommonStyles = css<{ $type?: NodeType, $unchanged?: boolean }>`
+  color: ${p => typeMap[p.$type!] ?? '#fff'};
+  ${p => p.$unchanged && css`
+    color: gray!important;
+    * {
+      color: gray!important;
     }
   `}
-  ${p => p.$indent && css`
+`;
+
+export const KeyNode = styled(CompactInput)`
+  color: #fff;
+  ${CommonStyles};
+`;
+
+export const ValueNode = styled(CompactInput)`
+  ${CommonStyles};
+`;
+
+export const Colon = styled(possible.span)`
+  color: #fff;
+  padding-right: 4px;
+  ${CommonStyles};
+`;
+
+export const BraceNode = styled(possible.span)`
+  ${CommonStyles};
+`;
+
+export const Ellipses = styled(possible.span)`
+  ${CommonStyles};
+`;
+
+export const ParenthesisNode = styled(possible.span)`
+  ${CommonStyles};
+`;
+
+export const ActionType = styled(possible.span)`
+  ${CommonStyles};
+`;
+
+export const CommaNode = styled(possible.span)`
+  ${CommonStyles};
+  &:after {
+    content: ' ';
+    display: block;
+  }
+`;
+
+export const ParentNode = styled(possible.span)`
+  ${CommonStyles};
+  position: relative;
+  cursor: pointer;
+  &:hover {
+    background-color: rgba(255,255,255,0.2);
+  }
+`;
+
+export const ChildNode = styled(possible.span)`
+  ${CommonStyles};
+  position: relative;
+  ${p => (p.$type === 'array' || p.$type === 'object') && css`
     padding-left: 16px;
-  `}
-  ${p => p.$block && css`
     display: block;
   `}
-  ${p => p.$clickable && css`
-    cursor: pointer;
-    &:hover {
-      background-color: rgba(255,255,255,0.2);
-    }
-  `}
-  ${p => p.$unchanged && css`
-    color: gray!important;
-    * {
-      color: gray!important;
-    }
-  `}
-  ${p => p.$relative && css`
-    position: relative;
-  `}
 `;
-
-export const KeyNode = styled(CompactInput)<{ $unchanged?: boolean }>`
-  color: #fff;
-  ${p => p.$unchanged && css`
-    color: gray!important;
-    * {
-      color: gray!important;
-    }
-  `}
-`;
-
-

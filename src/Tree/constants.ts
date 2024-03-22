@@ -42,4 +42,5 @@ export type NodeType =
   | 'colon'
   | 'comma'
   | 'parenthesis'
+  | 'ellipsis'
   | 'key';
