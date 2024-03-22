@@ -64,8 +64,8 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onChangeValue: (valueValue: InputValue) => {
       inputs.setState({ valueValue });
     },
-    onUpdateValue: (e: InputValue) => {
-      const str = is.null(e) ? 'null' : is.number(e) ? e : is.boolean(e) ? e.toString() : is.date(e) ? e.toISOString() : `"${e.toString()}"`;
+    onUpdateValue: (value: InputValue) => {
+      const str = is.null(value) ? 'null' : is.number(value) ? value : is.boolean(value) ? value.toString() : is.date(value) ? value.toISOString() : `"${value.toString()}"`;
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${str})`]);
     },
     onChangeValueType: (valueType: ValueType) => {
