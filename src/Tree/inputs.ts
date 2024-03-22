@@ -1,11 +1,12 @@
 import { useMemo, useRef } from "react";
 import { decisionMap, is, useRecord } from "../shared/functions";
 import { NodeType, RenderNodeArgs } from "./constants";
+import { InputValue, ValueType } from "../input/constants";
 
 export const useInputs = (
   props: RenderNodeArgs,
 ) => {
-  const localState = useLocalState();
+  const localState = useLocalState(props);
   const derivedState = useDerivedState(props);
   useValueUpdater(localState, props);
   return {
@@ -14,13 +15,24 @@ export const useInputs = (
   };
 }
 
-export const useLocalState = () => {
+export const useLocalState = (
+  props: RenderNodeArgs,
+) => {
   const record = useRecord({
     showOptions: false,
     showArrayOptions: false,
     isEditingObjectKey: false,
     keyValue: '',
-    valueValue: '',
+    valueValue: props.item as InputValue,
+    valueType: decisionMap(
+      [() => is.number(props.item), 'number'],
+      [() => is.string(props.item), 'string'],
+      [() => is.boolean(props.item), 'boolean'],
+      [() => is.date(props.item), 'date'],
+      [() => is.null(props.item), 'null'],
+      [() => is.undefined(props.item), 'undefined'],
+      [() => true, 'string'],
+    ) as ValueType,
   });
   return {
     ...record,
@@ -65,7 +77,7 @@ const useDerivedState = (
       [() => is.string(props.item), () => `"${(props.item as string).toString()}"`],
       [() => is.date(props.item), () => (props.item as Date).toISOString()],
       [() => true, () => props.item],
-    )() as JSX.Element, [props.item]),
+    ) as JSX.Element, [props.item]),
   }
 }
 
@@ -75,7 +87,7 @@ const useValueUpdater = (
 ) => {
   const setState = localState.setState;
   useMemo(() => {
-    setState({ valueValue: props.item === null ? 'null' : props.item === undefined ? '' : is.date(props.item) ? props.item.toISOString() : props.item.toString() });
+    setState({ valueValue: props.item as InputValue });
   }, [props.item, setState]);
   useMemo(() => {
     setState({ keyValue: props.objectKey! });

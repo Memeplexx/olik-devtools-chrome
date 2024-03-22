@@ -1,4 +1,5 @@
-import { ChangeEvent, MouseEvent } from "react";
+import { MouseEvent } from "react";
+import { InputValue, ValueType } from "../input/constants";
 import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
 import { RenderNodeArgs } from "./constants";
 import { useInputs } from "./inputs";
@@ -57,14 +58,21 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onHideOptions: () => {
       inputs.setState(({ showOptions: false }));
     },
-    onKeyUpdate: (keyDraft: string) => {
-      silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${keyDraft})`]);
+    onKeyUpdate: (keyDraft: InputValue) => {
+      silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${keyDraft!.toString()})`]);
     },
-    onKeyChange: (event: ChangeEvent<HTMLInputElement>) => {
-      inputs.setState({ keyValue: event.target.value });
+    onChangeKey: (keyValue: InputValue) => {
+      inputs.setState({ keyValue: keyValue as string });
     },
-    onValueChange: (event: ChangeEvent<HTMLInputElement>) => {
-      inputs.setState({ valueValue: event.target.value });
+    onChangeValue: (valueValue: InputValue) => {
+      inputs.setState({ valueValue });
+    },
+    onUpdateValue: (e: InputValue) => {
+      const str = is.null(e) ? 'null' : is.number(e) ? e : is.boolean(e) ? e.toString() : is.date(e) ? e.toISOString() : `"${e.toString()}"`;
+      silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${str})`]);
+    },
+    onChangeValueType: (valueType: ValueType) => {
+      inputs.setState({ valueType });
     },
     onFocusObjectKey: () => {
       inputs.setState({ isEditingObjectKey: true });

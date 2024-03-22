@@ -1,9 +1,14 @@
-import { ChangeEvent, FocusEvent, KeyboardEvent } from "react";
+import { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent } from "react";
 import { useInputs } from "./inputs";
-import { CompactInputProps } from "./constants";
+import { CompactInputProps, InputValue, ValueType } from "./constants";
+import { decisionMap, is, isoDateRegexPattern } from "../shared/functions";
 
-export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof useInputs>) => {
+export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, inputs: ReturnType<typeof useInputs>) => {
   return {
+    onClick: () => {
+      if (props.type !== 'boolean') { return; }
+      props.onUpdate(!props.value as V);
+    },
     onKeyUp: (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
         inputs.ref.current!.blur();
@@ -15,23 +20,54 @@ export const useOutputs = (props: CompactInputProps, inputs: ReturnType<typeof u
       }
     },
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      props.onChange?.(event);
+      const val = decisionMap(
+        [() => props.type === 'string', () => event.target.value as V],
+        [() => props.type === 'number', () => parseFloat(event.target.value) as V],
+        [() => props.type === 'boolean', () => (event.target.value === 'true') as V],
+        [() => props.type === 'date', () => new Date(event.target.value) as V],
+        [() => props.type === 'null', () => null as V],
+      );
+      props.onChange?.(val);
     },
     onKeyDown: (event: KeyboardEvent) => {
-      if (inputs.type !== 'date') { return; }
-      event.preventDefault();
+      if (is.date(props.value)) {
+        event.preventDefault();  
+      } else if (is.number(props.value) && !/[0-9]/.test(event.key)) {
+        event.preventDefault();
+      }
     },
     onBlur: (event: FocusEvent<HTMLInputElement>) => {
       if (inputs.calendarOpened.current) { return; }
       if (inputs.canceled.current) { return; }
       if (inputs.ref.current!.value === inputs.valueBefore.current) { return; }
+      if (props.type === 'boolean') { return; }
       props.onBlur?.(event);
-      props.onUpdate(inputs.ref.current!.value);
+      props.onUpdate(props.value);
     },
     onFocus: (e: FocusEvent<HTMLInputElement>) => {
       inputs.ref.current!.select();
       inputs.valueBefore.current = inputs.ref.current!.value;
       props.onFocus?.(e);
+    },
+    onMouseOver: (e: MouseEvent<HTMLInputElement>) => {
+      inputs.setState({ isFocused: true });
+      props.onMouseOver?.(e);
+    },
+    onMouseOut: (e: MouseEvent<HTMLInputElement>) => {
+      inputs.setState({ isFocused: false });
+      props.onMouseOut?.(e);
+    },
+    onClickChangeType: (type: ValueType) => () => {
+      const v = inputs.ref.current!.value;
+      const val = decisionMap(
+        [() => type === 'string', () => v as V],
+        [() => type === 'number', () => (/[0-9]/.test(v) ? +v : 0) as V],
+        [() => type === 'boolean', () => (v === 'true') as V],
+        [() => type === 'date', () => new Date(isoDateRegexPattern.test(v) ? v : 0) as V],
+        [() => type === 'null', () => null as V],
+      );
+      props.onChangeType?.(type);
+      props.onUpdate(val);
     },
   }
 }

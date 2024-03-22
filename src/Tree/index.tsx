@@ -1,13 +1,13 @@
 import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
-import { IconType } from "react-icons/lib";
 import { Frag } from "../html/frag";
 import { CompactInput } from "../input";
-import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
+import { PopupList } from "../popup-list";
+import { is } from "../shared/functions";
 import { RecurseArgs, RenderNodeArgs, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
-import { KeyNode, Node, PopupOption, PopupOptions } from "./styles";
+import { KeyNode, Node } from "./styles";
 
 
 export const Tree = (
@@ -96,15 +96,13 @@ export const RenderedNode = function RenderedNode(
                 onClick={outputs.handleValueClick}
                 data-key={props.keyConcat}
                 value={inputs.valueValue}
-                onChange={outputs.onValueChange}
+                onChange={outputs.onChangeValue}
                 showQuotes={true}
-                onUpdate={function onUpdate(e) {
-                  silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${e})`]);
-                }}
-              />
-              <Popup
-                showIf={!!props.isArrayElement && inputs.showArrayOptions}
-                children={[
+                showPopup={true}
+                type={inputs.valueType}
+                onChangeType={outputs.onChangeValueType}
+                onUpdate={outputs.onUpdateValue}
+                additionalOptions={(!props.isArrayElement || !inputs.showArrayOptions) ? [] : [
                   {
                     onClick: outputs.onClickCopy,
                     icon: FaCopy,
@@ -169,7 +167,10 @@ export const RenderedNode = function RenderedNode(
                   onUpdate={outputs.onKeyUpdate}
                   onFocus={outputs.onFocusObjectKey}
                   onBlur={outputs.onBlurObjectKey}
-                  onChange={outputs.onKeyChange}
+                  onChange={outputs.onChangeKey}
+                  showPopup={false}
+                  showQuotes={false}
+                  type={'string'}
                 />}
                 <Node
                   $type='colon'
@@ -190,7 +191,7 @@ export const RenderedNode = function RenderedNode(
                   $unchanged={inputs.isUnchanged}
                 />
                 {inputs.isContracted && content}
-                <Popup
+                <PopupList
                   showIf={inputs.showOptions}
                   children={[
                     {
@@ -240,28 +241,3 @@ export const RenderedNode = function RenderedNode(
   )
 }
 
-const Popup = (props: { children: { onClick: () => void, icon: IconType, text: string, showIf?: boolean }[], showIf?: boolean }) => {
-  return (
-    <PopupOptions
-      showIf={props.showIf}
-      children={
-        props.children.map(prop => (
-          <PopupOption
-            key={prop.text}
-            showIf={prop.showIf}
-            onClick={e => {
-              e.stopPropagation();
-              prop.onClick()
-            }}
-            children={
-              <>
-                <prop.icon />
-                {prop.text}
-              </>
-            }
-          />
-        ))
-      }
-    />
-  )
-}

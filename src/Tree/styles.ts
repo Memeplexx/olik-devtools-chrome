@@ -80,28 +80,4 @@ export const KeyNode = styled(CompactInput)<{ $unchanged?: boolean }>`
   `}
 `;
 
-export const PopupOptions = styled(possible.span)`
-  position: absolute;
-  left: calc(100%);
-  top: 0;
-  background-color: #FFF;
-  color: #000;
-  z-index: 1;
-  flex-direction: column;
-  border-top-right-radius: 3px;
-  border-bottom-right-radius: 3px;
-  border-bottom-left-radius: 3px;
-  width: 150px;
-`;
 
-export const PopupOption = styled(possible.span)`
-  cursor: pointer;
-  padding: 4px 8px;
-  display: flex;
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  :hover {
-    background-color: rgba(0,0,0,0.1);
-  }
-`

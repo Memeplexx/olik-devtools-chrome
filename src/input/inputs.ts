@@ -1,11 +1,11 @@
 import flatpickr from "flatpickr";
 import { Instance } from "flatpickr/dist/types/instance";
 import { ForwardedRef, useMemo, useRef } from "react";
-import { decisionMap, isoDateRegexPattern, useForwardedRef } from "../shared/functions";
-import { CompactInputProps } from "./constants";
+import { decisionMap, is, useForwardedRef, useRecord } from "../shared/functions";
+import { CompactInputProps, InputValue } from "./constants";
 
-export const useInputs = (
-  props: CompactInputProps,
+export const useInputs = <V extends InputValue>(
+  props: CompactInputProps<V>,
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) => {
   const localState = useLocalState(props, forwardedRef);
@@ -13,23 +13,34 @@ export const useInputs = (
   return localState;
 }
 
-const useLocalState = (
-  props: CompactInputProps,
+const useLocalState = <V extends InputValue>(
+  props: CompactInputProps<V>,
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) => {
-  const type = useMemo(() => decisionMap(
-    [() => isoDateRegexPattern.test((props.value as string) ?? ''), 'date'],
-    [() => props.value !== '' && !isNaN(Number(props.value)), 'number'],
-    [() => props.value === 'true' || props.value === 'false', 'boolean'],
-    [() => 'null' === props.value, 'null'],
-    [() => true, 'text'],
+  const localState = useRecord({
+    isFocused: false,
+  })
+  const valueAsString = useMemo(() => decisionMap(
+    [() => is.null(props.value), () => 'null'],
+    [() => is.undefined(props.value), () => ''],
+    [() => is.boolean(props.value), () => (props.value as boolean).toString()],
+    [() => is.number(props.value), () => (props.value as number).toString()],
+    [() => is.string(props.value), () => (props.value as string).toString()],
+    [() => is.date(props.value), () => (props.value as Date).toISOString()],
   ), [props.value]);
-  const showQuotes = useMemo(() => {
-    return type === 'text' && !!props.showQuotes;
-  }, [type, props.showQuotes]);
+  const inputType = useMemo(() => decisionMap(
+    [() => is.number(props.value), () => 'number'],
+    [() => true, () => 'string'],
+  ), [props.value]);
+  const max = useMemo(() => decisionMap(
+    [() => is.number(props.value), () => props.value as number],
+    [() => true, () => 0],
+  ), [props.value]);
   return {
-    type,
-    showQuotes,
+    ...localState,
+    valueAsString,
+    inputType,
+    max,
     ref: useForwardedRef(forwardedRef),
     valueBefore: useRef(''),
     flatPickerRef: useRef<Instance | null>(null),
@@ -39,14 +50,14 @@ const useLocalState = (
   };
 }
 
-const useDatePicker = (
-  props: CompactInputProps,
+const useDatePicker = <V extends InputValue>(
+  props: CompactInputProps<V>,
   localState: ReturnType<typeof useLocalState>,
 ) => {
-  if (localState.type === 'date' && !localState.flatPickerRef.current && localState.ref.current) {
+  if (is.date(props.value) && !localState.flatPickerRef.current && localState.ref.current) {
     localState.flatPickerRef.current = flatpickr(localState.ref.current, {
       enableTime: true,
-      defaultDate: props.value as string,
+      defaultDate: localState.valueAsString,
       formatDate: d => d.toISOString(),
       onOpen: () => {
         localState.dateChanged.current = false;
@@ -58,10 +69,10 @@ const useDatePicker = (
       onClose: function onChangeFlatpickr(s) {
         if (!localState.dateChanged.current) { return; }
         setTimeout(() => localState.calendarOpened.current = false);
-        props.onUpdate(s[0].toISOString());
+        props.onUpdate(s[0] as V);
       },
     })
-  } else if (localState.flatPickerRef.current && localState.type !== 'date') {
+  } else if (localState.flatPickerRef.current && !is.date(props.value)) {
     localState.flatPickerRef.current.destroy();
     localState.flatPickerRef.current = null;
   }
