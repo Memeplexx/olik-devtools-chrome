@@ -32,6 +32,7 @@ const useLocalState = <V extends InputValue>(
     canceled: useRef(false),
     calendarOpened: useRef(false),
     dateChanged: useRef(false),
+    animationEnabled: useRef(true),
     showPopup: props.allowTypeSelectorPopup && localState.isHovered,
     inputType: useMemo(() => decide(
       [() => is.number(props.value), () => 'number'],
@@ -67,8 +68,10 @@ const useAnimateOnValueChange = <V extends InputValue>(
 ) => {
   const setState = localState.setState;
   useMemo(() => {
+    if (!localState.animationEnabled.current) { return; }
     setState({ initialized: false, animate: false });
     setTimeout(() => setState({ initialized: true, animate: true }));
+    localState.animationEnabled.current = true;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.value, setState]);
 }

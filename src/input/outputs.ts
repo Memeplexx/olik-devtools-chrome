@@ -38,6 +38,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       } else if (is.number(props.value) && !/[0-9]/.test(event.key)) {
         event.preventDefault();
       }
+      inputs.animationEnabled.current = false;
     },
     onBlur: (event: FocusEvent<HTMLInputElement>) => {
       props.onBlur?.(event);
