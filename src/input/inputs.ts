@@ -1,6 +1,6 @@
 import flatpickr from "flatpickr";
 import { Instance } from "flatpickr/dist/types/instance";
-import { ForwardedRef, useMemo, useRef } from "react";
+import { ForwardedRef, useEffect, useMemo, useRef } from "react";
 import { decisionMap, is, useForwardedRef, useRecord } from "../shared/functions";
 import { CompactInputProps, InputValue } from "./constants";
 
@@ -18,8 +18,13 @@ const useLocalState = <V extends InputValue>(
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) => {
   const localState = useRecord({
+    initialized: false,
     isFocused: false,
   })
+  const setState = localState.setState;
+  useEffect(() => {
+    setState({ initialized: true });
+  }, [setState]);
   const valueAsString = useMemo(() => decisionMap(
     [() => is.null(props.value), () => 'null'],
     [() => is.undefined(props.value), () => ''],

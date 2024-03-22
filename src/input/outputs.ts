@@ -6,8 +6,10 @@ import { decisionMap, is, isoDateRegexPattern } from "../shared/functions";
 export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, inputs: ReturnType<typeof useInputs>) => {
   return {
     onClick: () => {
-      if (props.type !== 'boolean') { return; }
-      props.onUpdate(!props.value as V);
+      if (props.type === 'boolean') {
+        props.onUpdate(!props.value as V);
+        inputs.ref.current?.blur();
+      }
     },
     onKeyUp: (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
