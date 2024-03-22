@@ -158,6 +158,7 @@ export const RenderedNode = function RenderedNode(
                   $unchanged={inputs.isUnchanged}
                   onUpdate={outputs.onUpdateObjectKey}
                   onFocus={outputs.onFocusObjectKey}
+                  onBlur={outputs.onBlurObjectKey}
                   onChange={outputs.onChangeKey}
                   allowTypeSelectorPopup={false}
                   showQuotes={false}

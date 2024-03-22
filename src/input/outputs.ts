@@ -22,14 +22,13 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       }
     },
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      const val = decideComparing(props.type,
+      props.onChange?.(decideComparing(props.type,
         ['string', () => event.target.value as V],
         ['number', () => parseFloat(event.target.value) as V],
         ['boolean', () => (event.target.value === 'true') as V],
         ['date', () => new Date(event.target.value) as V],
         ['null', () => null as V],
-      );
-      props.onChange?.(val);
+      ));
     },
     onKeyDown: (event: KeyboardEvent) => {
       if (props.disabled) {
@@ -41,11 +40,11 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       }
     },
     onBlur: (event: FocusEvent<HTMLInputElement>) => {
+      props.onBlur?.(event);
       if (inputs.calendarOpened.current) { return; }
       if (inputs.canceled.current) { return; }
       if (inputs.ref.current!.value === inputs.valueBefore.current) { return; }
       if (props.type === 'boolean') { return; }
-      props.onBlur?.(event);
       props.onUpdate(props.value);
     },
     onFocus: (e: FocusEvent<HTMLInputElement>) => {

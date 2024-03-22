@@ -75,6 +75,9 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onFocusObjectKey: () => {
       inputs.setState({ isEditingObjectKey: true });
     },
+    onBlurObjectKey: () => {
+      inputs.setState({ isEditingObjectKey: false });
+    },
     onUpdateObjectKey: (value: InputValue) => {
       inputs.setState({ isEditingObjectKey: false });
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${value!.toString()})`]);
@@ -85,7 +88,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     },
     onDocumentKeyup: useEventHandlerForDocument('keyup', event => {
       if (event.key === 'Escape') {
-        inputs.setState({ showOptions: false, showArrayOptions: false, isEditingObjectKey: false });
+        inputs.setState({ showOptions: false, showArrayOptions: false });
       }
     }),
   };
