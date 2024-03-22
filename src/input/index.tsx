@@ -51,7 +51,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
             $type='end'
           />
           <PopupList
-            showIf={props.allowTypeSelectorPopup && inputs.isHovered}
+            showIf={inputs.showPopup}
             children={[
               ...(props.additionalOptions || []),
               ...types.map(type => ({

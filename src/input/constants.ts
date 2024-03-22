@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, RefObject } from "react";
+import { InputHTMLAttributes } from "react";
 import { PopupListProps } from "../popup-list/consts";
 
 
@@ -9,7 +9,6 @@ export type ValueType = typeof types[keyof typeof types];
 export type InputValue = string | number | boolean | Date | null;
 
 export type CompactInputProps<V extends InputValue> = {
-  ref?: RefObject<HTMLInputElement>,
   value: V,
   type: ValueType,
   onChange: (value: V) => void,

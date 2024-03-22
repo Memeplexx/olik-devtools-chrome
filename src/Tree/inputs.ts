@@ -1,5 +1,5 @@
 import { useMemo, useRef } from "react";
-import { decisionMap, is, useRecord } from "../shared/functions";
+import { decide, is, useRecord } from "../shared/functions";
 import { NodeType, RenderNodeArgs } from "./constants";
 import { InputValue, ValueType } from "../input/constants";
 
@@ -24,7 +24,7 @@ export const useLocalState = (
     isEditingObjectKey: false,
     keyValue: '',
     valueValue: props.item as InputValue,
-    valueType: decisionMap(
+    valueType: decide(
       [() => is.number(props.item), 'number'],
       [() => is.string(props.item), 'string'],
       [() => is.boolean(props.item), 'boolean'],
@@ -59,7 +59,7 @@ const useDerivedState = (
     isEmpty: useMemo(() => {
       return is.array(props.item) ? !props.item.length : is.record(props.item) ? !Object.keys(props.item).length : false;
     }, [props.item]),
-    nodeType: useMemo(() => decisionMap(
+    nodeType: useMemo(() => decide(
       [() => is.array(props.item), 'array'],
       [() => is.record(props.item), 'object'],
       [() => is.number(props.item), 'number'],
@@ -69,7 +69,7 @@ const useDerivedState = (
       [() => is.null(props.item), 'null'],
       [() => is.undefined(props.item), 'undefined'],
     ) as NodeType, [props.item]),
-    nodeEl: useMemo(() => decisionMap(
+    nodeEl: useMemo(() => decide(
       [() => is.null(props.item), () => 'null'],
       [() => is.undefined(props.item), () => ''],
       [() => is.boolean(props.item), () => (props.item as boolean).toString()],

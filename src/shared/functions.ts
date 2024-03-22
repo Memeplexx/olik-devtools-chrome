@@ -1,5 +1,5 @@
 import { deserialize } from "olik";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BasicStore } from "./types";
 
 export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(props: P) => {
@@ -113,17 +113,24 @@ export const fixKey = (key: string) => {
 	return key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
 }
 
-export const decisionMap = function <K, V>(...map: readonly (readonly [K, V])[]) {
+export const decide = function <K, V>(...map: readonly (readonly [K, V])[]) {
 	const result = [
 		...new Map(map).entries()
 	].find(([k]) => (typeof k === 'function' ? k() : k))![1];
-	return (typeof(result) === 'function' ? result() : result) as V extends () => infer R ? R : V;
+	return (typeof (result) === 'function' ? result() : result) as V extends () => infer R ? R : V;
+}
+
+export const decideComparing = function <K, V>(toCompare: K, ...map: readonly (readonly [K, V])[]) {
+	const result = [
+		...new Map(map).entries()
+	].find(([k]) => (typeof k === 'function' ? k() : k) === toCompare)![1];
+	return (typeof (result) === 'function' ? result() : result) as V extends () => infer R ? R : V;
 }
 
 export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 	const [state, setState] = useState(record);
 	return {
-		...state, 
+		...state,
 		setState: useCallback((arg: Partial<R> | ((r: R) => Partial<R>)) => {
 			if (is.function(arg)) {
 				setState(s => ({ ...s, ...arg(s) as Partial<R> }));
@@ -132,4 +139,51 @@ export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 			}
 		}, []),
 	};
+}
+
+export type Keys =
+  | 'Backspace'
+  | 'Tab'
+  | 'Enter'
+  | 'Shift'
+  | 'Control'
+  | 'Alt'
+  | 'CapsLock'
+  | 'Escape'
+  | 'Space'
+  | 'PageUp'
+  | 'PageDown'
+  | 'End'
+  | 'Home'
+  | 'ArrowLeft'
+  | 'ArrowUp'
+  | 'ArrowRight'
+  | 'ArrowDown'
+  | 'Insert'
+  | 'Delete';
+
+export interface TypedKeyboardEvent<T extends HTMLElement> extends React.KeyboardEvent<T> {
+  key: Keys,
+  target: T,
+}
+export type EventMap<T> = T extends 'click' ? MouseEvent<HTMLElement> & { target: HTMLElement } : T extends 'keyup' | 'keydown' ? TypedKeyboardEvent<HTMLElement> : never;
+export const useEventHandlerForDocument = <Type extends 'click' | 'keyup' | 'keydown'>(
+  type: Type,
+  handler: (event: EventMap<Type>) => void
+) => {
+  const listenerName = `onDocument${type.substring(0, 1).toUpperCase()}${type.substring(1)}`;
+  Object.defineProperty(handler, 'name', { value: listenerName });
+  const ref = useRef(handler)
+  ref.current = handler;
+  useEffect(() => {
+    const listener = ((event: EventMap<Type>) => {
+      const handler = ref.current;
+      if (handler) {
+        handler(event);
+      }
+    }) as unknown as EventListener;
+    Object.defineProperty(listener, 'name', { value: listenerName });
+    document.addEventListener(type, listener);
+    return () => document.removeEventListener(type, listener);
+  }, [listenerName, type]);
 }

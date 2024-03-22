@@ -1,7 +1,7 @@
 import flatpickr from "flatpickr";
 import { Instance } from "flatpickr/dist/types/instance";
 import { ForwardedRef, useEffect, useMemo, useRef } from "react";
-import { decisionMap, is, useForwardedRef, useRecord } from "../shared/functions";
+import { decide, is, useForwardedRef, useRecord } from "../shared/functions";
 import { CompactInputProps, InputValue } from "./constants";
 
 export const useInputs = <V extends InputValue>(
@@ -30,15 +30,16 @@ const useLocalState = <V extends InputValue>(
     canceled: useRef(false),
     calendarOpened: useRef(false),
     dateChanged: useRef(false),
-    inputType: useMemo(() => decisionMap(
+    showPopup: props.allowTypeSelectorPopup && localState.isHovered,
+    inputType: useMemo(() => decide(
       [() => is.number(props.value), () => 'number'],
       [() => true, () => 'string'],
     ), [props.value]),
-    max: useMemo(() => decisionMap(
+    max: useMemo(() => decide(
       [() => is.number(props.value), () => props.value as number],
       [() => true, () => 0],
     ), [props.value]),
-    valueAsString: useMemo(() => decisionMap(
+    valueAsString: useMemo(() => decide(
       [() => is.null(props.value), () => 'null'],
       [() => is.undefined(props.value), () => ''],
       [() => is.boolean(props.value), () => (props.value as boolean).toString()],

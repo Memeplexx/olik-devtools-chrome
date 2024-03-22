@@ -1,7 +1,7 @@
 import { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent } from "react";
-import { useInputs } from "./inputs";
+import { decideComparing, is, isoDateRegexPattern, useEventHandlerForDocument } from "../shared/functions";
 import { CompactInputProps, InputValue, ValueType } from "./constants";
-import { decisionMap, is, isoDateRegexPattern } from "../shared/functions";
+import { useInputs } from "./inputs";
 
 export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, inputs: ReturnType<typeof useInputs>) => {
   return {
@@ -14,7 +14,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
     onKeyUp: (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
         inputs.ref.current!.blur();
-      } else if (event.key === 'Escape') {
+      } else if (event.key === 'Escape' && !inputs.showPopup) {
         inputs.canceled.current = true;
         inputs.ref.current!.blur();
         inputs.canceled.current = false;
@@ -22,17 +22,19 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       }
     },
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      const val = decisionMap(
-        [() => props.type === 'string', () => event.target.value as V],
-        [() => props.type === 'number', () => parseFloat(event.target.value) as V],
-        [() => props.type === 'boolean', () => (event.target.value === 'true') as V],
-        [() => props.type === 'date', () => new Date(event.target.value) as V],
-        [() => props.type === 'null', () => null as V],
+      const val = decideComparing(props.type,
+        ['string', () => event.target.value as V],
+        ['number', () => parseFloat(event.target.value) as V],
+        ['boolean', () => (event.target.value === 'true') as V],
+        ['date', () => new Date(event.target.value) as V],
+        ['null', () => null as V],
       );
       props.onChange?.(val);
     },
     onKeyDown: (event: KeyboardEvent) => {
-      if (is.date(props.value)) {
+      if (props.disabled) {
+        event.preventDefault();
+      } else if (is.date(props.value)) {
         event.preventDefault();  
       } else if (is.number(props.value) && !/[0-9]/.test(event.key)) {
         event.preventDefault();
@@ -60,16 +62,21 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
     },
     onClickChangeType: (type: ValueType) => () => {
       const v = inputs.ref.current!.value;
-      const val = decisionMap(
-        [() => type === 'string', () => v as V],
-        [() => type === 'number', () => (/[0-9]/.test(v) ? +v : 0) as V],
-        [() => type === 'boolean', () => (v === 'true') as V],
-        [() => type === 'date', () => new Date(isoDateRegexPattern.test(v) ? v : 0) as V],
-        [() => type === 'null', () => null as V],
+      const val = decideComparing(type,
+        ['string', () => v as V],
+        ['number', () => (/[0-9]/.test(v) ? +v : 0) as V],
+        ['boolean', () => (v === 'true') as V],
+        ['date', () => new Date(isoDateRegexPattern.test(v) ? v : 0) as V],
+        ['null', () => null as V],
       );
       props.onChangeType?.(type);
       props.onUpdate(val);
     },
+    onDocumentKeyup: useEventHandlerForDocument('keyup', event => {
+      if (event.key === 'Escape' && inputs.showPopup) {
+        inputs.setState({ isHovered: false });
+      }
+    }),
   }
 }
 

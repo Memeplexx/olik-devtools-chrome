@@ -1,6 +1,6 @@
 import { MouseEvent } from "react";
 import { InputValue, ValueType } from "../input/constants";
-import { fixKey, is, silentlyApplyStateAction } from "../shared/functions";
+import { fixKey, is, silentlyApplyStateAction, useEventHandlerForDocument } from "../shared/functions";
 import { RenderNodeArgs } from "./constants";
 import { useInputs } from "./inputs";
 
@@ -18,14 +18,15 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       if (!is.array(props.item)) { throw new Error(); }
       const el = JSON.stringify(getSimplifiedObjectPayload(props.item[0]));
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$push(${el})`]);
-      inputs.setState({ showOptions: false });
       const k = `[data-key="${props.keyConcat}.${props.item.length}"]`;
       setTimeout(() => setTimeout(() => setTimeout(() => document.querySelector<HTMLInputElement>(k)?.focus())));
     },
     onClickAddToObject: () => {
-      inputs.setState({ showOptions: false });
-      silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setNew(${JSON.stringify({ '<key>': '<value>' })})`]);
-      const k = `[data-key="${props.keyConcat}.<key>"]`;
+      const keys = Object.keys(props.item as Record<string, unknown>);
+      const recurse = (tryKey: string, count: number): string => !keys.includes(tryKey) ? tryKey : recurse(`<key-${count++}>`, count);
+      const key = recurse('<key>', 0);
+      silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setNew(${JSON.stringify({ [key]: '<value>' })})`]);
+      const k = `[data-key="${props.keyConcat}.${key}"]`;
       setTimeout(() => setTimeout(() => setTimeout(() => document.querySelector<HTMLInputElement>(k)!.focus())));
     },
     onClickEditKey: () => {
@@ -81,7 +82,12 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onClickDeleteArrayElement: () => {
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);
       inputs.setState({ showArrayOptions: false });
-    }
+    },
+    onDocumentKeyup: useEventHandlerForDocument('keyup', event => {
+      if (event.key === 'Escape') {
+        inputs.setState({ showOptions: false, showArrayOptions: false, isEditingObjectKey: false });
+      }
+    }),
   };
 }
 
