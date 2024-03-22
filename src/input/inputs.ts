@@ -20,7 +20,7 @@ const useLocalState = <V extends InputValue>(
 ) => {
   const localState = useRecord({
     initialized: false,
-    isFocused: false,
+    isHovered: false,
   })
   return {
     ...localState,

@@ -15,12 +15,15 @@ export const Input = styled.input<{ $initialized: boolean, $valueType: ValueType
     -webkit-appearance: none;
     margin: 0;
   }
-  display: ${p => p.$initialized ? 'inline' : 'none'};
+  transition: 0.4s opacity;
+  opacity: ${p => p.$initialized ? '' : '0'};
   ${p => p.readOnly && `pointer-events: none;`}
   cursor: ${p => p.readOnly ? 'not-allowed' : p.$valueType === 'boolean' || p.$valueType === 'date' ? 'pointer' : 'text'};
 `;
 
-export const Quote = styled(possible.span)`
+export const Quote = styled(possible.span)<{ $type: 'start' | 'end' }>`
+  margin-right: ${p => p.$type === 'start' ? '-2px' : '0'};
+  margin-left: ${p => p.$type === 'end' ? '-2px' : '0'};
 `;
 
 export const Wrapper = styled(possible.span)`

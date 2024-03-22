@@ -26,6 +26,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
           <Quote
             showIf={showQuotes && is.string(props.value)}
             children='"'
+            $type='start'
           />
           <Input
             {...inputProps}
@@ -47,9 +48,10 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
           <Quote
             showIf={showQuotes && is.string(props.value)}
             children='"'
+            $type='end'
           />
           <PopupList
-            showIf={props.allowTypeSelectorPopup && inputs.isFocused}
+            showIf={props.allowTypeSelectorPopup && inputs.isHovered}
             children={[
               ...(props.additionalOptions || []),
               ...types.map(type => ({

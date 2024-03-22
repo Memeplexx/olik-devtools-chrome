@@ -123,7 +123,6 @@ export const RenderedNode = function RenderedNode(
         showIf={!inputs.isHidden && !inputs.isPrimitive}
       />
       <ParenthesisNode
-        $type='parenthesis'
         children=')'
         showIf={inputs.showActionType}
         $unchanged={inputs.isUnchanged}
@@ -142,13 +141,11 @@ export const RenderedNode = function RenderedNode(
             children={
               <>
                 <ActionType
-                  $type='actionType'
                   children={props.actionType}
                   showIf={inputs.showActionType}
                   $unchanged={inputs.isUnchanged}
                 />
                 <ParenthesisNode
-                  $type='parenthesis'
                   children='('
                   showIf={inputs.showActionType}
                   $unchanged={inputs.isUnchanged}
@@ -223,7 +220,6 @@ export const RenderedNode = function RenderedNode(
           />
           {!inputs.isContracted && content}
           <CommaNode
-            $type='comma'
             children=','
             showIf={!props.isLast && !inputs.isHidden}
             $unchanged={inputs.isUnchanged}

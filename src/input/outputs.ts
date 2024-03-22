@@ -47,16 +47,15 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       props.onUpdate(props.value);
     },
     onFocus: (e: FocusEvent<HTMLInputElement>) => {
-      inputs.ref.current!.select();
       inputs.valueBefore.current = inputs.ref.current!.value;
       props.onFocus?.(e);
     },
     onMouseOver: (e: MouseEvent<HTMLInputElement>) => {
-      inputs.setState({ isFocused: true });
+      inputs.setState({ isHovered: true });
       props.onMouseOver?.(e);
     },
     onMouseOut: (e: MouseEvent<HTMLInputElement>) => {
-      inputs.setState({ isFocused: false });
+      inputs.setState({ isHovered: false });
       props.onMouseOut?.(e);
     },
     onClickChangeType: (type: ValueType) => () => {
