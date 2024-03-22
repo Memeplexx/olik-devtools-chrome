@@ -11,6 +11,7 @@ export const useInputs = <V extends InputValue>(
   const localState = useLocalState(props, forwardedRef);
   useInitializer(localState);
   useDatePicker(props, localState);
+  useAnimateOnValueChange(props, localState);
   return localState;
 }
 
@@ -21,7 +22,8 @@ const useLocalState = <V extends InputValue>(
   const localState = useRecord({
     initialized: false,
     isHovered: false,
-  })
+    animate: true,
+  });
   return {
     ...localState,
     ref: useForwardedRef(forwardedRef),
@@ -57,6 +59,18 @@ const useInitializer = (
   useEffect(() => {
     setState({ initialized: true });
   }, [setState]);
+}
+
+const useAnimateOnValueChange = <V extends InputValue>(
+  props: CompactInputProps<V>,
+  localState: ReturnType<typeof useLocalState>
+) => {
+  const setState = localState.setState;
+  useMemo(() => {
+    setState({ initialized: false, animate: false });
+    setTimeout(() => setState({ initialized: true, animate: true }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.value, setState]);
 }
 
 const useDatePicker = <V extends InputValue>(

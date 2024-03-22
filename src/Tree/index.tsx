@@ -42,7 +42,7 @@ export const Tree = (
                 {...props}
                 key={index.toString()}
                 recurse={recurse}
-                keyConcat={key === '' ? key.toString() : `${outerKey.toString()}.${key.toString()}`}
+                keyConcat={key === '' ? key.toString() : `${outerKey}.${key}`}
                 index={index}
                 item={val[key]}
                 isLast={index === arr.length - 1}

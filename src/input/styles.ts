@@ -1,8 +1,8 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { possible } from "../html";
 import { ValueType } from "./constants";
 
-export const Input = styled.input<{ $initialized: boolean, $valueType: ValueType }>`
+export const Input = styled.input<{ $initialized: boolean, $valueType: ValueType, $animate: boolean }>`
   :focus {
     outline: 1px solid #add8e6;
   }
@@ -15,7 +15,7 @@ export const Input = styled.input<{ $initialized: boolean, $valueType: ValueType
     -webkit-appearance: none;
     margin: 0;
   }
-  transition: 0.4s opacity;
+  ${p => p.$animate ? css`transition: 0.4s opacity` : ''};
   opacity: ${p => p.$initialized ? '' : '0'};
   ${p => p.readOnly && `pointer-events: none;`}
   cursor: ${p => p.readOnly ? 'not-allowed' : p.$valueType === 'boolean' || p.$valueType === 'date' ? 'pointer' : 'text'};

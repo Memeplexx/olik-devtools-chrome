@@ -44,6 +44,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
             type={inputs.inputType}
             min='0'
             max={inputs.max}
+            $animate={inputs.animate}
           />
           <Quote
             showIf={showQuotes && is.string(props.value)}
