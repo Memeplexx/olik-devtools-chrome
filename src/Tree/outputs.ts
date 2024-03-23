@@ -57,11 +57,11 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onHideOptions: () => {
       inputs.setState(({ showOptions: false }));
     },
-    onChangeKey: (keyValue: InputValue) => {
-      inputs.setState({ keyValue: keyValue as string });
+    onChangeKey: (key: InputValue) => {
+      inputs.setState({ key: key as string });
     },
-    onChangeValue: (valueValue: InputValue) => {
-      inputs.setState({ valueValue });
+    onChangeValue: (value: InputValue) => {
+      inputs.setState({ value });
     },
     onChangeCommitValue: (value: InputValue) => {
       const argAsString = (() => {
@@ -73,8 +73,8 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       })()
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${argAsString})`]);
     },
-    onChangeValueType: (valueType: ValueType) => {
-      inputs.setState({ valueType });
+    onChangeValueType: (type: ValueType) => {
+      inputs.setState({ type });
     },
     onFocusObjectKey: () => {
       inputs.setState({ isEditingObjectKey: true });

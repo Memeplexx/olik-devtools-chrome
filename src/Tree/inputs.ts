@@ -22,9 +22,9 @@ export const useLocalState = (
     showOptions: false,
     showArrayOptions: false,
     isEditingObjectKey: false,
-    keyValue: '',
-    valueValue: props.item as InputValue,
-    valueType: (() => {
+    key: '',
+    value: props.item as InputValue,
+    type: (() => {
       if (is.number(props.item)) return 'number';
       if (is.string(props.item)) return 'string';
       if (is.boolean(props.item)) return 'boolean';
@@ -90,9 +90,9 @@ const useValueUpdater = (
 ) => {
   const setState = localState.setState;
   useMemo(() => {
-    setState({ valueValue: props.item as InputValue });
+    setState({ value: props.item as InputValue });
   }, [props.item, setState]);
   useMemo(() => {
-    setState({ keyValue: props.objectKey! });
+    setState({ key: props.objectKey! });
   }, [props.objectKey, setState]);
 }
