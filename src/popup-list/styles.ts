@@ -13,10 +13,10 @@ export const PopupOptions = styled(possible.span)<{ $position: Position }>`
   border-bottom-right-radius: 3px;
   border-bottom-left-radius: 3px;
   ${p => (pos => {
-    if (pos === 'right') return css`left: 100%`;
-    if (pos === 'above') return css`bottom: 100%`;
-    if (pos === 'left') return css`right: 100%`;
-    if (pos === 'below') return css`top: 100%`;
+    if (pos === 'right') return css`left: 100%; top: 0;`;
+    if (pos === 'above') return css`bottom: 100%; left: 0;`;
+    if (pos === 'left') return css`right: 100%; top: 0;`;
+    if (pos === 'below') return css`top: 100%; left: 0;`;
   })(p.$position)};
 `;
 export const PopupOption = styled(possible.span)<{ $selected?: boolean }>`
