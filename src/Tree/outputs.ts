@@ -36,7 +36,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       props.onClickNodeKey(key);
       inputs.setState({ showOptions: false })
     },
-    handleValueClick: () => {
+    onClickValueNode: () => {
       inputs.setState(({ showArrayOptions: false }))
     },
     onMouseOverRootNode: () => {

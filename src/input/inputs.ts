@@ -48,8 +48,8 @@ const useLocalState = <V extends InputValue>(
     return is.number(props.value) ? props.value : 0;
   }, [props.value]);
   const showQuote = useMemo(() => {
-    return props.showQuotes && is.string(props.value);
-  }, [props.showQuotes, props.value]);
+    return props.allowQuotesToBeShown && is.string(props.value);
+  }, [props.allowQuotesToBeShown, props.value]);
   return {
     ...localState,
     inputRef: useForwardedRef(forwardedRef),

@@ -86,13 +86,13 @@ export const RenderedNode = function RenderedNode(
             <>
               <ValueNode
                 $type={inputs.nodeType}
-                onClick={outputs.handleValueClick}
                 data-key={props.keyConcat}
                 value={inputs.valueValue}
                 onChange={outputs.onChangeValue}
-                showQuotes={true}
+                allowQuotesToBeShown={true}
                 allowTypeSelectorPopup={true}
                 type={inputs.valueType}
+                onClick={outputs.onClickValueNode}
                 onChangeType={outputs.onChangeValueType}
                 onChangeCommit={outputs.onChangeCommitValue}
                 additionalOptions={(!props.isArrayElement || !inputs.showArrayOptions) ? [] : [
@@ -153,12 +153,12 @@ export const RenderedNode = function RenderedNode(
                   readOnly={!props.store || !inputs.isEditingObjectKey}
                   value={inputs.keyValue}
                   $unchanged={inputs.isUnchanged}
+                  onChange={outputs.onChangeKey}
                   onChangeCommit={outputs.onChangeCommitObjectKey}
                   onFocus={outputs.onFocusObjectKey}
                   onBlur={outputs.onBlurObjectKey}
-                  onChange={outputs.onChangeKey}
                   allowTypeSelectorPopup={false}
-                  showQuotes={false}
+                  allowQuotesToBeShown={false}
                   type='string'
                 />
                 <Colon
