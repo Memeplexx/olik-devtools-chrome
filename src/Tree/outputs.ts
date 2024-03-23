@@ -69,7 +69,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
         if (is.number(v)) return v;
         if (is.boolean(v)) return v.toString();
         if (is.date(v)) return v.toISOString();
-        return `"${v.toString()}"`;
+        return v;
       })(value)
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${argAsString})`]);
     },
