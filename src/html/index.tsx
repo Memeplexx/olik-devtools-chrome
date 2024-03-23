@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, ComponentType, ForwardedRef, HTMLAttributes, InputHTMLAttributes, forwardRef,  } from "react";
+import { ButtonHTMLAttributes, ComponentType, ForwardedRef, HTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes, forwardRef,  } from "react";
 import { TypedKeyboardEvent } from "../shared/functions";
 
 
@@ -11,6 +11,8 @@ type ReplaceKeyboardEvents<E extends HTMLElement, A extends HTMLAttributes<E>> =
 export type ButtonProps = ReplaceKeyboardEvents<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElement>>;
 
 export type InputProps = ReplaceKeyboardEvents<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>;
+
+export type TextAreaProps = ReplaceKeyboardEvents<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>;
 
 export type DivProps = ReplaceKeyboardEvents<HTMLDivElement, HTMLAttributes<HTMLDivElement>>;
 
@@ -36,6 +38,12 @@ export const possible = {
     ref?: ForwardedRef<HTMLInputElement>
   ) {
     return showIf === false ? null : <input ref={ref} {...props}>{children}</input>;
+  }),
+  textarea: forwardRef(function Input(
+    { children, showIf, ...props }: TextAreaProps,
+    ref?: ForwardedRef<HTMLTextAreaElement>
+  ) {
+    return showIf === false ? null : <textarea ref={ref} {...props}>{children}</textarea>;
   }),
   button: forwardRef(function Button(
     { children, showIf, ...props }: ButtonProps,

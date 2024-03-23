@@ -1,18 +1,19 @@
 import { ChangeEvent, FocusEvent, MouseEvent } from "react";
 import { TypedKeyboardEvent, is, isoDateRegexPattern, useEventHandlerForDocument } from "../shared/functions";
-import { CompactInputProps, InputValue, ValueType } from "./constants";
+import { CompactInputProps, InputValue, TextInputElement, ValueType } from "./constants";
 import { useInputs } from "./inputs";
+
 
 export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, inputs: ReturnType<typeof useInputs>) => {
   return {
-    onClick: (event: MouseEvent<HTMLInputElement>) => {
+    onClick: (event: MouseEvent<TextInputElement>) => {
       if (props.type === 'boolean') {
         props.onChangeCommit(!props.value as V);
         inputs.inputRef.current?.blur();
       }
       props.onClick?.(event);
     },
-    onKeyUp: (event: TypedKeyboardEvent<HTMLInputElement>) => {
+    onKeyUp: (event: TypedKeyboardEvent<TextInputElement>) => {
       if (event.key === 'Enter') {
         inputs.inputRef.current!.blur();
       } else if (event.key === 'Escape' && !inputs.showPopup) {
@@ -21,8 +22,11 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
         inputs.canceled.current = false;
         manuallyFireChangeEvent(inputs);
       }
+      if (inputs.showTextArea) {
+        inputs.setState({ textAreaHeight: inputs.inputRef.current!.scrollHeight });
+      }
     },
-    onChange: (event: ChangeEvent<HTMLInputElement>) => {
+    onChange: (event: ChangeEvent<TextInputElement>) => {
       const inputVal = event.target.value;
       const valueOfNewType = (v => {
         if (is.string(v)) return inputVal;
@@ -33,8 +37,8 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       })(props.value) as V;
       props.onChange?.(valueOfNewType);
     },
-    onKeyDown: (event: TypedKeyboardEvent<HTMLInputElement>) => {
-      if (props.disabled) {
+    onKeyDown: (event: TypedKeyboardEvent<TextInputElement>) => {
+      if (props.readOnly) {
         event.preventDefault();
       } else if (is.date(props.value)) {
         event.preventDefault();  
@@ -43,7 +47,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       }
       inputs.animationEnabled.current = false;
     },
-    onBlur: (event: FocusEvent<HTMLInputElement>) => {
+    onBlur: (event: FocusEvent<TextInputElement>) => {
       props.onBlur?.(event);
       if (inputs.calendarOpened.current) return;
       if (inputs.canceled.current) return;
@@ -51,15 +55,15 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       if (props.type === 'boolean') return;
       props.onChangeCommit(props.value);
     },
-    onFocus: (e: FocusEvent<HTMLInputElement>) => {
+    onFocus: (e: FocusEvent<TextInputElement>) => {
       inputs.valueBefore.current = inputs.inputRef.current!.value;
       props.onFocus?.(e);
     },
-    onMouseOver: (e: MouseEvent<HTMLInputElement>) => {
+    onMouseOver: (e: MouseEvent<TextInputElement>) => {
       inputs.setState({ isHovered: true });
       props.onMouseOver?.(e);
     },
-    onMouseOut: (e: MouseEvent<HTMLInputElement>) => {
+    onMouseOut: (e: MouseEvent<TextInputElement>) => {
       inputs.setState({ isHovered: false });
       props.onMouseOut?.(e);
     },

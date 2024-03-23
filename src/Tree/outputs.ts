@@ -73,6 +73,9 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       })(value)
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${argAsString})`]);
     },
+    onChangeInputElement: (isShowingTextArea: boolean) => {
+      inputs.setState({ isShowingTextArea });
+    },
     onChangeValueType: (type: ValueType) => {
       inputs.setState({ type });
     },

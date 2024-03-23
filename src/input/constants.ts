@@ -1,4 +1,4 @@
-import { InputHTMLAttributes } from "react";
+import { HTMLAttributes } from "react";
 import { PopupListProps } from "../popup-list/consts";
 
 
@@ -8,6 +8,8 @@ export type ValueType = typeof types[keyof typeof types];
 
 export type InputValue = string | number | boolean | Date | null;
 
+export type TextInputElement = HTMLInputElement | HTMLTextAreaElement;
+
 export type CompactInputProps<V extends InputValue> = {
   value: V,
   type: ValueType,
@@ -16,5 +18,9 @@ export type CompactInputProps<V extends InputValue> = {
   onChangeType?: (type: ValueType) => void,
   allowQuotesToBeShown?: boolean,
   allowTypeSelectorPopup: boolean,
+  allowTextArea?: boolean,
   additionalOptions?: PopupListProps['children'],
-} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'type' | 'onChange'>;
+  readOnly?: boolean,
+  onChangeInputElement?: (isTextArea: boolean) => void,
+} & Omit<HTMLAttributes<HTMLElement>, 'onChange'>
+;

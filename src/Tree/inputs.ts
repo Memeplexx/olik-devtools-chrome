@@ -22,6 +22,7 @@ export const useLocalState = (
     showOptions: false,
     showArrayOptions: false,
     isEditingObjectKey: false,
+    isShowingTextArea: false,
     key: '',
     value: props.item as InputValue,
     type: (v => {

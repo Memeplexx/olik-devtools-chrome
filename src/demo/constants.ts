@@ -3,7 +3,7 @@ export const initialState = {
   bool: false,
   thing: {},
   flatObj: {
-    one: 'hello',
+    one: 'hello hello hello hello hello hello hello hello',
     two: 'world',
     three: 'another',
   },

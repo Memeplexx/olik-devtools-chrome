@@ -6,7 +6,7 @@ import { is } from "../shared/functions";
 import { RecurseArgs, RenderNodeArgs, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
-import { ActionType, BraceNode, ChildNode, Colon, CommaNode, Ellipses, KeyNode, ParentNode, ParenthesisNode, ValueNode } from "./styles";
+import { ActionType, BraceNode, ChildNode, Colon, CommaNode, Ellipses, KeyNode, ParentNode, ParenthesisNode, ValueNode, Wrapper } from "./styles";
 
 
 export const Tree = (
@@ -76,6 +76,7 @@ export const RenderedNode = function RenderedNode(
   const content = (
     <>
       <ChildNode
+        $wrappingTextArea={inputs.isShowingTextArea}
         $type={inputs.nodeType}
         showIf={!inputs.isContracted && !inputs.isEmpty && !inputs.isHidden}
         $unchanged={inputs.isUnchanged}
@@ -90,10 +91,12 @@ export const RenderedNode = function RenderedNode(
               onChange={outputs.onChangeValue}
               allowQuotesToBeShown={true}
               allowTypeSelectorPopup={true}
+              allowTextArea={true}
               type={inputs.type}
               onClick={outputs.onClickValueNode}
               onChangeType={outputs.onChangeValueType}
               onChangeCommit={outputs.onChangeCommitValue}
+              onChangeInputElement={outputs.onChangeInputElement}
               additionalOptions={(!props.isArrayElement || !inputs.showArrayOptions) ? [] : [
                 {
                   onClick: outputs.onClickCopy,
@@ -124,7 +127,8 @@ export const RenderedNode = function RenderedNode(
     </>
   );
   return (
-    <Frag
+    <Wrapper
+      $wrappingTextArea={inputs.isShowingTextArea}
       key={props.index}
       children={
         <>
@@ -217,7 +221,7 @@ export const RenderedNode = function RenderedNode(
           {!inputs.isContracted && content}
           <CommaNode
             children=','
-            showIf={!props.isLast && !inputs.isHidden}
+            showIf={!props.isLast && !inputs.isHidden && !inputs.isShowingTextArea}
             $unchanged={inputs.isUnchanged}
           />
         </>

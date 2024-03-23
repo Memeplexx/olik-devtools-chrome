@@ -1,21 +1,34 @@
 import 'flatpickr/dist/flatpickr.css';
-import { ForwardedRef, forwardRef } from "react";
-import { CompactInputProps, InputValue, types } from "./constants";
+import { ForwardedRef, MutableRefObject, forwardRef } from "react";
+import { CompactInputProps, InputValue, TextInputElement, types } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
-import { Input, Quote, Wrapper } from "./styles";
+import { Input, Quote, TextArea, Wrapper } from "./styles";
 import { PopupList } from '../popup-list';
 import { IoIosSwap } from 'react-icons/io';
 
 
 export const CompactInput = forwardRef(function CompactInput<V extends InputValue>(
   props: CompactInputProps<V>,
-  forwardedRef: ForwardedRef<HTMLInputElement>
+  forwardedRef: ForwardedRef<TextInputElement>
 ) {
   const inputs = useInputs(props, forwardedRef);
   const outputs = useOutputs(props, inputs);
+  const commonInputProps = {
+    value: inputs.valueAsString,
+    onKeyDown: outputs.onKeyDown,
+    onKeyUp: outputs.onKeyUp,
+    onChange: outputs.onChange,
+    onClick: outputs.onClick,
+    onBlur: outputs.onBlur,
+    onFocus: outputs.onFocus,
+    $initialized: inputs.initialized,
+    $valueType: props.type,
+    $animate: inputs.animate,
+  }
   return (
     <Wrapper
+      showIf={!props.showIf}
       onMouseOver={outputs.onMouseOver}
       onMouseOut={outputs.onMouseOut}
       children={
@@ -27,21 +40,21 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
           />
           <Input
             {...inputs.inputsProps}
-            value={inputs.valueAsString}
-            size={inputs.inputSize}
-            max={inputs.max}
-            ref={inputs.inputRef}
-            onKeyDown={outputs.onKeyDown}
-            onKeyUp={outputs.onKeyUp}
-            onChange={outputs.onChange}
-            onClick={outputs.onClick}
-            onBlur={outputs.onBlur}
-            onFocus={outputs.onFocus}
-            $initialized={inputs.initialized}
-            $valueType={props.type}
+            {...commonInputProps}
+            showIf={!inputs.showTextArea}
             type={inputs.inputType}
             min='0'
-            $animate={inputs.animate}
+            max={inputs.max}
+            size={inputs.inputSize}
+            ref={inputs.inputRef as MutableRefObject<HTMLInputElement>}
+          />
+          <TextArea
+            {...inputs.inputsProps}
+            {...commonInputProps}
+            showIf={inputs.showTextArea}
+            ref={inputs.inputRef as MutableRefObject<HTMLTextAreaElement>}
+            $height={inputs.textAreaHeight}
+            rows={1}
           />
           <Quote
             showIf={inputs.showQuote}
