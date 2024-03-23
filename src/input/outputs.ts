@@ -8,16 +8,16 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
     onClick: (event: MouseEvent<HTMLInputElement>) => {
       if (props.type === 'boolean') {
         props.onUpdate(!props.value as V);
-        inputs.ref.current?.blur();
+        inputs.inputRef.current?.blur();
       }
       props.onClick?.(event);
     },
     onKeyUp: (event: TypedKeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
-        inputs.ref.current!.blur();
+        inputs.inputRef.current!.blur();
       } else if (event.key === 'Escape' && !inputs.showPopup) {
         inputs.canceled.current = true;
-        inputs.ref.current!.blur();
+        inputs.inputRef.current!.blur();
         inputs.canceled.current = false;
         manuallyFireChangeEvent(inputs);
       }
@@ -47,12 +47,12 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       props.onBlur?.(event);
       if (inputs.calendarOpened.current) { return; }
       if (inputs.canceled.current) { return; }
-      if (inputs.ref.current!.value === inputs.valueBefore.current) { return; }
+      if (inputs.inputRef.current!.value === inputs.valueBefore.current) { return; }
       if (props.type === 'boolean') { return; }
       props.onUpdate(props.value);
     },
     onFocus: (e: FocusEvent<HTMLInputElement>) => {
-      inputs.valueBefore.current = inputs.ref.current!.value;
+      inputs.valueBefore.current = inputs.inputRef.current!.value;
       props.onFocus?.(e);
     },
     onMouseOver: (e: MouseEvent<HTMLInputElement>) => {
@@ -71,7 +71,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
         if (type === 'boolean') return (v === 'true');
         if (type === 'date') return new Date(isoDateRegexPattern.test(v) ? v : 0);
         if (type === 'null') return null;
-      })(inputs.ref.current!.value) as V;
+      })(inputs.inputRef.current!.value) as V;
       props.onUpdate(valueOfNewType);
     },
     onDocumentKeyup: useEventHandlerForDocument('keyup', event => {
@@ -90,6 +90,6 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
 const manuallyFireChangeEvent = (inputs: ReturnType<typeof useInputs>) => {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
-  nativeInputValueSetter.call(inputs.ref.current!, inputs.valueBefore.current);
-  inputs.ref.current!.dispatchEvent(new Event('input', { bubbles: true }));
+  nativeInputValueSetter.call(inputs.inputRef.current!, inputs.valueBefore.current);
+  inputs.inputRef.current!.dispatchEvent(new Event('input', { bubbles: true }));
 }

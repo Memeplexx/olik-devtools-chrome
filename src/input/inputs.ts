@@ -26,20 +26,33 @@ const useLocalState = <V extends InputValue>(
     isHovered: false,
     animate: true,
   });
-  const valueAsString = ((v) => {
-    if (is.null(v)) return 'null';
-    if (is.undefined(v)) return '';
-    if (is.boolean(v)) return v.toString();
-    if (is.number(v)) return v.toString();
-    if (is.string(v)) return v.toString();
-    if (is.date(v)) return v.toISOString();
-  })(props.value) as string;
-  const inputsProps = (Object.keys(props) as Array<keyof typeof props>)
-    .filter(k => (k in htmlEl))
-    .reduce<Record<string, unknown>>((acc, key) => { acc[key] = props[key]; return acc; }, {});
+  const valueAsString = useMemo(() => {
+    return ((v) => {
+      if (is.null(v)) return 'null';
+      if (is.undefined(v)) return '';
+      if (is.boolean(v)) return v.toString();
+      if (is.number(v)) return v.toString();
+      if (is.string(v)) return v.toString();
+      if (is.date(v)) return v.toISOString();
+    })(props.value) as string;
+  }, [props.value]);
+  const inputsProps = useMemo(() => {
+    return (Object.keys(props) as Array<keyof typeof props>)
+      .filter(k => (k in htmlEl))
+      .reduce<Record<string, unknown>>((acc, key) => { acc[key] = props[key]; return acc; }, {});
+  }, [props]);
+  const inputType = useMemo(() => {
+    return is.number(props.value) ? 'number' : 'string';
+  }, [props.value]);
+  const max = useMemo(() => {
+    return is.number(props.value) ? props.value : 0;
+  }, [props.value]);
+  const showQuote = useMemo(() => {
+    return props.showQuotes && is.string(props.value);
+  }, [props.showQuotes, props.value]);
   return {
     ...localState,
-    ref: useForwardedRef(forwardedRef),
+    inputRef: useForwardedRef(forwardedRef),
     valueBefore: useRef(''),
     flatPickerRef: useRef<Instance | null>(null),
     canceled: useRef(false),
@@ -48,9 +61,9 @@ const useLocalState = <V extends InputValue>(
     animationEnabled: useRef(true),
     showPopup: props.allowTypeSelectorPopup && localState.isHovered,
     inputSize: Math.max(1, valueAsString.length),
-    inputType: useMemo(() => is.number(props.value) ? 'number' : 'string', [props.value]),
-    max: useMemo(() => is.number(props.value) ? props.value : 0, [props.value]),
-    showQuote: useMemo(() => props.showQuotes && is.string(props.value), [props.showQuotes, props.value]),
+    inputType,
+    max,
+    showQuote,
     valueAsString,
     inputsProps,
   };
@@ -83,26 +96,27 @@ const useDatePicker = <V extends InputValue>(
   props: CompactInputProps<V>,
   localState: ReturnType<typeof useLocalState>,
 ) => {
-  if (is.date(props.value) && !localState.flatPickerRef.current && localState.ref.current) {
-    localState.flatPickerRef.current = flatpickr(localState.ref.current, {
+  const { flatPickerRef, inputRef, dateChanged, calendarOpened, valueAsString } = localState;
+  if (is.date(props.value) && !flatPickerRef.current && inputRef.current) {
+    flatPickerRef.current = flatpickr(inputRef.current, {
       enableTime: true,
-      defaultDate: localState.valueAsString,
+      defaultDate: valueAsString,
       formatDate: d => d.toISOString(),
       onOpen: () => {
-        localState.dateChanged.current = false;
-        localState.calendarOpened.current = true;
+        dateChanged.current = false;
+        calendarOpened.current = true;
       },
       onChange: () => {
-        localState.dateChanged.current = true;
+        dateChanged.current = true;
       },
       onClose: (s) => {
-        if (!localState.dateChanged.current) { return; }
-        setTimeout(() => localState.calendarOpened.current = false);
+        if (!dateChanged.current) { return; }
+        setTimeout(() => calendarOpened.current = false);
         props.onUpdate(s[0] as V);
       },
     })
-  } else if (localState.flatPickerRef.current && !is.date(props.value)) {
-    localState.flatPickerRef.current.destroy();
-    localState.flatPickerRef.current = null;
+  } else if (flatPickerRef.current && !is.date(props.value)) {
+    flatPickerRef.current.destroy();
+    flatPickerRef.current = null;
   }
 }
