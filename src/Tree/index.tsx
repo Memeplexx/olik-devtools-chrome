@@ -83,32 +83,30 @@ export const RenderedNode = function RenderedNode(
         onMouseOut={outputs.onMouseOutValueNode}
         children={
           is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.store ? inputs.nodeEl : (
-            <>
-              <ValueNode
-                $type={inputs.nodeType}
-                data-key={props.keyConcat}
-                value={inputs.value}
-                onChange={outputs.onChangeValue}
-                allowQuotesToBeShown={true}
-                allowTypeSelectorPopup={true}
-                type={inputs.type}
-                onClick={outputs.onClickValueNode}
-                onChangeType={outputs.onChangeValueType}
-                onChangeCommit={outputs.onChangeCommitValue}
-                additionalOptions={(!props.isArrayElement || !inputs.showArrayOptions) ? [] : [
-                  {
-                    onClick: outputs.onClickCopy,
-                    icon: FaCopy,
-                    text: 'copy node'
-                  },
-                  {
-                    onClick: outputs.onClickDeleteArrayElement,
-                    icon: FaTrash,
-                    text: 'delete node'
-                  },
-                ]}
-              />
-            </>
+            <ValueNode
+              $type={inputs.nodeType}
+              data-key={props.keyConcat}
+              value={inputs.value}
+              onChange={outputs.onChangeValue}
+              allowQuotesToBeShown={true}
+              allowTypeSelectorPopup={true}
+              type={inputs.type}
+              onClick={outputs.onClickValueNode}
+              onChangeType={outputs.onChangeValueType}
+              onChangeCommit={outputs.onChangeCommitValue}
+              additionalOptions={(!props.isArrayElement || !inputs.showArrayOptions) ? [] : [
+                {
+                  onClick: outputs.onClickCopy,
+                  icon: FaCopy,
+                  text: 'copy node'
+                },
+                {
+                  onClick: outputs.onClickDeleteArrayElement,
+                  icon: FaTrash,
+                  text: 'delete node'
+                },
+              ]}
+            />
           )
         }
       />

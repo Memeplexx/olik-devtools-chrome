@@ -24,7 +24,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
     },
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
       const inputVal = event.target.value;
-      const valueOfNewType = ((v) => {
+      const valueOfNewType = (v => {
         if (is.string(v)) return inputVal;
         if (is.number(v)) return inputVal.trim() === ''  ? 0 : parseFloat(inputVal);
         if (is.boolean(v)) return inputVal === 'true';
@@ -45,10 +45,10 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
     },
     onBlur: (event: FocusEvent<HTMLInputElement>) => {
       props.onBlur?.(event);
-      if (inputs.calendarOpened.current) { return; }
-      if (inputs.canceled.current) { return; }
-      if (inputs.inputRef.current!.value === inputs.valueBefore.current) { return; }
-      if (props.type === 'boolean') { return; }
+      if (inputs.calendarOpened.current) return;
+      if (inputs.canceled.current) return;
+      if (inputs.inputRef.current!.value === inputs.valueBefore.current) return;
+      if (props.type === 'boolean') return;
       props.onChangeCommit(props.value);
     },
     onFocus: (e: FocusEvent<HTMLInputElement>) => {
@@ -65,7 +65,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
     },
     onClickChangeType: (type: ValueType) => () => {
       props.onChangeType?.(type);
-      const valueOfNewType = ((v) => {
+      const valueOfNewType = (v => {
         if (type === 'string') return v;
         if (type === 'number') return (/^[0-9]$/.test(v) ? +v : 0);
         if (type === 'boolean') return (v === 'true');

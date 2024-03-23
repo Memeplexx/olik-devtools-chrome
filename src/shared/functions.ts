@@ -63,7 +63,7 @@ export const is = {
 	array: <T>(val: unknown): val is Array<T> => {
 		return Array.isArray(val);
 	},
-	function: <R, A extends Array<unknown>>(val: unknown): val is (...a: A) => R => {
+	function: <A extends Array<unknown>, R>(val: unknown): val is (...a: A) => R => {
 		return typeof (val) === 'function';
 	},
 	nullOrUndefined: (val: unknown): val is null | undefined => {
@@ -132,8 +132,8 @@ export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 	return {
 		...state,
 		setState: useCallback((arg: Partial<R> | ((r: R) => Partial<R>)) => {
-			if (is.function(arg)) {
-				setState(s => ({ ...s, ...arg(s) as Partial<R> }));
+			if (is.function<[R], Partial<R>>(arg)) {
+				setState(s => ({ ...s, ...arg(s) }));
 			} else {
 				setState(s => ({ ...s, ...arg }));
 			}
