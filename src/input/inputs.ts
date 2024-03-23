@@ -62,7 +62,7 @@ const useLocalState = <V extends InputValue>(
     ...localState,
     inputRef,
     valueBefore: useRef(''),
-    canceled: useRef(false),
+    onEscapePressed: useRef(false),
     calendarOpened: useRef(false),
     animationEnabled: useRef(true),
     showPopup: props.allowTypeSelectorPopup && localState.isHovered,

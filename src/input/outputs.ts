@@ -17,9 +17,9 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       if (event.key === 'Enter' && !(inputs.showTextArea && event.shiftKey)) {
         inputs.inputRef.current!.blur();
       } else if (event.key === 'Escape' && !inputs.showPopup) {
-        inputs.canceled.current = true;
+        inputs.onEscapePressed.current = true;
         inputs.inputRef.current!.blur();
-        inputs.canceled.current = false;
+        inputs.onEscapePressed.current = false;
         manuallyFireChangeEvent(inputs);
       }
     },
@@ -49,7 +49,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
     onBlur: (event: FocusEvent<TextInputElement>) => {
       props.onBlur?.(event);
       if (inputs.calendarOpened.current) return;
-      if (inputs.canceled.current) return;
+      if (inputs.onEscapePressed.current) return;
       if (inputs.inputRef.current!.value === inputs.valueBefore.current) return;
       if (props.type === 'boolean') return;
       props.onChangeCommit(props.value);
