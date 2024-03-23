@@ -129,7 +129,7 @@ export const RenderedNode = function RenderedNode(
       children={
         <>
           <ParentNode
-            onClick={outputs.handleNodeClick(props.keyConcat)}
+            onClick={outputs.onClickParentNode(props.keyConcat)}
             onMouseOver={outputs.onMouseOverRootNode}
             onMouseOut={outputs.onMouseOutRootNode}
             children={

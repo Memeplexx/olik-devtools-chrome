@@ -13,7 +13,7 @@ const typeMap = {
   date: 'deepskyblue',
   boolean: 'lightblue',
   null: 'magenta',
-} as {[k in NodeType]: string};
+} satisfies Record<NodeType, string>;
 
 export const CommonStyles = css<{ $type?: NodeType, $unchanged?: boolean }>`
   color: ${p => typeMap[p.$type!] ?? '#fff'};

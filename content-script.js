@@ -15,17 +15,3 @@ window.addEventListener('message', function(event) {
   chrome.runtime.sendMessage(message);
 
 });
-
-
-// chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-//   console.log('message', request);
-//     if (request.fromOlikDevtoolsInspector) {
-//       window.postMessage({
-//         fromOlikDevtools: true,
-//         data: request.state
-//       }, '*');
-//     }
-//   }
-// );
-
-

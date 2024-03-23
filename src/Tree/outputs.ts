@@ -31,7 +31,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       inputs.setState({ showOptions: false });
       inputs.keyNodeRef.current!.focus();
     },
-    handleNodeClick: (key: string) => (event: MouseEvent) => {
+    onClickParentNode: (key: string) => (event: MouseEvent) => {
       event.stopPropagation();
       props.onClickNodeKey(key);
       inputs.setState({ showOptions: false })
