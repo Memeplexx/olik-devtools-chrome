@@ -37,10 +37,4 @@ export type NodeType =
   | 'date'
   | 'boolean'
   | 'null'
-  | 'undefined'
-  | 'actionType'
-  | 'colon'
-  | 'comma'
-  | 'parenthesis'
-  | 'ellipsis'
-  | 'key';
+  ;
