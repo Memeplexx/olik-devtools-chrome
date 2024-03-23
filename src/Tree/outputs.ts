@@ -18,14 +18,14 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       if (!is.array(props.item)) { throw new Error(); }
       const el = JSON.stringify(getSimplifiedObjectPayload(props.item[0]));
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$push(${el})`]);
-      focusInput(`[data-key="${props.keyConcat}.${props.item.length}"]`);
+      tryFocusInput(`[data-key="${props.keyConcat}.${props.item.length}"]`);
     },
     onClickAddToObject: () => {
       const keys = Object.keys(props.item as Record<string, unknown>);
       const recurse = (tryKey: string, count: number): string => !keys.includes(tryKey) ? tryKey : recurse(`<key-${count++}>`, count);
       const key = recurse('<key>', 0);
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setNew(${JSON.stringify({ [key]: '<value>' })})`]);
-      focusInput(`[data-key="${props.keyConcat}.${key}"]`);
+      tryFocusInput(`[data-key="${props.keyConcat}.${key}"]`);
     },
     onClickEditKey: () => {
       inputs.setState({ showOptions: false });
@@ -64,7 +64,13 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       inputs.setState({ valueValue });
     },
     onUpdateValue: (value: InputValue) => {
-      const str = is.null(value) ? 'null' : is.number(value) ? value : is.boolean(value) ? value.toString() : is.date(value) ? value.toISOString() : `"${value.toString()}"`;
+      const str = (() => {
+        if (is.null(value)) return 'null';
+        if (is.number(value)) return value;
+        if (is.boolean(value)) return value.toString();
+        if (is.date(value)) return value.toISOString();
+        return `"${value.toString()}"`;
+      })()
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${str})`]);
     },
     onChangeValueType: (valueType: ValueType) => {
@@ -94,33 +100,22 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
 
 const getSimplifiedObjectPayload = (state: unknown) => {
   const recurse = (val: unknown): unknown => {
-    if (is.record(val)) {
-      const r = {} as Record<string, unknown>;
-      Object.keys(val).forEach(key => r[key] = recurse(val[key]));
-      return r;
-    } else if (is.array(val)) {
-      return val.map(recurse);
-    } else if (is.number(val)) {
-      return 0;
-    } else if (is.boolean(val)) {
-      return false;
-    } else if (is.date(val)) {
-      return new Date();
-    } else if (is.string(val)) {
-      return '';
-    } else if (is.null(val)) {
-      return null;
-    } else {
-      throw new Error('unhandled type');
-    }
+    if (is.record(val)) return Object.keys(val).reduce((acc, key) => ({ ...acc, [key]: recurse(val[key]) }), {} as Record<string, unknown>);
+    if (is.array(val)) return val.map(recurse);
+    if (is.number(val)) return 0;
+    if (is.boolean(val)) return false;
+    if (is.date(val)) return new Date();
+    if (is.string(val)) return '';
+    if (is.null(val)) return null;
+    throw new Error('unhandled type');
   }
   return recurse(state);
 }
 
-const focusInput = (selector: string) => {
+const tryFocusInput = (selector: string) => {
   setTimeout(() => setTimeout(() => setTimeout(() => {
-    const el = document.querySelector<HTMLInputElement>(selector)!;
-    el.focus();
-    el.select();
+    const el = document.querySelector<HTMLInputElement>(selector);
+    el?.focus();
+    el?.select();
   })));
 }
