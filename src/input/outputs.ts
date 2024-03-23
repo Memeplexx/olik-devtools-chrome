@@ -7,7 +7,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
   return {
     onClick: (event: MouseEvent<HTMLInputElement>) => {
       if (props.type === 'boolean') {
-        props.onUpdate(!props.value as V);
+        props.onChangeCommit(!props.value as V);
         inputs.inputRef.current?.blur();
       }
       props.onClick?.(event);
@@ -49,7 +49,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       if (inputs.canceled.current) { return; }
       if (inputs.inputRef.current!.value === inputs.valueBefore.current) { return; }
       if (props.type === 'boolean') { return; }
-      props.onUpdate(props.value);
+      props.onChangeCommit(props.value);
     },
     onFocus: (e: FocusEvent<HTMLInputElement>) => {
       inputs.valueBefore.current = inputs.inputRef.current!.value;
@@ -72,7 +72,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
         if (type === 'date') return new Date(isoDateRegexPattern.test(v) ? v : 0);
         if (type === 'null') return null;
       })(inputs.inputRef.current!.value) as V;
-      props.onUpdate(valueOfNewType);
+      props.onChangeCommit(valueOfNewType);
     },
     onDocumentKeyup: useEventHandlerForDocument('keyup', event => {
       if (event.key === 'Escape' && inputs.showPopup) {

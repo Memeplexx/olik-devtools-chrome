@@ -94,7 +94,7 @@ export const RenderedNode = function RenderedNode(
                 allowTypeSelectorPopup={true}
                 type={inputs.valueType}
                 onChangeType={outputs.onChangeValueType}
-                onUpdate={outputs.onUpdateValue}
+                onChangeCommit={outputs.onChangeCommitValue}
                 additionalOptions={(!props.isArrayElement || !inputs.showArrayOptions) ? [] : [
                   {
                     onClick: outputs.onClickCopy,
@@ -153,7 +153,7 @@ export const RenderedNode = function RenderedNode(
                   readOnly={!props.store || !inputs.isEditingObjectKey}
                   value={inputs.keyValue}
                   $unchanged={inputs.isUnchanged}
-                  onUpdate={outputs.onUpdateObjectKey}
+                  onChangeCommit={outputs.onChangeCommitObjectKey}
                   onFocus={outputs.onFocusObjectKey}
                   onBlur={outputs.onBlurObjectKey}
                   onChange={outputs.onChangeKey}

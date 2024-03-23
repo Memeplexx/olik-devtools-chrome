@@ -112,7 +112,7 @@ const useDatePicker = <V extends InputValue>(
       onClose: (s) => {
         if (!dateChanged.current) { return; }
         setTimeout(() => calendarOpened.current = false);
-        props.onUpdate(s[0] as V);
+        props.onChangeCommit(s[0] as V);
       },
     })
   } else if (flatPickerRef.current && !is.date(props.value)) {

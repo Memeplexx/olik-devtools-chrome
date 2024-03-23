@@ -12,7 +12,7 @@ export type CompactInputProps<V extends InputValue> = {
   value: V,
   type: ValueType,
   onChange: (value: V) => void,
-  onUpdate: (value: V) => void,
+  onChangeCommit: (value: V) => void,
   onChangeType?: (type: ValueType) => void,
   showQuotes?: boolean,
   allowTypeSelectorPopup: boolean,

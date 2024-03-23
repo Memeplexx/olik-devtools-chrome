@@ -63,7 +63,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onChangeValue: (valueValue: InputValue) => {
       inputs.setState({ valueValue });
     },
-    onUpdateValue: (value: InputValue) => {
+    onChangeCommitValue: (value: InputValue) => {
       const argAsString = (() => {
         if (is.null(value)) return 'null';
         if (is.number(value)) return value;
@@ -82,7 +82,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
     onBlurObjectKey: () => {
       inputs.setState({ isEditingObjectKey: false });
     },
-    onUpdateObjectKey: (value: InputValue) => {
+    onChangeCommitObjectKey: (value: InputValue) => {
       inputs.setState({ isEditingObjectKey: false });
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${value!.toString()})`]);
     },
