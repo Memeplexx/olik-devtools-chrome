@@ -64,6 +64,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
           />
           <PopupList
             showIf={inputs.showPopup}
+            position={inputs.showTextArea ? 'below' : 'right'}
             children={[
               ...(props.additionalOptions || []),
               ...types.map(type => ({

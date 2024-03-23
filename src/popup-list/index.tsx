@@ -1,10 +1,13 @@
 import { PopupListProps } from "./consts";
 import { PopupOption, PopupOptions } from "./styles";
 
-export const PopupList = (props: PopupListProps) => {
+export const PopupList = (
+  props: PopupListProps
+) => {
   return (
     <PopupOptions
       showIf={props.showIf}
+      $position={props.position ?? 'right'}
       children={
         props.children.map(prop => (
           <PopupOption

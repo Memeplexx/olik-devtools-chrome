@@ -13,6 +13,26 @@ export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(prop
 	}).current;
 }
 
+export const usePropsWithDefaults = <P extends Record<string, unknown>, I extends P, D extends P>(incomingProps: I, defaultProps: D) => {
+
+  // We need a ref of incomingProps so we can compare previous props to incoming props
+  const inRef = useRef<P>(incomingProps);
+
+  // We need a ref of result because we might want to return exactly the same object if props have not changed
+  const outRef = useRef<P>({ ...defaultProps, incomingProps });
+
+  // props object has changed so we can return a new object which is a spread of defaultProps and incomingProps
+  if (inRef.current !== incomingProps) {
+    inRef.current = incomingProps;
+    outRef.current = { ...defaultProps, ...incomingProps };
+    return outRef.current as I & D;
+  }
+
+  // one or more props have changed.
+  Object.assign(outRef.current, incomingProps);
+  return outRef.current as I & D;
+}
+
 export const useForwardedRef = <T>(forwardedRef: React.ForwardedRef<T>) => {
 	const basicRef = useRef<T | null>(null);
 	const targetRef = useRef<T | null>(null)

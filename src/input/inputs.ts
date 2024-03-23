@@ -27,7 +27,6 @@ const useLocalState = <V extends InputValue>(
     initialized: false,
     isHovered: false,
     animate: true,
-    // textAreaHeight: 0,
   });
   const valueAsString = useMemo(() => {
     return ((v) => {

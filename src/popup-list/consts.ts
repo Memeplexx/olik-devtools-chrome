@@ -1,5 +1,7 @@
 import { IconType } from "react-icons"
 
+
+export type Position = 'right' | 'below' | 'above' | 'left';
 export type PopupListProps = {
   children: {
     onClick: () => unknown,
@@ -9,4 +11,5 @@ export type PopupListProps = {
     selected?: boolean,
   }[],
   showIf?: boolean
+  position: Position,
 }
