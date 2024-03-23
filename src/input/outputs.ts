@@ -14,16 +14,13 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       props.onClick?.(event);
     },
     onKeyUp: (event: TypedKeyboardEvent<TextInputElement>) => {
-      if (event.key === 'Enter') {
+      if (event.key === 'Enter' && !(inputs.showTextArea && event.shiftKey)) {
         inputs.inputRef.current!.blur();
       } else if (event.key === 'Escape' && !inputs.showPopup) {
         inputs.canceled.current = true;
         inputs.inputRef.current!.blur();
         inputs.canceled.current = false;
         manuallyFireChangeEvent(inputs);
-      }
-      if (inputs.showTextArea) {
-        inputs.setState({ textAreaHeight: inputs.inputRef.current!.scrollHeight });
       }
     },
     onChange: (event: ChangeEvent<TextInputElement>) => {
@@ -38,7 +35,9 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       props.onChange?.(valueOfNewType);
     },
     onKeyDown: (event: TypedKeyboardEvent<TextInputElement>) => {
-      if (props.readOnly) {
+      if (event.key === 'Enter' && inputs.showTextArea && !event.shiftKey) {
+        event.preventDefault();
+      } else if (props.readOnly) {
         event.preventDefault();
       } else if (is.date(props.value)) {
         event.preventDefault();  

@@ -27,7 +27,7 @@ const useLocalState = <V extends InputValue>(
     initialized: false,
     isHovered: false,
     animate: true,
-    textAreaHeight: 0,
+    // textAreaHeight: 0,
   });
   const valueAsString = useMemo(() => {
     return ((v) => {
@@ -52,12 +52,16 @@ const useLocalState = <V extends InputValue>(
   const max = useMemo(() => {
     return is.number(props.value) ? props.value : 0;
   }, [props.value]);
-  const showQuote = useMemo(() => {
+  const showOpenQuote = useMemo(() => {
+    return props.allowQuotesToBeShown && is.string(props.value);
+  }, [props.allowQuotesToBeShown, props.value]);
+  const showCloseQuote = useMemo(() => {
     return props.allowQuotesToBeShown && is.string(props.value) && !showTextArea;
   }, [props.allowQuotesToBeShown, props.value, showTextArea]);
+  const inputRef = useForwardedRef(forwardedRef);
   return {
     ...localState,
-    inputRef: useForwardedRef(forwardedRef),
+    inputRef,
     valueBefore: useRef(''),
     canceled: useRef(false),
     calendarOpened: useRef(false),
@@ -66,10 +70,12 @@ const useLocalState = <V extends InputValue>(
     inputSize: Math.max(1, valueAsString.length),
     inputType,
     max,
-    showQuote,
+    showOpenQuote,
+    showCloseQuote,
     valueAsString,
     inputsProps,
     showTextArea,
+    textAreaHeight: inputRef.current?.scrollHeight ?? 0,
   };
 }
 

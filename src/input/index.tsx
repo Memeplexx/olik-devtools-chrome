@@ -31,10 +31,11 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
       showIf={!props.showIf}
       onMouseOver={outputs.onMouseOver}
       onMouseOut={outputs.onMouseOut}
+      $isTextArea={inputs.showTextArea}
       children={
         <>
           <Quote
-            showIf={inputs.showQuote}
+            showIf={inputs.showOpenQuote}
             children='"'
             $type='start'
           />
@@ -57,7 +58,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
             rows={1}
           />
           <Quote
-            showIf={inputs.showQuote}
+            showIf={inputs.showCloseQuote}
             children='"'
             $type='end'
           />
