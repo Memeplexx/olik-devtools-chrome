@@ -1,7 +1,7 @@
 import flatpickr from "flatpickr";
 import { Instance } from "flatpickr/dist/types/instance";
 import { ForwardedRef, useEffect, useMemo, useRef } from "react";
-import { decide, is, useForwardedRef, useRecord } from "../shared/functions";
+import { is, useForwardedRef, useRecord } from "../shared/functions";
 import { CompactInputProps, InputValue } from "./constants";
 
 export const useInputs = <V extends InputValue>(
@@ -24,14 +24,14 @@ const useLocalState = <V extends InputValue>(
     isHovered: false,
     animate: true,
   });
-  const valueAsString = useMemo(() => decide(
-    [() => is.null(props.value), () => 'null'],
-    [() => is.undefined(props.value), () => ''],
-    [() => is.boolean(props.value), () => (props.value as boolean).toString()],
-    [() => is.number(props.value), () => (props.value as number).toString()],
-    [() => is.string(props.value), () => (props.value as string).toString()],
-    [() => is.date(props.value), () => (props.value as Date).toISOString()],
-  ), [props.value]);
+  const valueAsString = (() => {
+    if (is.null(props.value)) return 'null';
+    if (is.undefined(props.value)) return '';
+    if (is.boolean(props.value)) return props.value.toString();
+    if (is.number(props.value)) return props.value.toString();
+    if (is.string(props.value)) return props.value.toString();
+    if (is.date(props.value)) return props.value.toISOString();
+  })() as string;
   return {
     ...localState,
     ref: useForwardedRef(forwardedRef),
@@ -43,14 +43,8 @@ const useLocalState = <V extends InputValue>(
     animationEnabled: useRef(true),
     showPopup: props.allowTypeSelectorPopup && localState.isHovered,
     inputSize: Math.max(1, valueAsString.length),
-    inputType: useMemo(() => decide(
-      [() => is.number(props.value), () => 'number'],
-      [() => true, () => 'string'],
-    ), [props.value]),
-    max: useMemo(() => decide(
-      [() => is.number(props.value), () => props.value as number],
-      [() => true, () => 0],
-    ), [props.value]),
+    inputType: useMemo(() => is.number(props.value) ? 'number' : 'string', [props.value]),
+    max: useMemo(() => is.number(props.value) ? props.value : 0, [props.value]),
     valueAsString,
   };
 }
@@ -74,7 +68,7 @@ const useAnimateOnValueChange = <V extends InputValue>(
     setState({ initialized: false, animate: false });
     setTimeout(() => setState({ initialized: true, animate: true }));
     localState.animationEnabled.current = true;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.value, setState]);
 }
 

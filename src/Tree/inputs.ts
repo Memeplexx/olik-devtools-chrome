@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
-import { decide, is, useRecord } from "../shared/functions";
-import { NodeType, RenderNodeArgs } from "./constants";
 import { InputValue, ValueType } from "../input/constants";
+import { is, useRecord } from "../shared/functions";
+import { NodeType, RenderNodeArgs } from "./constants";
 
 export const useInputs = (
   props: RenderNodeArgs,
@@ -24,15 +24,15 @@ export const useLocalState = (
     isEditingObjectKey: false,
     keyValue: '',
     valueValue: props.item as InputValue,
-    valueType: decide(
-      [() => is.number(props.item), 'number'],
-      [() => is.string(props.item), 'string'],
-      [() => is.boolean(props.item), 'boolean'],
-      [() => is.date(props.item), 'date'],
-      [() => is.null(props.item), 'null'],
-      [() => is.undefined(props.item), 'undefined'],
-      [() => true, 'string'],
-    ) as ValueType,
+    valueType: (() => {
+      if (is.number(props.item)) return 'number';
+      if (is.string(props.item)) return 'string';
+      if (is.boolean(props.item)) return 'boolean';
+      if (is.date(props.item)) return 'date';
+      if (is.null(props.item)) return 'null';
+      if (is.undefined(props.item)) return 'undefined';
+      return 'string';
+    })() as ValueType,
   });
   return {
     ...record,
@@ -57,27 +57,30 @@ const useDerivedState = (
       return props.unchanged.includes(props.keyConcat) && props.hideUnchanged;
     }, [props.hideUnchanged, props.keyConcat, props.unchanged]),
     isEmpty: useMemo(() => {
-      return is.array(props.item) ? !props.item.length : is.record(props.item) ? !Object.keys(props.item).length : false;
+      if (is.array(props.item)) return !props.item.length;
+      if (is.record(props.item)) return !Object.keys(props.item).length;
+      return false;
     }, [props.item]),
-    nodeType: useMemo(() => decide(
-      [() => is.array(props.item), 'array'],
-      [() => is.record(props.item), 'object'],
-      [() => is.number(props.item), 'number'],
-      [() => is.string(props.item), 'string'],
-      [() => is.boolean(props.item), 'boolean'],
-      [() => is.date(props.item), 'date'],
-      [() => is.null(props.item), 'null'],
-      [() => is.undefined(props.item), 'undefined'],
-    ) as NodeType, [props.item]),
-    nodeEl: useMemo(() => decide(
-      [() => is.null(props.item), () => 'null'],
-      [() => is.undefined(props.item), () => ''],
-      [() => is.boolean(props.item), () => (props.item as boolean).toString()],
-      [() => is.number(props.item), () => (props.item as number).toString()],
-      [() => is.string(props.item), () => `"${(props.item as string).toString()}"`],
-      [() => is.date(props.item), () => (props.item as Date).toISOString()],
-      [() => true, () => props.item],
-    ) as JSX.Element, [props.item]),
+    nodeType: useMemo(() => {
+      if (is.array(props.item)) return 'array';
+      if (is.record(props.item)) return 'object';
+      if (is.number(props.item)) return 'number';
+      if (is.string(props.item)) return 'string';
+      if (is.boolean(props.item)) return 'boolean';
+      if (is.date(props.item)) return 'date';
+      if (is.null(props.item)) return 'null';
+      if (is.undefined(props.item)) return 'undefined';
+      return 'unknown';
+    }, [props.item]) as NodeType,
+    nodeEl: useMemo(() => {
+      if (is.null(props.item)) return 'null';
+      if (is.undefined(props.item)) return '';
+      if (is.boolean(props.item)) return props.item.toString();
+      if (is.number(props.item)) return props.item.toString();
+      if (is.string(props.item)) return `"${props.item}"`;
+      if (is.date(props.item)) return props.item.toISOString();
+      return props.item;
+    }, [props.item]) as JSX.Element,
   }
 }
 

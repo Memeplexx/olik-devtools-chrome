@@ -1,5 +1,5 @@
 import { ChangeEvent, FocusEvent, MouseEvent } from "react";
-import { TypedKeyboardEvent, decideComparing, is, isoDateRegexPattern, useEventHandlerForDocument } from "../shared/functions";
+import { TypedKeyboardEvent, is, isoDateRegexPattern, useEventHandlerForDocument } from "../shared/functions";
 import { CompactInputProps, InputValue, ValueType } from "./constants";
 import { useInputs } from "./inputs";
 
@@ -23,13 +23,13 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
     },
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
       const inputVal = event.target.value;
-      props.onChange?.(decideComparing(props.type,
-        ['string', () => inputVal as V],
-        ['number', () => inputVal.trim() === ''  ? 0 as V : parseFloat(inputVal) as V],
-        ['boolean', () => (inputVal === 'true') as V],
-        ['date', () => new Date(inputVal) as V],
-        ['null', () => null as V],
-      ));
+      props.onChange?.(((v) => {
+        if (is.string(v)) return inputVal;
+        if (is.number(v)) return inputVal.trim() === ''  ? 0 : parseFloat(inputVal);
+        if (is.boolean(v)) return (inputVal === 'true');
+        if (is.date(v)) return new Date(inputVal);
+        if (is.null(v)) return null;
+      })(props.value) as V);
     },
     onKeyDown: (event: TypedKeyboardEvent<HTMLInputElement>) => {
       if (props.disabled) {
@@ -62,16 +62,15 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       props.onMouseOut?.(e);
     },
     onClickChangeType: (type: ValueType) => () => {
-      const v = inputs.ref.current!.value;
-      const val = decideComparing(type,
-        ['string', () => v as V],
-        ['number', () => (/^[0-9]$/.test(v) ? +v : 0) as V],
-        ['boolean', () => (v === 'true') as V],
-        ['date', () => new Date(isoDateRegexPattern.test(v) ? v : 0) as V],
-        ['null', () => null as V],
-      );
       props.onChangeType?.(type);
-      props.onUpdate(val);
+      const valueOfNewType = ((v) => {
+        if (type === 'string') return v;
+        if (type === 'number') return (/^[0-9]$/.test(v) ? +v : 0);
+        if (type === 'boolean') return (v === 'true');
+        if (type === 'date') return new Date(isoDateRegexPattern.test(v) ? v : 0);
+        if (type === 'null') return null;
+      })(inputs.ref.current!.value) as V;
+      props.onUpdate(valueOfNewType);
     },
     onDocumentKeyup: useEventHandlerForDocument('keyup', event => {
       if (event.key === 'Escape' && inputs.showPopup) {
