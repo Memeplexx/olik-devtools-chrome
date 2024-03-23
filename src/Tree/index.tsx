@@ -37,7 +37,7 @@ export const Tree = (
           {Object.keys(val).map((key, index, arr) => (
             <RenderedNode
               {...props}
-              key={index.toString()}
+              key={key}
               recurse={recurse}
               keyConcat={key === '' ? key.toString() : `${outerKey}.${key}`}
               index={index}
@@ -158,7 +158,7 @@ export const RenderedNode = function RenderedNode(
                   onChange={outputs.onChangeKey}
                   allowTypeSelectorPopup={false}
                   showQuotes={false}
-                  type={'string'}
+                  type='string'
                 />}
                 <Colon
                   children=':'
