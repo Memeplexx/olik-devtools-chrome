@@ -5,11 +5,12 @@ import { useInputs } from "./inputs";
 
 export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, inputs: ReturnType<typeof useInputs>) => {
   return {
-    onClick: () => {
+    onClick: (event: MouseEvent<HTMLInputElement>) => {
       if (props.type === 'boolean') {
         props.onUpdate(!props.value as V);
         inputs.ref.current?.blur();
       }
+      props.onClick?.(event);
     },
     onKeyUp: (event: TypedKeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {

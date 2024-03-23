@@ -4,6 +4,8 @@ import { ForwardedRef, useEffect, useMemo, useRef } from "react";
 import { is, useForwardedRef, useRecord } from "../shared/functions";
 import { CompactInputProps, InputValue } from "./constants";
 
+const htmlEl = document.createElement('input');
+
 export const useInputs = <V extends InputValue>(
   props: CompactInputProps<V>,
   forwardedRef: ForwardedRef<HTMLInputElement>
@@ -32,6 +34,9 @@ const useLocalState = <V extends InputValue>(
     if (is.string(v)) return v.toString();
     if (is.date(v)) return v.toISOString();
   })(props.value) as string;
+  const inputsProps = (Object.keys(props) as Array<keyof typeof props>)
+    .filter(k => (k in htmlEl))
+    .reduce<Record<string, unknown>>((acc, key) => { acc[key] = props[key]; return acc; }, {});
   return {
     ...localState,
     ref: useForwardedRef(forwardedRef),
@@ -45,7 +50,9 @@ const useLocalState = <V extends InputValue>(
     inputSize: Math.max(1, valueAsString.length),
     inputType: useMemo(() => is.number(props.value) ? 'number' : 'string', [props.value]),
     max: useMemo(() => is.number(props.value) ? props.value : 0, [props.value]),
+    showQuote: useMemo(() => props.showQuotes && is.string(props.value), [props.showQuotes, props.value]),
     valueAsString,
+    inputsProps,
   };
 }
 

@@ -64,14 +64,14 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       inputs.setState({ valueValue });
     },
     onUpdateValue: (value: InputValue) => {
-      const str = (() => {
+      const argAsString = (() => {
         if (is.null(value)) return 'null';
         if (is.number(value)) return value;
         if (is.boolean(value)) return value.toString();
         if (is.date(value)) return value.toISOString();
         return `"${value.toString()}"`;
       })()
-      silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${str})`]);
+      silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${argAsString})`]);
     },
     onChangeValueType: (valueType: ValueType) => {
       inputs.setState({ valueType });
@@ -100,7 +100,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
 
 const getSimplifiedObjectPayload = (state: unknown) => {
   const recurse = (val: unknown): unknown => {
-    if (is.record(val)) return Object.keys(val).reduce((acc, key) => ({ ...acc, [key]: recurse(val[key]) }), {} as Record<string, unknown>);
+    if (is.record(val)) return Object.keys(val).reduce((acc, key) => ({ ...acc, [key]: recurse(val[key]) }), {});
     if (is.array(val)) return val.map(recurse);
     if (is.number(val)) return 0;
     if (is.boolean(val)) return false;

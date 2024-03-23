@@ -5,7 +5,6 @@ import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
 import { Input, Quote, Wrapper } from "./styles";
 import { PopupList } from '../popup-list';
-import { is } from '../shared/functions';
 import { IoIosSwap } from 'react-icons/io';
 
 
@@ -13,8 +12,6 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
   props: CompactInputProps<V>,
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { onUpdate, value, size, showQuotes, onChange, onChangeType, allowTypeSelectorPopup, additionalOptions, ...inputProps } = props;
   const inputs = useInputs(props, forwardedRef);
   const outputs = useOutputs(props, inputs);
   return (
@@ -24,12 +21,12 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
       children={
         <>
           <Quote
-            showIf={showQuotes && is.string(props.value)}
+            showIf={inputs.showQuote}
             children='"'
             $type='start'
           />
           <Input
-            {...inputProps}
+            {...inputs.inputsProps}
             value={inputs.valueAsString}
             size={inputs.inputSize}
             max={inputs.max}
@@ -47,7 +44,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
             $animate={inputs.animate}
           />
           <Quote
-            showIf={showQuotes && is.string(props.value)}
+            showIf={inputs.showQuote}
             children='"'
             $type='end'
           />

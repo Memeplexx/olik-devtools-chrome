@@ -16,41 +16,37 @@ export const Tree = (
     if (is.array(val)) {
       return (
         <>
-          {val.map((item, index) => {
-            return (
-              <RenderedNode
-                key={index.toString()}
-                {...props}
-                recurse={recurse}
-                keyConcat={`${outerKey}.${index}`}
-                index={index}
-                item={item}
-                isLast={index === val.length - 1}
-                isTopLevel={false}
-                isArrayElement={true}
-              />
-            );
-          })}
+          {val.map((item, index) => (
+            <RenderedNode
+              key={index.toString()}
+              {...props}
+              recurse={recurse}
+              keyConcat={`${outerKey}.${index}`}
+              index={index}
+              item={item}
+              isLast={index === val.length - 1}
+              isTopLevel={false}
+              isArrayElement={true}
+            />
+          ))}
         </>
       );
     } else if (is.record(val)) {
       return (
         <>
-          {Object.keys(val).map((key, index, arr) => {
-            return (
-              <RenderedNode
-                {...props}
-                key={index.toString()}
-                recurse={recurse}
-                keyConcat={key === '' ? key.toString() : `${outerKey}.${key}`}
-                index={index}
-                item={val[key]}
-                isLast={index === arr.length - 1}
-                isTopLevel={key === ''}
-                objectKey={key}
-              />
-            )
-          })}
+          {Object.keys(val).map((key, index, arr) => (
+            <RenderedNode
+              {...props}
+              key={index.toString()}
+              recurse={recurse}
+              keyConcat={key === '' ? key.toString() : `${outerKey}.${key}`}
+              index={index}
+              item={val[key]}
+              isLast={index === arr.length - 1}
+              isTopLevel={key === ''}
+              objectKey={key}
+            />
+          ))}
         </>
       );
     } else if (is.scalar(val)) {
@@ -69,7 +65,7 @@ export const Tree = (
       throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
   };
-  return recurse({val: is.recordOrArray(props.state) ? { '': props.state } : props.state, outerKey: ''});
+  return recurse({ val: is.recordOrArray(props.state) ? { '': props.state } : props.state, outerKey: '' });
 }
 
 export const RenderedNode = function RenderedNode(
@@ -230,4 +226,3 @@ export const RenderedNode = function RenderedNode(
     />
   )
 }
-
