@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, ForwardedRef, HTMLAttributes, InputHTMLAttributes, forwardRef,  } from "react";
+import { ButtonHTMLAttributes, ComponentType, ForwardedRef, HTMLAttributes, InputHTMLAttributes, forwardRef,  } from "react";
 import { TypedKeyboardEvent } from "../shared/functions";
 
 
@@ -15,6 +15,8 @@ export type InputProps = ReplaceKeyboardEvents<HTMLInputElement, InputHTMLAttrib
 export type DivProps = ReplaceKeyboardEvents<HTMLDivElement, HTMLAttributes<HTMLDivElement>>;
 
 export type SpanProps = ReplaceKeyboardEvents<HTMLSpanElement, HTMLAttributes<HTMLSpanElement>>;
+
+export type ElementProps = ReplaceKeyboardEvents<HTMLElement, HTMLAttributes<HTMLElement>>;
 
 export const possible = {
   div: forwardRef(function Div(
@@ -41,4 +43,12 @@ export const possible = {
   ) {
     return showIf === false ? null : <button ref={ref} {...props}>{children}</button>;
   }),
+  element: function Element<P>(ComponentType: ComponentType<P>) {
+    return forwardRef(function Element(
+      { children, showIf, ...props }: P & { showIf?: boolean, children?: React.ReactNode },
+      ref?: ForwardedRef<HTMLElement>
+    ) {
+      return showIf === false ? null : <ComponentType ref={ref} {...props as P}>{children}</ComponentType>;
+    });
+  }
 }

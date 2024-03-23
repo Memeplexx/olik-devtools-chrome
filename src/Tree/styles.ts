@@ -25,17 +25,15 @@ export const CommonStyles = css<{ $type?: NodeType, $unchanged?: boolean }>`
   `}
 `;
 
-export const KeyNode = styled(CompactInput)`
-  color: #fff;
+export const KeyNode = styled(possible.element(CompactInput))`
   ${CommonStyles};
 `;
 
-export const ValueNode = styled(CompactInput)`
+export const ValueNode = styled(possible.element(CompactInput))`
   ${CommonStyles};
 `;
 
 export const Colon = styled(possible.span)`
-  color: #fff;
   padding-right: 4px;
   ${CommonStyles};
 `;

@@ -146,7 +146,8 @@ export const RenderedNode = function RenderedNode(
                   showIf={inputs.showActionType}
                   $unchanged={inputs.isUnchanged}
                 />
-                {inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden && <KeyNode
+                <KeyNode
+                  showIf={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
                   data-key={props.keyConcat}
                   ref={inputs.keyNodeRef}
                   readOnly={!props.store || !inputs.isEditingObjectKey}
@@ -159,7 +160,7 @@ export const RenderedNode = function RenderedNode(
                   allowTypeSelectorPopup={false}
                   showQuotes={false}
                   type='string'
-                />}
+                />
                 <Colon
                   children=':'
                   $unchanged={inputs.isUnchanged}
