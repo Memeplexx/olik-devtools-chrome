@@ -2,7 +2,7 @@ import styled, { css } from "styled-components";
 import { possible } from "../html";
 import { ValueType } from "./constants";
 
-export const Input = styled.input<{ $initialized: boolean, $valueType: ValueType, $animate: boolean }>`
+export const Input = styled(possible.input)<{ $initialized: boolean, $valueType: ValueType, $animate: boolean }>`
   :focus {
     outline: 1px solid #add8e6;
   }

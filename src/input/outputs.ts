@@ -1,5 +1,5 @@
-import { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent } from "react";
-import { decideComparing, is, isoDateRegexPattern, useEventHandlerForDocument } from "../shared/functions";
+import { ChangeEvent, FocusEvent, MouseEvent } from "react";
+import { TypedKeyboardEvent, decideComparing, is, isoDateRegexPattern, useEventHandlerForDocument } from "../shared/functions";
 import { CompactInputProps, InputValue, ValueType } from "./constants";
 import { useInputs } from "./inputs";
 
@@ -11,7 +11,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
         inputs.ref.current?.blur();
       }
     },
-    onKeyUp: (event: KeyboardEvent) => {
+    onKeyUp: (event: TypedKeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
         inputs.ref.current!.blur();
       } else if (event.key === 'Escape' && !inputs.showPopup) {
@@ -22,20 +22,21 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       }
     },
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
+      const inputVal = event.target.value;
       props.onChange?.(decideComparing(props.type,
-        ['string', () => event.target.value as V],
-        ['number', () => parseFloat(event.target.value) as V],
-        ['boolean', () => (event.target.value === 'true') as V],
-        ['date', () => new Date(event.target.value) as V],
+        ['string', () => inputVal as V],
+        ['number', () => inputVal.trim() === ''  ? 0 as V : parseFloat(inputVal) as V],
+        ['boolean', () => (inputVal === 'true') as V],
+        ['date', () => new Date(inputVal) as V],
         ['null', () => null as V],
       ));
     },
-    onKeyDown: (event: KeyboardEvent) => {
+    onKeyDown: (event: TypedKeyboardEvent<HTMLInputElement>) => {
       if (props.disabled) {
         event.preventDefault();
       } else if (is.date(props.value)) {
         event.preventDefault();  
-      } else if (is.number(props.value) && !/[0-9]/.test(event.key)) {
+      } else if (is.number(props.value) && /^[a-zA-Z]$/.test(event.key)) {
         event.preventDefault();
       }
       inputs.animationEnabled.current = false;
@@ -64,7 +65,7 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
       const v = inputs.ref.current!.value;
       const val = decideComparing(type,
         ['string', () => v as V],
-        ['number', () => (/[0-9]/.test(v) ? +v : 0) as V],
+        ['number', () => (/^[0-9]$/.test(v) ? +v : 0) as V],
         ['boolean', () => (v === 'true') as V],
         ['date', () => new Date(isoDateRegexPattern.test(v) ? v : 0) as V],
         ['null', () => null as V],

@@ -24,6 +24,14 @@ const useLocalState = <V extends InputValue>(
     isHovered: false,
     animate: true,
   });
+  const valueAsString = useMemo(() => decide(
+    [() => is.null(props.value), () => 'null'],
+    [() => is.undefined(props.value), () => ''],
+    [() => is.boolean(props.value), () => (props.value as boolean).toString()],
+    [() => is.number(props.value), () => (props.value as number).toString()],
+    [() => is.string(props.value), () => (props.value as string).toString()],
+    [() => is.date(props.value), () => (props.value as Date).toISOString()],
+  ), [props.value]);
   return {
     ...localState,
     ref: useForwardedRef(forwardedRef),
@@ -34,22 +42,16 @@ const useLocalState = <V extends InputValue>(
     dateChanged: useRef(false),
     animationEnabled: useRef(true),
     showPopup: props.allowTypeSelectorPopup && localState.isHovered,
+    inputSize: Math.max(1, valueAsString.length),
     inputType: useMemo(() => decide(
-      [() => is.number(props.value), () => 'number'],
+      [() => props.type === 'number', () => 'number'],
       [() => true, () => 'string'],
-    ), [props.value]),
+    ), [props.type]),
     max: useMemo(() => decide(
-      [() => is.number(props.value), () => props.value as number],
+      [() => props.type === 'number', () => props.value as number],
       [() => true, () => 0],
-    ), [props.value]),
-    valueAsString: useMemo(() => decide(
-      [() => is.null(props.value), () => 'null'],
-      [() => is.undefined(props.value), () => ''],
-      [() => is.boolean(props.value), () => (props.value as boolean).toString()],
-      [() => is.number(props.value), () => (props.value as number).toString()],
-      [() => is.string(props.value), () => (props.value as string).toString()],
-      [() => is.date(props.value), () => (props.value as Date).toISOString()],
-    ), [props.value]),
+    ), [props.type, props.value]),
+    valueAsString,
   };
 }
 

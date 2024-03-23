@@ -14,7 +14,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
   forwardedRef: ForwardedRef<HTMLInputElement>
 ) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { onUpdate, value, size, showQuotes, onChange, onChangeType, ...inputProps } = props;
+  const { onUpdate, value, size, showQuotes, onChange, onChangeType, allowTypeSelectorPopup, additionalOptions, ...inputProps } = props;
   const inputs = useInputs(props, forwardedRef);
   const outputs = useOutputs(props, inputs);
   return (
@@ -31,19 +31,19 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
           <Input
             {...inputProps}
             value={inputs.valueAsString}
+            size={inputs.inputSize}
+            max={inputs.max}
             ref={inputs.ref}
             onKeyDown={outputs.onKeyDown}
             onKeyUp={outputs.onKeyUp}
             onChange={outputs.onChange}
             onClick={outputs.onClick}
-            size={Math.max(1, inputs.valueAsString.length)}
             onBlur={outputs.onBlur}
             onFocus={outputs.onFocus}
             $initialized={inputs.initialized}
             $valueType={props.type}
             type={inputs.inputType}
             min='0'
-            max={inputs.max}
             $animate={inputs.animate}
           />
           <Quote
