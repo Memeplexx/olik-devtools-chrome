@@ -24,15 +24,15 @@ export const useLocalState = (
     isEditingObjectKey: false,
     key: '',
     value: props.item as InputValue,
-    type: (() => {
-      if (is.number(props.item)) return 'number';
-      if (is.string(props.item)) return 'string';
-      if (is.boolean(props.item)) return 'boolean';
-      if (is.date(props.item)) return 'date';
-      if (is.null(props.item)) return 'null';
-      if (is.undefined(props.item)) return 'undefined';
+    type: (v => {
+      if (is.number(v)) return 'number';
+      if (is.string(v)) return 'string';
+      if (is.boolean(v)) return 'boolean';
+      if (is.date(v)) return 'date';
+      if (is.null(v)) return 'null';
+      if (is.undefined(v)) return 'undefined';
       return 'string';
-    })() as ValueType,
+    })(props.item) as ValueType,
   });
   return {
     ...record,
