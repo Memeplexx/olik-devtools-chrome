@@ -18,16 +18,14 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       if (!is.array(props.item)) { throw new Error(); }
       const el = JSON.stringify(getSimplifiedObjectPayload(props.item[0]));
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$push(${el})`]);
-      const k = `[data-key="${props.keyConcat}.${props.item.length}"]`;
-      setTimeout(() => setTimeout(() => setTimeout(() => document.querySelector<HTMLInputElement>(k)?.focus())));
+      focusInput(`[data-key="${props.keyConcat}.${props.item.length}"]`);
     },
     onClickAddToObject: () => {
       const keys = Object.keys(props.item as Record<string, unknown>);
       const recurse = (tryKey: string, count: number): string => !keys.includes(tryKey) ? tryKey : recurse(`<key-${count++}>`, count);
       const key = recurse('<key>', 0);
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setNew(${JSON.stringify({ [key]: '<value>' })})`]);
-      const k = `[data-key="${props.keyConcat}.${key}"]`;
-      setTimeout(() => setTimeout(() => setTimeout(() => document.querySelector<HTMLInputElement>(k)!.focus())));
+      focusInput(`[data-key="${props.keyConcat}.${key}"]`);
     },
     onClickEditKey: () => {
       inputs.setState({ showOptions: false });
@@ -117,4 +115,12 @@ const getSimplifiedObjectPayload = (state: unknown) => {
     }
   }
   return recurse(state);
+}
+
+const focusInput = (selector: string) => {
+  setTimeout(() => setTimeout(() => setTimeout(() => {
+    const el = document.querySelector<HTMLInputElement>(selector)!;
+    el.focus();
+    el.select();
+  })));
 }
