@@ -23,13 +23,14 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
     },
     onChange: (event: ChangeEvent<HTMLInputElement>) => {
       const inputVal = event.target.value;
-      props.onChange?.(((v) => {
+      const valueOfNewType = ((v) => {
         if (is.string(v)) return inputVal;
         if (is.number(v)) return inputVal.trim() === ''  ? 0 : parseFloat(inputVal);
         if (is.boolean(v)) return (inputVal === 'true');
         if (is.date(v)) return new Date(inputVal);
         if (is.null(v)) return null;
-      })(props.value) as V);
+      })(props.value) as V;
+      props.onChange?.(valueOfNewType);
     },
     onKeyDown: (event: TypedKeyboardEvent<HTMLInputElement>) => {
       if (props.disabled) {

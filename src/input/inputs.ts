@@ -24,14 +24,14 @@ const useLocalState = <V extends InputValue>(
     isHovered: false,
     animate: true,
   });
-  const valueAsString = (() => {
-    if (is.null(props.value)) return 'null';
-    if (is.undefined(props.value)) return '';
-    if (is.boolean(props.value)) return props.value.toString();
-    if (is.number(props.value)) return props.value.toString();
-    if (is.string(props.value)) return props.value.toString();
-    if (is.date(props.value)) return props.value.toISOString();
-  })() as string;
+  const valueAsString = ((v) => {
+    if (is.null(v)) return 'null';
+    if (is.undefined(v)) return '';
+    if (is.boolean(v)) return v.toString();
+    if (is.number(v)) return v.toString();
+    if (is.string(v)) return v.toString();
+    if (is.date(v)) return v.toISOString();
+  })(props.value) as string;
   return {
     ...localState,
     ref: useForwardedRef(forwardedRef),
