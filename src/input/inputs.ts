@@ -44,13 +44,13 @@ const useLocalState = <V extends InputValue>(
     showPopup: props.allowTypeSelectorPopup && localState.isHovered,
     inputSize: Math.max(1, valueAsString.length),
     inputType: useMemo(() => decide(
-      [() => props.type === 'number', () => 'number'],
+      [() => is.number(props.value), () => 'number'],
       [() => true, () => 'string'],
-    ), [props.type]),
+    ), [props.value]),
     max: useMemo(() => decide(
-      [() => props.type === 'number', () => props.value as number],
+      [() => is.number(props.value), () => props.value as number],
       [() => true, () => 0],
-    ), [props.type, props.value]),
+    ), [props.value]),
     valueAsString,
   };
 }
