@@ -3,7 +3,7 @@ import { ForwardedRef, MutableRefObject, forwardRef } from "react";
 import { CompactInputProps, InputValue, TextInputElement, types } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
-import { Input, InvisibleTextMeasurer, Quote, TextArea, TextAreaWrapper, Wrapper } from "./styles";
+import { Input, TextMeasurerWrapper, Quote, TextArea, TextAreaWrapper, TextMeasurer, Wrapper } from "./styles";
 import { PopupList } from '../popup-list';
 import { IoIosSwap } from 'react-icons/io';
 
@@ -62,17 +62,23 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
                   rows={1}
                   cols={1}
                 />
-                <InvisibleTextMeasurer
-                  children={inputs.valueAsString || 'x'}
+                <TextMeasurerWrapper
                   ref={inputs.textMeasurerRef}
+                  children={
+                    <>
+                      <TextMeasurer
+                        children={inputs.valueAsString}
+                      />
+                      <Quote
+                        showIf={inputs.showQuote}
+                        $type='end'
+                        children='"'
+                      />
+                    </>
+                  }
                 />
               </>
             }
-          />
-          <Quote
-            showIf={inputs.showQuote}
-            $type='end'
-            children='"'
           />
           <PopupList
             showIf={inputs.showPopup}

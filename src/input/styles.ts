@@ -35,11 +35,10 @@ export const TextArea = styled(possible.textarea)<{ $initialized: boolean, $valu
   ${p => p.readOnly && `pointer-events: none;`}
   ${p => p.readOnly ? 'cursor: not-allowed' : 'cursor: text'};
   ${p => css`height: ${p.$height}px`};
-  ${p => css`width: ${p.$width}px`};
+  ${p => css`width: calc(${p.$width}px - 6px)`};
 `;
 
 export const Quote = styled(possible.span)<{ $type: 'start' | 'end' }>`
-  ${p => p.$type === 'end' ? css`transform: rotate(180deg);` : ''}
 `;
 
 export const Wrapper = styled(possible.span)<{ $isTextArea: boolean }>`
@@ -47,19 +46,23 @@ export const Wrapper = styled(possible.span)<{ $isTextArea: boolean }>`
   ${p => p.$isTextArea ? css`display: flex;` : ''};
 `;
 
-export const InvisibleTextMeasurer = styled(possible.span)`
+export const TextMeasurerWrapper = styled(possible.span)`
   position: absolute;
-  border: 1px solid blue;
-  background-color: red;
+  border: 1px solid red;
+  background-color: transparent;
   left: 0;
   bottom: 0;
   pointer-events: none;
   white-space: pre-wrap;
-  opacity: 0;
+`;
+
+export const TextMeasurer = styled(possible.span)`
+  visibility: hidden;
 `;
 
 export const TextAreaWrapper = styled(possible.span)`
   position: relative;
   flex: 1;
   display: flex;
+  margin-right: 6px;
 `;
