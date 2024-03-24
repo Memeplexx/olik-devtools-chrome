@@ -48,7 +48,7 @@ export const Wrapper = styled(possible.span)<{ $isTextArea: boolean }>`
 
 export const TextMeasurerWrapper = styled(possible.span)`
   position: absolute;
-  border: 1px solid red;
+  border: 1px solid transparent;
   background-color: transparent;
   left: 0;
   bottom: 0;
@@ -64,5 +64,4 @@ export const TextAreaWrapper = styled(possible.span)`
   position: relative;
   flex: 1;
   display: flex;
-  margin-right: 6px;
 `;
