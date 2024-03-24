@@ -59,10 +59,10 @@ export const ItemWrapper = styled.div`
   margin-bottom: 6px;
 `;
 
-export const ItemHeading = styled.div<{ $maxHeight: string }>`
+export const ItemHeading = styled.div<{ $headerExpanded: boolean, $eventCount: number }>`
 	color: white;
 	transition: all 0.2s;
-	max-height: ${p => p.$maxHeight};
+	max-height: ${p => p.$headerExpanded ? `${p.$eventCount * 15}px` : '15px'};
 	padding: 0 4px;
 	cursor: pointer;
 	overflow: hidden;
