@@ -45,7 +45,7 @@ const useLocalState = <V extends InputValue>(
     return is.number(props.value) ? 'number' : 'string';
   }, [props.value]);
   const showTextArea = !!props.allowTextArea && props.type === 'string';
-  const inputsProps = usePropsForHTMLElement(showTextArea ? textAreaEl : inputEl, props);
+  const inputsProps = usePropsForHTMLElement(showTextArea ? textAreaEl : inputEl, props, ['data-key']);
   const max = useMemo(() => {
     return is.number(props.value) ? props.value : 0;
   }, [props.value]);

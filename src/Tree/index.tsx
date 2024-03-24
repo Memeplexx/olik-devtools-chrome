@@ -36,7 +36,7 @@ export const Tree = (
           {Object.keys(val).map((key, index, arr) => (
             <RenderedNode
               {...props}
-              key={key}
+              key={index.toString()}
               recurse={recurse}
               keyConcat={key === '' ? key.toString() : `${outerKey}.${key}`}
               index={index}

@@ -77,39 +77,37 @@ export const App = () => {
                             <Items
                               tabIndex={0}
                               children={
-                                <>
-                                  {inputs.items.filter(i => i.visible).map(itemWrapper => (
-                                    <ItemWrapper
-                                      key={itemWrapper.id}
-                                      children={
-                                        <>
-                                          <ItemHeading
-                                            children={itemWrapper.event.map((e, i) => (
-                                              <ItemHead
-                                                key={i}
-                                                children={e}
-                                              />
-                                            ))}
-                                          />
-                                          {itemWrapper.items.map(item => (
-                                            <ItemContent
-                                              id={item.id.toString()}
-                                              key={item.id}
-                                              onClick={outputs.onClickItem(item.id)}
-                                              isSelected={item.id === inputs.selectedId}
-                                              children={
-                                                <>
-                                                  <ItemJsx children={inputs.hideUnchanged ? item.jsxPruned : item.jsx} />
-                                                  <ItemTime children={item.time} />
-                                                </>
-                                              }
+                                inputs.items.filter(i => i.visible).map(itemWrapper => (
+                                  <ItemWrapper
+                                    key={itemWrapper.id}
+                                    children={
+                                      <>
+                                        <ItemHeading
+                                          children={itemWrapper.event.map((e, i) => (
+                                            <ItemHead
+                                              key={i}
+                                              children={e}
                                             />
                                           ))}
-                                        </>
-                                      }
-                                    />
-                                  ))}
-                                </>
+                                        />
+                                        {itemWrapper.items.map(item => (
+                                          <ItemContent
+                                            id={item.id.toString()}
+                                            key={item.id}
+                                            onClick={outputs.onClickItem(item.id)}
+                                            isSelected={item.id === inputs.selectedId}
+                                            children={
+                                              <>
+                                                <ItemJsx children={inputs.hideUnchanged ? item.jsxPruned : item.jsx} />
+                                                <ItemTime children={item.time} />
+                                              </>
+                                            }
+                                          />
+                                        ))}
+                                      </>
+                                    }
+                                  />
+                                ))
                               }
                             />
                           }

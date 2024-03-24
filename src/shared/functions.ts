@@ -136,20 +136,6 @@ export const fixKey = (key: string) => {
 	return key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
 }
 
-export const decide = function <K, V>(...map: readonly (readonly [K, V])[]) {
-	const result = [
-		...new Map(map).entries()
-	].find(([k]) => (typeof k === 'function' ? k() : k))![1];
-	return (typeof (result) === 'function' ? result() : result) as V extends () => infer R ? R : V;
-}
-
-export const decideComparing = function <K, V>(toCompare: K, ...map: readonly (readonly [K, V])[]) {
-	const result = [
-		...new Map(map).entries()
-	].find(([k]) => (typeof k === 'function' ? k() : k) === toCompare)![1];
-	return (typeof (result) === 'function' ? result() : result) as V extends () => infer R ? R : V;
-}
-
 export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 	const [state, setState] = useState(record);
 	return {
@@ -212,11 +198,11 @@ export const useEventHandlerForDocument = <Type extends 'click' | 'keyup' | 'key
 }
 
 
-export const usePropsForHTMLElement = <T extends HTMLElement>(element: T, props: Record<string, unknown>) => {
+export const usePropsForHTMLElement = <T extends HTMLElement>(element: T, props: Record<string, unknown>, whitelist = new Array<string>()) => {
 	return useMemo(() => {
 		return Object.keys(props)
-			.filter(k => (k in element))
+			.filter(k => (k in element) || whitelist.includes(k))
 			.reduce<Record<string, unknown>>((acc, key) => { acc[key] = props[key]; return acc; }, {});
-	}, [props, element]);
+	}, [props, element, whitelist]);
 }
 
