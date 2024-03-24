@@ -83,6 +83,8 @@ export const App = () => {
                                     children={
                                       <>
                                         <ItemHeading
+                                          $maxHeight={itemWrapper.headerExpanded ? `${itemWrapper.event.length * 15}px` : '15px'}
+                                          onClick={outputs.onClickHeader(itemWrapper.id)}
                                           children={itemWrapper.event.map((e, i) => (
                                             <ItemHead
                                               key={i}

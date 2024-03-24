@@ -140,7 +140,8 @@ const useMessageHandler = (props: State) => {
             id: ++props.idRefOuter.current,
             event: currentEvent,
             items: [getNewItem()],
-            visible: true
+            visible: true,
+            headerExpanded: false,
           }
         ],
     };
@@ -300,5 +301,5 @@ const getCleanStackTrace = (stack: string) => stack
   .map(s => ({ ...s, filePath: s.filePath.includes(':') ? s.filePath.substring(0, s.filePath.indexOf(':')) : s.filePath }))
   .map(s => ({ ...s, filePath: s.filePath.replace(/\.[^/.]+$/, "") }))
   .map(s => `${s.filePath}.${s.fn}`)
-  .map(s => s.replace('///', '').replace('//', '🥚 '))
+  .map(s => s.replace('///', '').replace('//', ' '))
   .reverse();

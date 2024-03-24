@@ -59,8 +59,16 @@ export const ItemWrapper = styled.div`
   margin-bottom: 6px;
 `;
 
-export const ItemHeading = styled.div`
+export const ItemHeading = styled.div<{ $maxHeight: string }>`
 	color: white;
+	transition: all 0.2s;
+	max-height: ${p => p.$maxHeight};
+	padding: 0 4px;
+	cursor: pointer;
+	overflow: hidden;
+	:hover {
+		background-color: rgba(255,255,255,0.4);
+	}
 `;
 
 export const ItemHead = styled.div`
