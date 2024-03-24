@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled from "styled-components/macro";
 import { Editor } from "../editor";
 import { State } from "../state";
 import { Panel, PanelResizeHandle } from "react-resizable-panels";

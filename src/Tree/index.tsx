@@ -182,7 +182,7 @@ export const RenderedNode = function RenderedNode(
                 {inputs.isContracted && content}
                 <PopupList
                   showIf={inputs.showOptions}
-                  position='below'
+                  position='right'
                   children={[
                     {
                       onClick: outputs.onClickEditKey,
