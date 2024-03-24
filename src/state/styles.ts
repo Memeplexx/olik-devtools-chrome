@@ -6,4 +6,5 @@ export const JsonWrapper = styled(possible.div)`
   overflow: auto;
   font-family: 'Source Code Pro', monospace;
   padding-bottom: 50px;
+  overflow-x: hidden;
 `;

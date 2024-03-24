@@ -74,6 +74,7 @@ export const ParentNode = styled(possible.span)`
 export const ChildNode = styled(possible.span)<{ $type?: NodeType, $unchanged?: boolean, $wrappingTextArea?: boolean }>`
   ${CommonStyles};
   position: relative;
+  min-width: 0;
   ${p => p.$wrappingTextArea ? css`flex: 1;` : ''}
   ${p => (p.$type === 'array' || p.$type === 'object') && css`
     padding-left: 16px;

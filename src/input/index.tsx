@@ -3,7 +3,7 @@ import { ForwardedRef, MutableRefObject, forwardRef } from "react";
 import { CompactInputProps, InputValue, TextInputElement, types } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
-import { Input, Quote, TextArea, Wrapper } from "./styles";
+import { Input, InvisibleTextMeasurer, Quote, TextArea, TextAreaWrapper, Wrapper } from "./styles";
 import { PopupList } from '../popup-list';
 import { IoIosSwap } from 'react-icons/io';
 
@@ -25,7 +25,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
     $initialized: inputs.initialized,
     $valueType: props.type,
     $animate: inputs.animate,
-  }
+  };
   return (
     <Wrapper
       showIf={!props.showIf}
@@ -35,9 +35,9 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
       children={
         <>
           <Quote
-            showIf={inputs.showOpenQuote}
-            children='"'
+            showIf={inputs.showQuote}
             $type='start'
+            children='"'
           />
           <Input
             {...inputs.inputsProps}
@@ -49,18 +49,30 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
             size={inputs.inputSize}
             ref={inputs.inputRef as MutableRefObject<HTMLInputElement>}
           />
-          <TextArea
-            {...inputs.inputsProps}
-            {...commonInputProps}
+          <TextAreaWrapper
             showIf={inputs.showTextArea}
-            ref={inputs.inputRef as MutableRefObject<HTMLTextAreaElement>}
-            $height={inputs.textAreaHeight}
-            rows={1}
+            children={
+              <>
+                <TextArea
+                  {...inputs.inputsProps}
+                  {...commonInputProps}
+                  ref={inputs.inputRef as MutableRefObject<HTMLTextAreaElement>}
+                  $height={inputs.textAreaHeight}
+                  $width={inputs.textAreaWidth}
+                  rows={1}
+                  cols={1}
+                />
+                <InvisibleTextMeasurer
+                  children={inputs.valueAsString || 'x'}
+                  ref={inputs.textMeasurerRef}
+                />
+              </>
+            }
           />
           <Quote
-            showIf={inputs.showCloseQuote}
-            children='"'
+            showIf={inputs.showQuote}
             $type='end'
+            children='"'
           />
           <PopupList
             showIf={inputs.showPopup}

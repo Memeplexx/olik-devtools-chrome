@@ -21,9 +21,9 @@ export const Input = styled(possible.input)<{ $initialized: boolean, $valueType:
   ${p => p.readOnly ? 'cursor: not-allowed' : p.$valueType === 'boolean' || p.$valueType === 'date' ? 'cursor: pointer' : 'cursor: text'};
 `;
 
-export const TextArea = styled(possible.textarea)<{ $initialized: boolean, $valueType: ValueType, $animate: boolean, $height: number }>`
-  width: calc(100% - 8px);
-  padding-left: 2px;
+export const TextArea = styled(possible.textarea)<{ $initialized: boolean, $valueType: ValueType, $animate: boolean, $height: number, $width: number }>`
+  overflow: hidden;
+  resize: none;
   :focus {
     outline: 1px solid #add8e6;
   }
@@ -34,15 +34,32 @@ export const TextArea = styled(possible.textarea)<{ $initialized: boolean, $valu
   ${p => p.$initialized ? 'opacity: 1' : 'opacity: 0'};
   ${p => p.readOnly && `pointer-events: none;`}
   ${p => p.readOnly ? 'cursor: not-allowed' : 'cursor: text'};
-  ${p => p.$height ? css`height: ${p.$height}px` : ''};
+  ${p => css`height: ${p.$height}px`};
+  ${p => css`width: ${p.$width}px`};
 `;
 
 export const Quote = styled(possible.span)<{ $type: 'start' | 'end' }>`
-  margin-right: ${p => p.$type === 'start' ? '-2px' : '0'};
-  margin-left: ${p => p.$type === 'end' ? '-2px' : '0'};
+  ${p => p.$type === 'end' ? css`transform: rotate(180deg);` : ''}
 `;
 
 export const Wrapper = styled(possible.span)<{ $isTextArea: boolean }>`
   position: relative;
   ${p => p.$isTextArea ? css`display: flex;` : ''};
+`;
+
+export const InvisibleTextMeasurer = styled(possible.span)`
+  position: absolute;
+  border: 1px solid blue;
+  background-color: red;
+  left: 0;
+  bottom: 0;
+  pointer-events: none;
+  white-space: pre-wrap;
+  opacity: 0;
+`;
+
+export const TextAreaWrapper = styled(possible.span)`
+  position: relative;
+  flex: 1;
+  display: flex;
 `;
