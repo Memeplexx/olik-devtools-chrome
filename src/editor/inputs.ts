@@ -45,19 +45,12 @@ const instantiateEditor = (props: EditorProps, state: State) => {
 
 const reGenerateTypeDefinitions = (props: EditorProps, state: State) => {
   const recurse = (val: unknown): string => {
-    if (is.primitive(val)) {
-      return `"${typeof val}"`;
-    } else if (is.date(val)) {
-      return '"Date"';
-    } else if (is.null(val)) {
-      return '"null"';
-    } else if (is.record(val)) {
-      return `{${Object.keys(val).map(key => `"${key}": ${recurse(val[key])}`).join(',')}}`;
-    } else if (is.array(val)) {
-      return `[${val.length ? recurse(val[0]) : ''}]`;
-    } else {
-      throw new Error(`Unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
-    }
+    if (is.primitive(val)) return `"${typeof val}"`;
+    if (is.date(val)) return '"Date"';
+    if (is.null(val)) return '"null"';
+    if (is.record(val)) return `{${Object.keys(val).map(key => `"${key}": ${recurse(val[key])}`).join(',')}}`;
+    if (is.array(val)) return `[${val.length ? recurse(val[0]) : ''}]`;
+    throw new Error(`Unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
   }
   const typeDef = recurse(props.state);
   // console.log(JSON.stringify(JSON.parse(typeDef), null, 2)); // un-comment to debug

@@ -1,12 +1,12 @@
 import { useInputs } from "./inputs";
 import { EditorProps } from "./constants";
 import { Container, EditorPane } from "./styles";
-import { usePropsWithoutFunctions } from "../shared/functions";
+import { useKnownPropsOnly } from "../shared/functions";
 
 
 export const Editor = (props: EditorProps) => {
   const inputs = useInputs(props);
-  const propsRev = usePropsWithoutFunctions(props);
+  const propsRev = useKnownPropsOnly(document?.createElement('div') ?? {}, props);
   return (
     <Container 
       {...propsRev}

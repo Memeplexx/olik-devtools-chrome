@@ -1,7 +1,7 @@
 import flatpickr from "flatpickr";
 import { Instance } from "flatpickr/dist/types/instance";
 import { ForwardedRef, useEffect, useMemo, useRef } from "react";
-import { is, useForwardedRef, useRecord } from "../shared/functions";
+import { is, useForwardedRef, usePropsForHTMLElement, useRecord } from "../shared/functions";
 import { CompactInputProps, InputValue, TextInputElement } from "./constants";
 
 const inputEl = document.createElement('input');
@@ -42,12 +42,7 @@ const useLocalState = <V extends InputValue>(
     return is.number(props.value) ? 'number' : 'string';
   }, [props.value]);
   const showTextArea = !!props.allowTextArea && inputType === 'string' && valueAsString.length > 24;
-  const inputsProps = useMemo(() => {
-    const el = showTextArea ? textAreaEl : inputEl;
-    return (Object.keys(props) as Array<keyof typeof props>)
-      .filter(k => (k in el))
-      .reduce<Record<string, unknown>>((acc, key) => { acc[key] = props[key]; return acc; }, {});
-  }, [props, showTextArea]);
+  const inputsProps = usePropsForHTMLElement(showTextArea ? textAreaEl : inputEl, props);
   const max = useMemo(() => {
     return is.number(props.value) ? props.value : 0;
   }, [props.value]);
@@ -144,7 +139,9 @@ const useSwitchFocusWhenRequired = <V extends InputValue>(
   const pos = localState.inputRef.current!.selectionStart;
   setTimeout(() => {
     localState.inputRef.current!.focus();
-    localState.inputRef.current?.setSelectionRange(pos, pos);
+    if (props.type === 'string') {
+      localState.inputRef.current?.setSelectionRange(pos, pos);
+    }
   });
   wasTextArea.current = localState.showTextArea;
   setTimeout(() => props.onChangeInputElement?.(localState.showTextArea));

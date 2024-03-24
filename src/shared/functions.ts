@@ -2,15 +2,18 @@ import { deserialize } from "olik";
 import { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BasicStore } from "./types";
 
-export const usePropsWithoutFunctions = <P extends Record<string, unknown>>(props: P) => {
-	return useRef(() => {
-		return (Object.keys(props) as Array<keyof P>)
-			.filter(key => typeof (props[key]) !== 'function')
-			.reduce((prev, curr) => ({ ...prev, [curr]: props[curr] }), {} as {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				[key in keyof P as P[key] extends (...args: any[]) => unknown ? never : key]: P[key]
-			});
-	}).current;
+export const useKnownPropsOnly = <T extends HTMLElement>(
+  element: T,
+  props: Record<string, unknown>
+) => {
+  return useMemo(() => {
+    return Object.keys(props)
+        .filter(key => key in element)
+        .reduce<Record<string, unknown>>((acc, key) => {
+          acc[key] = props[key];
+          return acc; 
+        }, {});
+  }, [props, element]);
 }
 
 export const usePropsWithDefaults = <P extends Record<string, unknown>, I extends P, D extends P>(incomingProps: I, defaultProps: D) => {
@@ -207,3 +210,13 @@ export const useEventHandlerForDocument = <Type extends 'click' | 'keyup' | 'key
     return () => document.removeEventListener(type, listener);
   }, [listenerName, type]);
 }
+
+
+export const usePropsForHTMLElement = <T extends HTMLElement>(element: T, props: Record<string, unknown>) => {
+	return useMemo(() => {
+		return Object.keys(props)
+			.filter(k => (k in element))
+			.reduce<Record<string, unknown>>((acc, key) => { acc[key] = props[key]; return acc; }, {});
+	}, [props, element]);
+}
+
