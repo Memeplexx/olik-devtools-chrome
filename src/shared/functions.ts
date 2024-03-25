@@ -100,15 +100,6 @@ export const is = {
 	},
 }
 
-export const dateToISOLikeButLocal = (date: Date) => {
-	const offsetMs = date.getTimezoneOffset() * 60 * 1000;
-	const msLocal = date.getTime() - offsetMs;
-	const dateLocal = new Date(msLocal);
-	const iso = dateLocal.toISOString();
-	const isoLocal = iso.slice(0, 19);
-	return isoLocal;
-}
-
 export const silentlyApplyStateAction = (store: BasicStore, query: string[]) => {
 	if (!chrome.runtime) {
 		query.filter(e => !!e).forEach(key => {

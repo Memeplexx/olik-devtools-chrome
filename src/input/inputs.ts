@@ -148,13 +148,14 @@ const useTextAreaReSizer = <V extends InputValue>(
   props: CompactInputProps<V>,
   localState: ReturnType<typeof useLocalState>
 ) => {
+  const setState = localState.setState;
   useMemo(() => {
     setTimeout(() => {
       const textMeasurer = localState.textMeasurerRef.current;
       if (!textMeasurer) return;
       const styles = getComputedStyle(textMeasurer);
-      localState.setState({ textAreaWidth: parseInt(styles.width), textAreaHeight: parseInt(styles.height) });
+      setState({ textAreaWidth: parseInt(styles.width), textAreaHeight: parseInt(styles.height) });
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localState.textMeasurerRef, props.value])
+  }, [localState.textMeasurerRef, props.value, setState])
 }

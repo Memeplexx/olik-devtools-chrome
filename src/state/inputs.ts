@@ -1,5 +1,5 @@
 import { StateAction, deserialize, readState, updateFunctions } from "olik";
-import { ForwardedRef } from "react";
+import { ForwardedRef, ReactNode } from "react";
 import { useForwardedRef, useRecord } from "../shared/functions";
 import { Tree } from "../tree";
 import { StateProps } from "./constants";
@@ -23,7 +23,7 @@ const useLocalState = (ref: ForwardedRef<HTMLDivElement>) => {
   }
 }
 
-const tryReadState = (arg: ReturnType<typeof useLocalState> & StateProps): JSX.Element => {
+const tryReadState = (arg: ReturnType<typeof useLocalState> & StateProps): ReactNode => {
   const onClickNodeKey = (key: string) => arg.setState(s => ({
     ...s,
     contractedKeys: s.contractedKeys.includes(key)

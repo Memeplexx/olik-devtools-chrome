@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { ReactNode, useMemo, useRef } from "react";
 import { InputValue, ValueType } from "../input/constants";
 import { is, useRecord } from "../shared/functions";
 import { NodeType, RenderNodeArgs } from "./constants";
@@ -81,7 +81,7 @@ const useDerivedState = (
       if (is.string(props.item)) return `"${props.item}"`;
       if (is.date(props.item)) return props.item.toISOString();
       return props.item;
-    }, [props.item]) as JSX.Element,
+    }, [props.item]) as ReactNode,
   }
 }
 

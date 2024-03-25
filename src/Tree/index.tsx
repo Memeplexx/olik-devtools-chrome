@@ -56,7 +56,6 @@ export const Tree = (
         />
       );
     }
-    throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
   };
   return recurse({ val: is.recordOrArray(props.state) ? { '': props.state } : props.state, outerKey: '' });
 }

@@ -15,7 +15,7 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       inputs.setState({ showOptions: false });
     },
     onClickAddToArray: () => {
-      if (!is.array(props.item)) { throw new Error(); }
+      if (!is.array(props.item)) throw new Error();
       const el = JSON.stringify(getSimplifiedObjectPayload(props.item[0]));
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$push(${el})`]);
       tryFocusInput(`[data-key="${props.keyConcat}.${props.item.length}"]`);
@@ -40,18 +40,18 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       inputs.setState(({ showArrayOptions: false }))
     },
     onMouseOverRootNode: () => {
-      if (props.actionType) { return; }
+      if (props.actionType) return;
       inputs.setState({ showOptions: true });
     },
     onMouseOutRootNode: () => {
       inputs.setState({ showOptions: false });
     },
     onMouseOverValueNode: () => {
-      if (!props.isArrayElement) { return; }
+      if (!props.isArrayElement) return;
       inputs.setState({ showArrayOptions: true });
     },
     onMouseOutValueNode: () => {
-      if (!props.isArrayElement) { return; }
+      if (!props.isArrayElement) return;
       inputs.setState({ showArrayOptions: false });
     },
     onHideOptions: () => {

@@ -150,8 +150,8 @@ const useMessageHandler = (props: State) => {
   useEffect(() => {
     if (!props.storeFullyInitialized) { return; }
     const messageListener = (e: MessageEvent<Message>) => {
-      if (e.origin !== window.location.origin) { return; }
-      if (e.data.source !== 'olik-devtools-extension') { return; }
+      if (e.origin !== window.location.origin) return;
+      if (e.data.source !== 'olik-devtools-extension') return;
       processEvent(e.data);
     }
     const chromeMessageListener = (event: Message) => {
