@@ -1,5 +1,6 @@
 import { OlikAction, StateAction } from "olik"
 import { useLocalState } from "./inputs";
+import { ReactNode } from "react";
 
 export type Message = {
   source: string,
@@ -18,8 +19,8 @@ export type ItemWrapper = {
 }
 
 export type Item = {
-  jsx: JSX.Element,
-  jsxPruned: JSX.Element,
+  jsx: ReactNode,
+  jsxPruned: ReactNode,
   payload: unknown,
   id: number,
   state: Record<string, unknown>,

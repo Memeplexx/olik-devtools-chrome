@@ -7,7 +7,7 @@ export const PopupOptions = styled(possible.span)<{ $position: Position }>`
   top: 0;
   background-color: #FFF;
   color: #000;
-  z-index: 1;
+  z-index: 2;
   flex-direction: column;
   border-top-right-radius: 3px;
   border-bottom-right-radius: 3px;
@@ -36,4 +36,7 @@ export const PopupOption = styled(possible.span)<{ $selected?: boolean }>`
       background-color: rgba(0,0,0,0.2);
     }
   `}
+`;
+
+export const OptionText = styled(possible.span)`
 `;

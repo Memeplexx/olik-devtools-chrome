@@ -6,11 +6,25 @@ import { CiCircleRemove } from 'react-icons/ci';
 import { BsToggleOff, BsToggleOn } from 'react-icons/bs';
 import { possible } from "../html";
 import { DemoWrapper } from "../demo/demo-wrapper";
+import { IoMdMore } from "react-icons/io";
 
 export const ClearButton = styled.button`
 	position: absolute;
 	top: 0px;
 	right: 0px;
+	width: 20px;
+	height: 20px;
+	display: flex;
+	cursor: pointer;
+	border-radius: 50%;
+	:hover {
+		background-color: rgba(255,255,255,0.2);
+	}
+`;
+
+export const MenuButton = styled.button`
+	position: absolute;
+	right: 0;
 	width: 20px;
 	height: 20px;
 	display: flex;
@@ -40,6 +54,11 @@ export const ShowUnchangedToggle = styled.button`
 `;
 
 export const ClearIcon = styled(CiCircleRemove)`
+  flex: 1;
+  height: auto;
+`;
+
+export const MenuIcon = styled(IoMdMore)`
   flex: 1;
   height: auto;
 `;

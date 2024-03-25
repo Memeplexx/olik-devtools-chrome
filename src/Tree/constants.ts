@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { BasicStore } from "../shared/types";
 
 export interface TreeProps {
@@ -14,7 +15,7 @@ export interface TreeProps {
 export type RenderNodeArgs
   = TreeProps
   & {
-    recurse: (arg: RecurseArgs) => JSX.Element,
+    recurse: (arg: RecurseArgs) => ReactNode,
     keyConcat: string,
     index: number,
     item: unknown,

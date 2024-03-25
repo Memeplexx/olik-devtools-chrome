@@ -24,6 +24,7 @@ export const useLocalState = () => {
     items: new Array<ItemWrapper>(),
     hideUnchanged: false,
     query: '',
+    showOptions: false,
   });
   return {
     ...record,
@@ -96,9 +97,8 @@ const useMessageHandler = (props: State) => {
     const stateAfter = doReadState(fullStateAfter);
     const currentEvent = getCleanStackTrace(incoming.trace);
     const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
-    const getNewItem = () => ({
-      id: ++props.idRefInner.current,
-      jsx: getTypeJsx({
+    const getNewItem = () => {
+      const commonProps = {
         type: incoming.action.type,
         payload,
         stateBefore,
@@ -106,24 +106,24 @@ const useMessageHandler = (props: State) => {
         setState,
         idOuter: props.idRefOuter.current,
         idInner: props.idRefInner.current,
-        hideUnchanged: false,
-      }),
-      jsxPruned: getTypeJsx({
-        type: incoming.action.type,
-        payload,
-        stateBefore,
-        stateAfter,
-        setState,
-        idOuter: props.idRefOuter.current,
-        idInner: props.idRefInner.current,
-        hideUnchanged: true,
-      }),
-      state: fullStateAfter,
-      payload: incoming.action.payload,
-      contractedKeys: [],
-      time,
-      date,
-    } satisfies Item);
+      };
+      return {
+        id: ++props.idRefInner.current,
+        jsx: getTypeJsx({
+          ...commonProps,
+          hideUnchanged: false,
+        }),
+        jsxPruned: getTypeJsx({
+          ...commonProps,
+          hideUnchanged: true,
+        }),
+        state: fullStateAfter,
+        payload: incoming.action.payload,
+        contractedKeys: [],
+        time,
+        date,
+      } satisfies Item;
+    };
     return {
       storeState: fullStateAfter,
       items: currentEvent.toString() === previousEvent.toString()

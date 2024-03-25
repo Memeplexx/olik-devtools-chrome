@@ -1,8 +1,9 @@
-import { ClearButton, ClearIcon, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, ShowUnchangedToggle, ToggleOffIcon, ToggleOnIcon, StatePanel, DemoPanel } from './styles';
 import { PanelGroup } from 'react-resizable-panels';
-import { useInputs } from './inputs';
 import { Frag } from '../html/frag';
+import { PopupList } from '../popup-list';
+import { useInputs } from './inputs';
 import { useOutputs } from './outputs';
+import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, StatePanel, ToggleOffIcon, ToggleOnIcon } from './styles';
 
 export const App = () => {
   const inputs = useInputs();
@@ -56,7 +57,7 @@ export const App = () => {
                                       />
                                     }
                                   />
-                                  <ShowUnchangedToggle
+                                  {/* <ShowUnchangedToggle
                                     title="Hide ineffective updates"
                                     onClick={outputs.onClickHideIneffectiveActions}
                                     children={inputs.hideUnchanged ? <ToggleOnIcon /> : <ToggleOffIcon />}
@@ -64,6 +65,30 @@ export const App = () => {
                                   <ClearButton
                                     children={<ClearIcon />}
                                     onClick={outputs.onClickClear}
+                                  /> */}
+                                  <MenuButton
+                                    onClick={outputs.onClickToggleMenu}
+                                    children={
+                                      <>
+                                        <MenuIcon />
+                                        <PopupList
+                                          position='left'
+                                          showIf={inputs.showOptions}
+                                          children={[
+                                            {
+                                              icon: inputs.hideUnchanged ? ToggleOnIcon : ToggleOffIcon,
+                                              text: 'Hide ineffective updates',
+                                              onClick: outputs.onClickHideIneffectiveActions,
+                                            },
+                                            {
+                                              icon: ClearIcon,
+                                              text: 'Clear',
+                                              onClick: outputs.onClickClear,
+                                            },
+                                          ]}
+                                        />
+                                      </>
+                                    }
                                   />
                                 </>
                               }

@@ -6,49 +6,44 @@ import { RecurseArgs, RenderNodeArgs, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
 import { ActionType, BraceNode, ChildNode, Colon, CommaNode, Ellipses, KeyNode, ParentNode, ParenthesisNode, ValueNode, Wrapper } from "./styles";
+import { ReactNode } from "react";
 
 
 export const Tree = (
   props: TreeProps
-): JSX.Element => {
-  const recurse = ({ outerKey, val }: RecurseArgs): JSX.Element => {
+): ReactNode => {
+  const recurse = ({ outerKey, val }: RecurseArgs): ReactNode => {
     if (is.array(val)) {
-      return (
-        <>
-          {val.map((item, index) => (
-            <RenderedNode
-              key={index.toString()}
-              {...props}
-              recurse={recurse}
-              keyConcat={`${outerKey}.${index}`}
-              index={index}
-              item={item}
-              isLast={index === val.length - 1}
-              isTopLevel={false}
-              isArrayElement={true}
-            />
-          ))}
-        </>
-      );
-    } else if (is.record(val)) {
-      return (
-        <>
-          {Object.keys(val).map((key, index, arr) => (
-            <RenderedNode
-              {...props}
-              key={index.toString()}
-              recurse={recurse}
-              keyConcat={key === '' ? key.toString() : `${outerKey}.${key}`}
-              index={index}
-              item={val[key]}
-              isLast={index === arr.length - 1}
-              isTopLevel={key === ''}
-              objectKey={key}
-            />
-          ))}
-        </>
-      );
-    } else if (is.scalar(val)) {
+      return val.map((item, index) => (
+        <RenderedNode
+          key={index.toString()}
+          {...props}
+          recurse={recurse}
+          keyConcat={`${outerKey}.${index}`}
+          index={index}
+          item={item}
+          isLast={index === val.length - 1}
+          isTopLevel={false}
+          isArrayElement={true}
+        />
+      ));
+    }
+    if (is.record(val)) {
+      return Object.keys(val).map((key, index, arr) => (
+        <RenderedNode
+          {...props}
+          key={index.toString()}
+          recurse={recurse}
+          keyConcat={key === '' ? key.toString() : `${outerKey}.${key}`}
+          index={index}
+          item={val[key]}
+          isLast={index === arr.length - 1}
+          isTopLevel={key === ''}
+          objectKey={key}
+        />
+      ));
+    }
+    if (is.scalar(val)) {
       return (
         <RenderedNode
           {...props}
@@ -60,9 +55,8 @@ export const Tree = (
           isTopLevel={true}
         />
       );
-    } else {
-      throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
     }
+    throw new Error(`unhandled type: ${val === undefined ? 'undefined' : val!.toString()}`);
   };
   return recurse({ val: is.recordOrArray(props.state) ? { '': props.state } : props.state, outerKey: '' });
 }

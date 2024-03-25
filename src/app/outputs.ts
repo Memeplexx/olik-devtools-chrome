@@ -30,6 +30,9 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
     onClickHeader: (selectedId: number) => () => {
       inputs.setState({ items: inputs.items.map(i => ({ ...i, headerExpanded: i.id === selectedId ? !i.headerExpanded : i.headerExpanded })) });
     },
+    onClickToggleMenu: () => {
+      inputs.setState(s => ({ showOptions: !s.showOptions }));
+    },
   }
 }
 
