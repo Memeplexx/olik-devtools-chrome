@@ -25,7 +25,8 @@ export const useLocalState = (
     isShowingTextArea: false,
     key: '',
     value: props.item as InputValue,
-    type: (v => {
+    type: (() => {
+      const v = props.item;
       if (is.number(v)) return 'number';
       if (is.string(v)) return 'string';
       if (is.boolean(v)) return 'boolean';
@@ -33,7 +34,7 @@ export const useLocalState = (
       if (is.null(v)) return 'null';
       if (is.undefined(v)) return 'undefined';
       return 'string';
-    })(props.item) as ValueType,
+    })() as ValueType,
   });
   return {
     ...record,

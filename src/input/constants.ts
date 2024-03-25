@@ -17,7 +17,7 @@ export type CompactInputProps<V extends InputValue> = {
   onChangeCommit: (value: V) => void,
   onChangeType?: (type: ValueType) => void,
   allowQuotesToBeShown?: boolean,
-  allowTypeSelectorPopup: boolean,
+  allowTypeSelectorPopup?: boolean,
   allowTextArea?: boolean,
   additionalOptions?: PopupListProps['children'],
   readOnly?: boolean,

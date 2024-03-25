@@ -64,14 +64,14 @@ export const useOutputs = (props: RenderNodeArgs, inputs: ReturnType<typeof useI
       inputs.setState({ value });
     },
     onChangeCommitValue: (value: InputValue) => {
-      const argAsString = (v => {
-        if (is.null(v)) return 'null';
-        if (is.number(v)) return v;
-        if (is.boolean(v)) return v.toString();
-        if (is.date(v)) return v.toISOString();
-        if (is.string(v)) return `"${v.toString()}"`;
-        return v;
-      })(value)
+      const argAsString = (() => {
+        if (is.null(value)) return 'null';
+        if (is.number(value)) return value;
+        if (is.boolean(value)) return value.toString();
+        if (is.date(value)) return value.toISOString();
+        if (is.string(value)) return `"${value.toString()}"`;
+        return value;
+      })()
       silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${argAsString})`]);
     },
     onChangeInputElement: (isShowingTextArea: boolean) => {

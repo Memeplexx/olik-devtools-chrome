@@ -25,13 +25,14 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
     },
     onChange: (event: ChangeEvent<TextInputElement>) => {
       const inputVal = event.target.value;
-      const valueOfNewType = (v => {
+      const valueOfNewType = (() => {
+        const v = props.value;
         if (is.string(v)) return inputVal;
         if (is.number(v)) return inputVal.trim() === ''  ? 0 : parseFloat(inputVal);
         if (is.boolean(v)) return inputVal === 'true';
         if (is.date(v)) return new Date(inputVal);
         if (is.null(v)) return null;
-      })(props.value) as V;
+      })() as V;
       props.onChange?.(valueOfNewType);
     },
     onKeyDown: (event: TypedKeyboardEvent<TextInputElement>) => {
@@ -68,13 +69,14 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
     },
     onClickChangeType: (type: ValueType) => () => {
       props.onChangeType?.(type);
-      const valueOfNewType = (v => {
+      const v = inputs.inputRef.current!.value;
+      const valueOfNewType = (() => {
         if (type === 'string') return v;
         if (type === 'number') return (/^[0-9]$/.test(v) ? +v : 0);
         if (type === 'boolean') return (v === 'true');
         if (type === 'date') return new Date(isoDateRegexPattern.test(v) ? v : 0);
         if (type === 'null') return null;
-      })(inputs.inputRef.current!.value) as V;
+      })() as V;
       props.onChangeCommit(valueOfNewType);
     },
     onDocumentKeyup: useEventHandlerForDocument('keyup', event => {
@@ -91,8 +93,9 @@ export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, in
  * @param inputs 
  */
 const manuallyFireChangeEvent = (inputs: ReturnType<typeof useInputs>) => {
+  const prototype = inputs.inputRef.current instanceof HTMLInputElement ? HTMLInputElement : HTMLTextAreaElement;
   // eslint-disable-next-line @typescript-eslint/unbound-method
-  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
+  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(prototype.prototype, 'value')!.set!;
   nativeInputValueSetter.call(inputs.inputRef.current!, inputs.valueBefore.current);
   inputs.inputRef.current!.dispatchEvent(new Event('input', { bubbles: true }));
 }
