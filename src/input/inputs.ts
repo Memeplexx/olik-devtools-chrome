@@ -69,8 +69,9 @@ const useLocalState = <V extends InputValue>(
 }
 
 const useInitializer = (
-  { setState }: ReturnType<typeof useLocalState>
+  state: ReturnType<typeof useLocalState>
 ) => {
+  const { setState } = state;
   useEffect(() => {
     setState({ initialized: true });
   }, [setState]);
@@ -78,38 +79,38 @@ const useInitializer = (
 
 const useAnimateOnValueChange = <V extends InputValue>(
   props: CompactInputProps<V>,
-  { setState, animationEnabled }: ReturnType<typeof useLocalState>
+  state: ReturnType<typeof useLocalState>
 ) => {
   useMemo(() => {
-    if (!animationEnabled.current) return;
-    setState({ initialized: false, animate: false });
-    setTimeout(() => setState({ initialized: true, animate: true }));
-    animationEnabled.current = true;
+    if (!state.animationEnabled.current) return;
+    state.setState({ initialized: false, animate: false });
+    setTimeout(() => state.setState({ initialized: true, animate: true }));
+    state.animationEnabled.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.value, setState]);
+  }, [props.value, state.setState]);
 }
 
 const useDatePicker = <V extends InputValue>(
   props: CompactInputProps<V>,
-  { inputRef, calendarOpened, valueAsString }: ReturnType<typeof useLocalState>,
+  state: ReturnType<typeof useLocalState>,
 ) => {
   const flatPickerRef = useRef<Instance | null>(null);
   const dateChanged = useRef(false);
-  if (is.date(props.value) && !flatPickerRef.current && inputRef.current) {
-    flatPickerRef.current = flatpickr(inputRef.current, {
+  if (is.date(props.value) && !flatPickerRef.current && state.inputRef.current) {
+    flatPickerRef.current = flatpickr(state.inputRef.current, {
       enableTime: true,
-      defaultDate: valueAsString,
+      defaultDate: state.valueAsString,
       formatDate: d => d.toISOString(),
       onOpen: () => {
         dateChanged.current = false;
-        calendarOpened.current = true;
+        state.calendarOpened.current = true;
       },
       onChange: () => {
         dateChanged.current = true;
       },
       onClose: s => {
         if (!dateChanged.current) { return; }
-        setTimeout(() => calendarOpened.current = false);
+        setTimeout(() => state.calendarOpened.current = false);
         props.onChangeCommit(s[0] as V);
       },
     })
@@ -121,28 +122,28 @@ const useDatePicker = <V extends InputValue>(
 
 const useInputElementChanger = <V extends InputValue>(
   props: CompactInputProps<V>,
-  { initialized, showTextArea }: ReturnType<typeof useLocalState>
+  state: ReturnType<typeof useLocalState>
 ) => {
-  if (!initialized) {
-    setTimeout(() => props.onChangeInputElement?.(showTextArea));
+  if (!state.initialized) {
+    setTimeout(() => props.onChangeInputElement?.(state.showTextArea));
   }
-  const wasTextArea = useRef(showTextArea);
-  if (wasTextArea.current == showTextArea) { return; }
-  wasTextArea.current = showTextArea;
-  setTimeout(() => props.onChangeInputElement?.(showTextArea));
+  const wasTextArea = useRef(state.showTextArea);
+  if (wasTextArea.current == state.showTextArea) { return; }
+  wasTextArea.current = state.showTextArea;
+  setTimeout(() => props.onChangeInputElement?.(state.showTextArea));
 }
 
 const useTextAreaReSizer = <V extends InputValue>(
   props: CompactInputProps<V>,
-  { setState, textMeasurerRef }: ReturnType<typeof useLocalState>
+  state: ReturnType<typeof useLocalState>
 ) => {
   useMemo(() => {
     setTimeout(() => {
-      const textMeasurer = textMeasurerRef.current;
+      const textMeasurer = state.textMeasurerRef.current;
       if (!textMeasurer) return;
       const styles = getComputedStyle(textMeasurer);
-      setState({ textAreaWidth: parseInt(styles.width), textAreaHeight: parseInt(styles.height) });
+      state.setState({ textAreaWidth: parseInt(styles.width), textAreaHeight: parseInt(styles.height) });
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [textMeasurerRef, props.value, setState])
+  }, [state.textMeasurerRef, props.value, state.setState])
 }

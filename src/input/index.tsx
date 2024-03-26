@@ -28,7 +28,6 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
   };
   return (
     <Wrapper
-      showIf={!props.showIf}
       onMouseOver={outputs.onMouseOver}
       onMouseOut={outputs.onMouseOut}
       $isTextArea={inputs.showTextArea}
