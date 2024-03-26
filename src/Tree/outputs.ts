@@ -1,6 +1,6 @@
 import { MouseEvent } from "react";
 import { InputValue, ValueType } from "../input/constants";
-import { fixKey, is, silentlyApplyStateAction, useEventHandlerForDocument } from "../shared/functions";
+import { is, silentlyApplyStateAction, useEventHandlerForDocument } from "../shared/functions";
 import { RenderNodeArgs, State } from "./constants";
 
 export const useOutputs = (props: RenderNodeArgs, state: State) => ({
@@ -9,20 +9,20 @@ export const useOutputs = (props: RenderNodeArgs, state: State) => ({
     state.set({ showOptions: false, showArrayOptions: false });
   },
   onClickDelete: () => {
-    silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);
+    silentlyApplyStateAction(props.store!, `${props.keyConcat}.$delete()`);
     state.set({ showOptions: false });
   },
   onClickAddToArray: () => {
     if (!is.array(props.item)) throw new Error();
     const el = JSON.stringify(getSimplifiedObjectPayload(props.item[0]));
-    silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$push(${el})`]);
+    silentlyApplyStateAction(props.store!, `${props.keyConcat}.$push(${el})`);
     tryFocusInput(`[data-key="${props.keyConcat}.${props.item.length}"]`);
   },
   onClickAddToObject: () => {
     const keys = Object.keys(props.item as Record<string, unknown>);
     const recurse = (tryKey: string, count: number): string => !keys.includes(tryKey) ? tryKey : recurse(`<key-${count++}>`, count);
     const key = recurse('<key>', 0);
-    silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setNew(${JSON.stringify({ [key]: '<value>' })})`]);
+    silentlyApplyStateAction(props.store!, `${props.keyConcat}.$setNew(${JSON.stringify({ [key]: '<value>' })})`);
     tryFocusInput(`[data-key="${props.keyConcat}.${key}"]`);
   },
   onClickEditKey: () => {
@@ -70,7 +70,7 @@ export const useOutputs = (props: RenderNodeArgs, state: State) => ({
       if (is.string(value)) return `"${value.toString()}"`;
       return value;
     })()
-    silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$set(${argAsString})`]);
+    silentlyApplyStateAction(props.store!, `${props.keyConcat}.$set(${argAsString})`);
   },
   onChangeInputElement: (isShowingTextArea: boolean) => {
     state.set({ isShowingTextArea });
@@ -86,10 +86,10 @@ export const useOutputs = (props: RenderNodeArgs, state: State) => ({
   },
   onChangeCommitObjectKey: (value: InputValue) => {
     state.set({ isEditingObjectKey: false });
-    silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$setKey(${value!.toString()})`]);
+    silentlyApplyStateAction(props.store!, `${props.keyConcat}.$setKey(${value!.toString()})`);
   },
   onClickDeleteArrayElement: () => {
-    silentlyApplyStateAction(props.store!, [...fixKey(props.keyConcat).split('.'), `$delete()`]);
+    silentlyApplyStateAction(props.store!, `${props.keyConcat}.$delete()`);
     state.set({ showArrayOptions: false });
   },
   onDocumentKeyup: useEventHandlerForDocument('keyup', event => {

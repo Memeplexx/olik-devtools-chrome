@@ -100,9 +100,10 @@ export const is = {
 	},
 }
 
-export const silentlyApplyStateAction = (store: BasicStore, query: string[]) => {
+export const silentlyApplyStateAction = (store: BasicStore, queryString: string) => {
+	const query = queryString.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e);
 	if (!chrome.runtime) {
-		query.filter(e => !!e).forEach(key => {
+		query.forEach(key => {
 			const arg = key.match(/\(([^)]*)\)/)?.[1];
 			const containsParenthesis = arg !== null && arg !== undefined;
 			if (containsParenthesis) {
@@ -121,10 +122,6 @@ export const silentlyApplyStateAction = (store: BasicStore, query: string[]) => 
 			.then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: updateDiv, args: [query] }))
 			.catch(console.error);
 	}
-}
-
-export const fixKey = (key: string) => {
-	return key.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e).join('.');
 }
 
 export const useRecord = <R extends Record<string, unknown>>(record: R) => {

@@ -25,7 +25,7 @@ export const useOutputs = (state: State) => {
       state.set({ query });
     },
     onEditorEnter: (query: string) => {
-      silentlyApplyStateAction(state.storeRef.current!, query.split('.'));
+      silentlyApplyStateAction(state.storeRef.current!, query);
     },
     onClickHeader: (selectedId: number) => () => {
       state.set({ items: state.items.map(i => ({ ...i, headerExpanded: i.id === selectedId ? !i.headerExpanded : i.headerExpanded })) });

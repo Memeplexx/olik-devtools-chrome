@@ -17,7 +17,6 @@ export const useLocalState = () => {
   const record = useRecord({
     error: '',
     storeFullyInitialized: false,
-    storeStateInitial: null as Record<string, unknown> | null,
     storeState: null as Record<string, unknown> | null,
     storeStateVersion: null as Record<string, unknown> | null,
     selectedId: null as number | null,
@@ -167,8 +166,7 @@ const useMessageHandler = (state: State) => {
     if (!chrome.runtime) {
       window.addEventListener('message', messageListener);
     } else {
-      chrome.runtime.onMessage
-        .addListener(chromeMessageListener);
+      chrome.runtime.onMessage.addListener(chromeMessageListener);
     }
     return () => {
       window.removeEventListener('message', messageListener);
