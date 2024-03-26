@@ -45,12 +45,10 @@ export const useLocalState = <V extends InputValue>(
   const max = useMemo(() => is.number(props.value) ? props.value : 0, [props.value]);
   const showQuote = useMemo(() => props.allowQuotesToBeShown && is.string(props.value), [props.allowQuotesToBeShown, props.value]);
   const showCloseQuote = useMemo(() => props.allowQuotesToBeShown && is.string(props.value) && !showTextArea, [props.allowQuotesToBeShown, props.value, showTextArea]);
-  const inputRef = useForwardedRef(forwardedRef);
-  const textMeasurerRef = useRef<HTMLSpanElement>(null);
   return {
     ...localState,
-    inputRef,
-    textMeasurerRef,
+    inputRef: useForwardedRef(forwardedRef),
+    textMeasurerRef: useRef<HTMLSpanElement>(null),
     valueBefore: useRef(''),
     onEscapePressed: useRef(false),
     calendarOpened: useRef(false),
