@@ -174,9 +174,8 @@ export const useEventHandlerForDocument = <Type extends 'click' | 'keyup' | 'key
   ref.current = handler;
   useEffect(() => {
     const listener = ((event: EventMap<Type>) => {
-      const handler = ref.current;
-      if (handler) {
-        handler(event);
+      if (ref.current) {
+        ref.current(event);
       }
     }) as unknown as EventListener;
     Object.defineProperty(listener, 'name', { value: listenerName });

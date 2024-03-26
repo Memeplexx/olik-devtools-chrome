@@ -4,8 +4,8 @@ import { is, silentlyApplyStateAction, useEventHandlerForDocument } from "../sha
 import { RenderNodeArgs, State } from "./constants";
 
 export const useOutputs = (props: RenderNodeArgs, state: State) => ({
-  onClickCopy: () => {
-    navigator.clipboard.writeText(JSON.stringify(props.item, null, 2)).catch(console.error);
+  onClickCopy: async () => {
+    await navigator.clipboard.writeText(JSON.stringify(props.item, null, 2));
     state.set({ showOptions: false, showArrayOptions: false });
   },
   onClickDelete: () => {
@@ -19,7 +19,8 @@ export const useOutputs = (props: RenderNodeArgs, state: State) => ({
     tryFocusInput(`[data-key="${props.keyConcat}.${props.item.length}"]`);
   },
   onClickAddToObject: () => {
-    const keys = Object.keys(props.item as Record<string, unknown>);
+    if (!is.record(props.item)) throw new Error();
+    const keys = Object.keys(props.item);
     const recurse = (tryKey: string, count: number): string => !keys.includes(tryKey) ? tryKey : recurse(`<key-${count++}>`, count);
     const key = recurse('<key>', 0);
     silentlyApplyStateAction(props.store!, `${props.keyConcat}.$setNew(${JSON.stringify({ [key]: '<value>' })})`);

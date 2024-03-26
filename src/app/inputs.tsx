@@ -180,7 +180,7 @@ const getTypeJsx = (arg: {
   payload: unknown,
   stateBefore: unknown,
   stateAfter: unknown,
-  set: ReturnType<typeof useLocalState>['set'],
+  set: State['set'],
   idOuter: number,
   idInner: number,
   hideUnchanged: boolean,
