@@ -126,16 +126,17 @@ export const silentlyApplyStateAction = (store: BasicStore, queryString: string)
 
 export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 	const [state, setState] = useState(record);
-	return {
+  const applySetState = useCallback((arg: Partial<R> | ((r: R) => Partial<R>)) => {
+    if (is.function<[R], Partial<R>>(arg)) {
+      setState(s => ({ ...s, ...arg(s) }));
+    } else {
+      setState(s => ({ ...s, ...arg }));
+    }
+  }, []);
+  return useMemo(() => ({
 		...state,
-		set: useCallback((arg: Partial<R> | ((r: R) => Partial<R>)) => {
-			if (is.function<[R], Partial<R>>(arg)) {
-				setState(s => ({ ...s, ...arg(s) }));
-			} else {
-				setState(s => ({ ...s, ...arg }));
-			}
-		}, []),
-	};
+		set: applySetState,
+  }), [applySetState, state]);
 }
 
 export type Keys =
