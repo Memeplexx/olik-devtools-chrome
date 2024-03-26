@@ -211,7 +211,7 @@ export const useResizeObserver = (
       observer.observe(arg.ref.current);
     }
     return () => observer.disconnect();
-  }, [arg.ref, callBackRef]);
+  }, [arg.ref]);
 }
 
 export const useAttributeObserver = <T extends HTMLElement>(
@@ -231,5 +231,5 @@ export const useAttributeObserver = <T extends HTMLElement>(
 			observer.observe(arg.ref.current, { attributes: true, attributeFilter: attributeFilterRef.current as string[] });
 		}
 		return () => observer.disconnect();
-	}, [arg.ref, attributeFilterRef, callBackRef]);
+	}, [arg.ref]);
 }
