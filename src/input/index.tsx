@@ -1,6 +1,6 @@
 import 'flatpickr/dist/flatpickr.css';
 import { ForwardedRef, MutableRefObject, forwardRef } from "react";
-import { CompactInputProps, InputValue, TextInputElement, types } from "./constants";
+import { Props, InputValue, TextInputElement, types } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
 import { Input, TextMeasurerWrapper, Quote, TextArea, TextAreaWrapper, TextMeasurer, Wrapper } from "./styles";
@@ -9,7 +9,7 @@ import { IoIosSwap } from 'react-icons/io';
 
 
 export const CompactInput = forwardRef(function CompactInput<V extends InputValue>(
-  props: CompactInputProps<V>,
+  props: Props<V>,
   forwardedRef: ForwardedRef<TextInputElement>
 ) {
   const inputs = useInputs(props, forwardedRef);

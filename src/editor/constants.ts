@@ -1,7 +1,7 @@
 import { editor } from "monaco-editor"
 import { useLocalState } from "./inputs";
 
-export type EditorProps = {
+export type Props = {
   state: Record<string, unknown> | null,
   onChange: (query: string) => void,
   onEnter: (query: string) => void,

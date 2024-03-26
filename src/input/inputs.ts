@@ -1,27 +1,27 @@
 import flatpickr from "flatpickr";
 import { Instance } from "flatpickr/dist/types/instance";
 import { ForwardedRef, useEffect, useMemo, useRef } from "react";
-import { is, useForwardedRef, usePropsForHTMLElement, useRecord } from "../shared/functions";
-import { CompactInputProps, InputValue, TextInputElement } from "./constants";
+import { is, useAttributeObserver, useForwardedRef, usePropsForHTMLElement, useRecord, useResizeObserver } from "../shared/functions";
+import { Props, InputValue, State, TextInputElement } from "./constants";
 
 const inputEl = document.createElement('input');
 const textAreaEl = document.createElement('textarea');
 
 export const useInputs = <V extends InputValue>(
-  props: CompactInputProps<V>,
+  props: Props<V>,
   forwardedRef: ForwardedRef<TextInputElement>
 ) => {
   const localState = useLocalState(props, forwardedRef);
   useInitializer(localState);
   useDatePicker(props, localState);
-  useAnimateOnValueChange(props, localState);
+  useAnimateOnValueChange(localState);
   useInputElementChanger(props, localState);
-  useTextAreaReSizer(props, localState);
+  useTextAreaReSizer(localState);
   return localState;
 }
 
-const useLocalState = <V extends InputValue>(
-  props: CompactInputProps<V>,
+export const useLocalState = <V extends InputValue>(
+  props: Props<V>,
   forwardedRef: ForwardedRef<TextInputElement>
 ) => {
   const localState = useRecord({
@@ -31,21 +31,20 @@ const useLocalState = <V extends InputValue>(
     textAreaWidth: 0,
     textAreaHeight: 0,
   });
-  const v = props.value;
   const valueAsString = useMemo(() => {
-    if (is.null(v)) return 'null';
-    if (is.undefined(v)) return '';
-    if (is.boolean(v)) return v.toString();
-    if (is.number(v)) return v.toString();
-    if (is.string(v)) return v.toString();
-    if (is.date(v)) return v.toISOString();
-  }, [v]) as string;
-  const inputType = useMemo(() => is.number(v) ? 'number' : 'string', [v]);
+    if (is.null(props.value)) return 'null';
+    if (is.undefined(props.value)) return '';
+    if (is.boolean(props.value)) return props.value.toString();
+    if (is.number(props.value)) return props.value.toString();
+    if (is.string(props.value)) return props.value.toString();
+    if (is.date(props.value)) return props.value.toISOString();
+  }, [props.value]) as string;
+  const inputType = useMemo(() => is.number(props.value) ? 'number' : 'string', [props.value]);
   const showTextArea = !!props.allowTextArea && props.type === 'string';
   const inputsProps = usePropsForHTMLElement(showTextArea ? textAreaEl : inputEl, props);
-  const max = useMemo(() => is.number(v) ? v : 0, [v]);
-  const showQuote = useMemo(() => props.allowQuotesToBeShown && is.string(v), [props.allowQuotesToBeShown, v]);
-  const showCloseQuote = useMemo(() => props.allowQuotesToBeShown && is.string(v) && !showTextArea, [props.allowQuotesToBeShown, v, showTextArea]);
+  const max = useMemo(() => is.number(props.value) ? props.value : 0, [props.value]);
+  const showQuote = useMemo(() => props.allowQuotesToBeShown && is.string(props.value), [props.allowQuotesToBeShown, props.value]);
+  const showCloseQuote = useMemo(() => props.allowQuotesToBeShown && is.string(props.value) && !showTextArea, [props.allowQuotesToBeShown, props.value, showTextArea]);
   const inputRef = useForwardedRef(forwardedRef);
   const textMeasurerRef = useRef<HTMLSpanElement>(null);
   return {
@@ -69,30 +68,17 @@ const useLocalState = <V extends InputValue>(
 }
 
 const useInitializer = (
-  state: ReturnType<typeof useLocalState>
+  state: State
 ) => {
-  const { setState } = state;
+  const { set } = state;
   useEffect(() => {
-    setState({ initialized: true });
-  }, [setState]);
-}
-
-const useAnimateOnValueChange = <V extends InputValue>(
-  props: CompactInputProps<V>,
-  state: ReturnType<typeof useLocalState>
-) => {
-  useMemo(() => {
-    if (!state.animationEnabled.current) return;
-    state.setState({ initialized: false, animate: false });
-    setTimeout(() => state.setState({ initialized: true, animate: true }));
-    state.animationEnabled.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.value, state.setState]);
+    set({ initialized: true });
+  }, [set]);
 }
 
 const useDatePicker = <V extends InputValue>(
-  props: CompactInputProps<V>,
-  state: ReturnType<typeof useLocalState>,
+  props: Props<V>,
+  state: State,
 ) => {
   const flatPickerRef = useRef<Instance | null>(null);
   const dateChanged = useRef(false);
@@ -121,8 +107,8 @@ const useDatePicker = <V extends InputValue>(
 }
 
 const useInputElementChanger = <V extends InputValue>(
-  props: CompactInputProps<V>,
-  state: ReturnType<typeof useLocalState>
+  props: Props<V>,
+  state: State
 ) => {
   if (!state.initialized) {
     setTimeout(() => props.onChangeInputElement?.(state.showTextArea));
@@ -133,17 +119,28 @@ const useInputElementChanger = <V extends InputValue>(
   setTimeout(() => props.onChangeInputElement?.(state.showTextArea));
 }
 
-const useTextAreaReSizer = <V extends InputValue>(
-  props: CompactInputProps<V>,
-  state: ReturnType<typeof useLocalState>
+const useAnimateOnValueChange = (
+  state: State,
 ) => {
-  useMemo(() => {
-    setTimeout(() => {
-      const textMeasurer = state.textMeasurerRef.current;
-      if (!textMeasurer) return;
-      const styles = getComputedStyle(textMeasurer);
-      state.setState({ textAreaWidth: parseInt(styles.width), textAreaHeight: parseInt(styles.height) });
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.textMeasurerRef, props.value, state.setState])
+  useAttributeObserver({
+    ref: state.inputRef,
+    attributes: ['value'],
+    onChange: () => {
+      if (!state.animationEnabled.current) return;
+      state.set({ initialized: false, animate: false });
+      requestAnimationFrame(() => requestAnimationFrame(() => state.set({ initialized: true, animate: true })));
+      state.animationEnabled.current = true;
+    },
+  })
+}
+
+const useTextAreaReSizer = (
+  state: State
+) => {
+  useResizeObserver({
+    ref: state.textMeasurerRef,
+    onChange: size => {
+      state.set({ textAreaWidth: size.width, textAreaHeight: size.height });
+    },
+  });
 }

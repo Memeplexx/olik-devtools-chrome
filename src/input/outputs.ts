@@ -1,101 +1,100 @@
 import { ChangeEvent, FocusEvent, MouseEvent } from "react";
 import { TypedKeyboardEvent, is, isoDateRegexPattern, useEventHandlerForDocument } from "../shared/functions";
-import { CompactInputProps, InputValue, TextInputElement, ValueType } from "./constants";
-import { useInputs } from "./inputs";
+import { Props, InputValue, State, TextInputElement, ValueType } from "./constants";
 
 
-export const useOutputs = <V extends InputValue>(props: CompactInputProps<V>, inputs: ReturnType<typeof useInputs>) => {
-  return {
-    onClick: (event: MouseEvent<TextInputElement>) => {
-      if (props.type === 'boolean') {
-        props.onChangeCommit(!props.value as V);
-        inputs.inputRef.current?.blur();
-      }
-      props.onClick?.(event);
-    },
-    onKeyUp: (event: TypedKeyboardEvent<TextInputElement>) => {
-      if (event.key === 'Enter' && !(inputs.showTextArea && event.shiftKey)) {
-        inputs.inputRef.current!.blur();
-      } else if (event.key === 'Escape' && !inputs.showPopup) {
-        inputs.onEscapePressed.current = true;
-        inputs.inputRef.current!.blur();
-        inputs.onEscapePressed.current = false;
-        manuallyFireChangeEvent(inputs);
-      }
-    },
-    onChange: (event: ChangeEvent<TextInputElement>) => {
-      const inputVal = event.target.value;
-      const valueOfNewType = (() => {
-        const v = props.value;
-        if (is.string(v)) return inputVal;
-        if (is.number(v)) return inputVal.trim() === ''  ? 0 : parseFloat(inputVal);
-        if (is.boolean(v)) return inputVal === 'true';
-        if (is.date(v)) return new Date(inputVal);
-        if (is.null(v)) return null;
-      })() as V;
-      props.onChange?.(valueOfNewType);
-    },
-    onKeyDown: (event: TypedKeyboardEvent<TextInputElement>) => {
-      if (event.key === 'Enter' && inputs.showTextArea && !event.shiftKey) {
-        event.preventDefault();
-      } else if (props.readOnly) {
-        event.preventDefault();
-      } else if (is.date(props.value)) {
-        event.preventDefault();  
-      } else if (is.number(props.value) && /^[a-zA-Z]$/.test(event.key)) {
-        event.preventDefault();
-      }
-      inputs.animationEnabled.current = false;
-    },
-    onBlur: (event: FocusEvent<TextInputElement>) => {
-      props.onBlur?.(event);
-      if (inputs.calendarOpened.current) return;
-      if (inputs.onEscapePressed.current) return;
-      if (inputs.inputRef.current!.value === inputs.valueBefore.current) return;
-      if (props.type === 'boolean') return;
-      props.onChangeCommit(props.value);
-    },
-    onFocus: (e: FocusEvent<TextInputElement>) => {
-      inputs.valueBefore.current = inputs.inputRef.current!.value;
-      props.onFocus?.(e);
-    },
-    onMouseOver: (e: MouseEvent<TextInputElement>) => {
-      inputs.setState({ isHovered: true });
-      props.onMouseOver?.(e);
-    },
-    onMouseOut: (e: MouseEvent<TextInputElement>) => {
-      inputs.setState({ isHovered: false });
-      props.onMouseOut?.(e);
-    },
-    onClickChangeType: (type: ValueType) => () => {
-      props.onChangeType?.(type);
-      const v = inputs.inputRef.current!.value;
-      const valueOfNewType = (() => {
-        if (type === 'string') return v;
-        if (type === 'number') return (/^[0-9]$/.test(v) ? +v : 0);
-        if (type === 'boolean') return (v === 'true');
-        if (type === 'date') return new Date(isoDateRegexPattern.test(v) ? v : 0);
-        if (type === 'null') return null;
-      })() as V;
-      props.onChangeCommit(valueOfNewType);
-    },
-    onDocumentKeyup: useEventHandlerForDocument('keyup', event => {
-      if (event.key === 'Escape' && inputs.showPopup) {
-        inputs.setState({ isHovered: false });
-      }
-    }),
-  }
-}
+export const useOutputs = <V extends InputValue>(
+  props: Props<V>,
+  state: State
+) => ({
+  onClick: (event: MouseEvent<TextInputElement>) => {
+    if (props.type === 'boolean') {
+      props.onChangeCommit(!props.value as V);
+      state.inputRef.current?.blur();
+    }
+    props.onClick?.(event);
+  },
+  onKeyUp: (event: TypedKeyboardEvent<TextInputElement>) => {
+    if (event.key === 'Enter' && !(state.showTextArea && event.shiftKey)) {
+      state.inputRef.current!.blur();
+    } else if (event.key === 'Escape' && !state.showPopup) {
+      state.onEscapePressed.current = true;
+      state.inputRef.current!.blur();
+      state.onEscapePressed.current = false;
+      manuallyFireChangeEvent(state);
+    }
+  },
+  onChange: (event: ChangeEvent<TextInputElement>) => {
+    const inputVal = event.target.value;
+    const valueOfNewType = (() => {
+      if (is.string(props.value)) return inputVal;
+      if (is.number(props.value)) return inputVal.trim() === '' ? 0 : parseFloat(inputVal);
+      if (is.boolean(props.value)) return inputVal === 'true';
+      if (is.date(props.value)) return new Date(inputVal);
+      if (is.null(props.value)) return null;
+    })() as V;
+    props.onChange?.(valueOfNewType);
+  },
+  onKeyDown: (event: TypedKeyboardEvent<TextInputElement>) => {
+    if (event.key === 'Enter' && state.showTextArea && !event.shiftKey) {
+      event.preventDefault();
+    } else if (props.readOnly) {
+      event.preventDefault();
+    } else if (is.date(props.value)) {
+      event.preventDefault();
+    } else if (is.number(props.value) && /^[a-zA-Z]$/.test(event.key)) {
+      event.preventDefault();
+    }
+    state.animationEnabled.current = false;
+  },
+  onBlur: (event: FocusEvent<TextInputElement>) => {
+    props.onBlur?.(event);
+    if (state.calendarOpened.current) return;
+    if (state.onEscapePressed.current) return;
+    if (state.inputRef.current!.value === state.valueBefore.current) return;
+    if (props.type === 'boolean') return;
+    props.onChangeCommit(props.value);
+  },
+  onFocus: (event: FocusEvent<TextInputElement>) => {
+    state.valueBefore.current = state.inputRef.current!.value;
+    props.onFocus?.(event);
+  },
+  onMouseOver: (event: MouseEvent<TextInputElement>) => {
+    state.set({ isHovered: true });
+    props.onMouseOver?.(event);
+  },
+  onMouseOut: (event: MouseEvent<TextInputElement>) => {
+    state.set({ isHovered: false });
+    props.onMouseOut?.(event);
+  },
+  onClickChangeType: (type: ValueType) => () => {
+    props.onChangeType?.(type);
+    const { value } = state.inputRef.current!;
+    const valueOfNewType = (() => {
+      if (type === 'string') return value;
+      if (type === 'number') return (/^[0-9]$/.test(value) ? +value : 0);
+      if (type === 'boolean') return (value === 'true');
+      if (type === 'date') return new Date(isoDateRegexPattern.test(value) ? value : 0);
+      if (type === 'null') return null;
+    })() as V;
+    props.onChangeCommit(valueOfNewType);
+  },
+  onDocumentKeyup: useEventHandlerForDocument('keyup', event => {
+    if (event.key === 'Escape' && state.showPopup) {
+      state.set({ isHovered: false });
+    }
+  }),
+});
 
 /**
  * We need this because the `onChange` event is not fired when the value is changed programmatically.
  * https://stackoverflow.com/a/46012210/1087131
- * @param inputs 
+ * @param state 
  */
-const manuallyFireChangeEvent = (inputs: ReturnType<typeof useInputs>) => {
-  const prototype = inputs.inputRef.current instanceof HTMLInputElement ? HTMLInputElement : HTMLTextAreaElement;
+const manuallyFireChangeEvent = (state: State) => {
+  const prototype = state.inputRef.current instanceof HTMLInputElement ? HTMLInputElement : HTMLTextAreaElement;
   // eslint-disable-next-line @typescript-eslint/unbound-method
   const nativeInputValueSetter = Object.getOwnPropertyDescriptor(prototype.prototype, 'value')!.set!;
-  nativeInputValueSetter.call(inputs.inputRef.current!, inputs.valueBefore.current);
-  inputs.inputRef.current!.dispatchEvent(new Event('input', { bubbles: true }));
+  nativeInputValueSetter.call(state.inputRef.current!, state.valueBefore.current);
+  state.inputRef.current!.dispatchEvent(new Event('input', { bubbles: true }));
 }

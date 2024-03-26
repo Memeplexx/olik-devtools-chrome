@@ -1,45 +1,45 @@
 import { libState } from "olik";
-import { useInputs } from "./inputs";
 import { silentlyApplyStateAction } from "../shared/functions";
+import { State } from "./constants";
 
 
-export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
+export const useOutputs = (state: State) => {
   return {
     onClickHideIneffectiveActions: () => {
-      inputs.setState({ hideUnchanged: !inputs.hideUnchanged });
+      state.set({ hideUnchanged: !state.hideUnchanged });
     },
     onClickItem: (selectedId: number) => () => {
-      const itemsFlattened = inputs.items.flatMap(i => i.items);
-      if (inputs.selectedId === selectedId) {
-        inputs.setState({ selectedId: null });
-        silentlyUpdateAppStoreState(inputs, itemsFlattened[itemsFlattened.length - 1].state);
+      const itemsFlattened = state.items.flatMap(i => i.items);
+      if (state.selectedId === selectedId) {
+        state.set({ selectedId: null });
+        silentlyUpdateAppStoreState(state, itemsFlattened[itemsFlattened.length - 1].state);
       } else {
-        inputs.setState({ selectedId, storeStateVersion: itemsFlattened.find(i => i.id === selectedId)!.state });
-        silentlyUpdateAppStoreState(inputs, itemsFlattened.find(i => i.id === selectedId)!.state);
+        state.set({ selectedId, storeStateVersion: itemsFlattened.find(i => i.id === selectedId)!.state });
+        silentlyUpdateAppStoreState(state, itemsFlattened.find(i => i.id === selectedId)!.state);
       }
     },
     onClickClear: () => {
-      inputs.setState(s => ({ items: s.items.map(i => ({ ...i, visible: false } ) ) }));
+      state.set(s => ({ items: s.items.map(i => ({ ...i, visible: false } ) ) }));
     },
     onEditorChange: (query: string) => {
-      inputs.setState({ query });
+      state.set({ query });
     },
     onEditorEnter: (query: string) => {
-      silentlyApplyStateAction(inputs.storeRef.current!, query.split('.'));
+      silentlyApplyStateAction(state.storeRef.current!, query.split('.'));
     },
     onClickHeader: (selectedId: number) => () => {
-      inputs.setState({ items: inputs.items.map(i => ({ ...i, headerExpanded: i.id === selectedId ? !i.headerExpanded : i.headerExpanded })) });
+      state.set({ items: state.items.map(i => ({ ...i, headerExpanded: i.id === selectedId ? !i.headerExpanded : i.headerExpanded })) });
     },
     onClickToggleMenu: () => {
-      inputs.setState(s => ({ showOptions: !s.showOptions }));
+      state.set(s => ({ showOptions: !s.showOptions }));
     },
   }
 }
 
-const silentlyUpdateAppStoreState = (props: ReturnType<typeof useInputs>, state: Record<string, unknown>) => {
+const silentlyUpdateAppStoreState = (state: State, newState: Record<string, unknown>) => {
   if (!chrome.runtime) {
     libState.disableDevtoolsDispatch = true;
-    props.storeRef.current!.$set(state);
+    state.storeRef.current!.$set(newState);
     libState.disableDevtoolsDispatch = false;
   } else {
     const updateDiv = (state: string) => document.getElementById('olik-state')!.innerHTML = state;

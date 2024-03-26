@@ -1,16 +1,16 @@
 import { ReactNode, useMemo, useRef } from "react";
 import { InputValue, ValueType } from "../input/constants";
 import { is, useRecord } from "../shared/functions";
-import { NodeType, RenderNodeArgs } from "./constants";
+import { NodeType, RenderNodeArgs, State } from "./constants";
 
 export const useInputs = (
   props: RenderNodeArgs,
 ) => {
-  const localState = useLocalState(props);
+  const state = useLocalState(props);
   const derivedState = useDerivedState(props);
-  useValueUpdater(localState, props);
+  useValueUpdater(props, state);
   return {
-    ...localState,
+    ...state,
     ...derivedState,
   };
 }
@@ -26,13 +26,12 @@ export const useLocalState = (
     key: '',
     value: props.item as InputValue,
     type: (() => {
-      const v = props.item;
-      if (is.number(v)) return 'number';
-      if (is.string(v)) return 'string';
-      if (is.boolean(v)) return 'boolean';
-      if (is.date(v)) return 'date';
-      if (is.null(v)) return 'null';
-      if (is.undefined(v)) return 'undefined';
+      if (is.number(props.item)) return 'number';
+      if (is.string(props.item)) return 'string';
+      if (is.boolean(props.item)) return 'boolean';
+      if (is.date(props.item)) return 'date';
+      if (is.null(props.item)) return 'null';
+      if (is.undefined(props.item)) return 'undefined';
       return 'string';
     })() as ValueType,
   });
@@ -87,10 +86,10 @@ const useDerivedState = (
 }
 
 const useValueUpdater = (
-  localState: ReturnType<typeof useLocalState>,
   props: RenderNodeArgs,
+  state: State,
 ) => {
-  const setState = localState.setState;
+  const setState = state.set;
   useMemo(() => {
     setState({ value: props.item as InputValue });
   }, [props.item, setState]);

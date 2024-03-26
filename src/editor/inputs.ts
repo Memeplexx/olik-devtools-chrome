@@ -3,20 +3,20 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 import { useRef } from "react";
 import * as olikTypeDefsText from '../../node_modules/olik/dist/type.d.ts?raw';
 import { is, useRecord } from "../shared/functions";
-import { EditorProps, State, editorRefOptions, editorTheme } from "./constants";
+import { Props, State, editorRefOptions, editorTheme } from "./constants";
 
 const olikTypeDefsAsString = olikTypeDefsText.default.replace(/\n|\r/g, "");
 
 const lineHeight = 18;
 
-export const useInputs = (props: EditorProps) => {
-  const localState = useLocalState();
-  instantiateEditor(props, localState);
-  respondToEditorScrollChanges(localState);
-  respondToEditorTextChanges(props, localState);
-  respondToEditorEnterKeyup(props, localState);
-  useStateChangeResponder(props, localState);
-  return localState;
+export const useInputs = (props: Props) => {
+  const state = useLocalState();
+  instantiateEditor(props, state);
+  respondToEditorScrollChanges(state);
+  respondToEditorTextChanges(props, state);
+  respondToEditorEnterKeyup(props, state);
+  useStateChangeResponder(props, state);
+  return state;
 }
 
 export const useLocalState = () => {
@@ -33,7 +33,7 @@ export const useLocalState = () => {
   };
 }
 
-const instantiateEditor = (props: EditorProps, state: State) => {
+const instantiateEditor = (props: Props, state: State) => {
   if (!state.divEl.current || state.editorRef.current || !props.state) { return; }
   self.MonacoEnvironment = { getWorker: () => new tsWorker() };
   editor.defineTheme('olik-editor-theme', editorTheme);
@@ -43,7 +43,7 @@ const instantiateEditor = (props: EditorProps, state: State) => {
   state.editorRef.current.setValue(defaultEditorValue);
 }
 
-const reGenerateTypeDefinitions = (props: EditorProps, state: State) => {
+const reGenerateTypeDefinitions = (props: Props, state: State) => {
   const recurse = (val: unknown): string => {
     if (is.primitive(val)) return `"${typeof val}"`;
     if (is.date(val)) return '"Date"';
@@ -55,7 +55,7 @@ const reGenerateTypeDefinitions = (props: EditorProps, state: State) => {
   const typeDef = recurse(props.state);
   // console.log(JSON.stringify(JSON.parse(typeDef), null, 2)); // un-comment to debug
   const defaultEditorValue = [olikTypeDefsAsString + `; const store: Store<${typeDef.replace(/"/g, '')}>;`, 'store.'].join('\n');
-  state.setState({ defaultEditorValue })
+  state.set({ defaultEditorValue })
   return defaultEditorValue;
 }
 
@@ -66,10 +66,10 @@ const respondToEditorScrollChanges = (state: State) => {
     state.editorRef.current!.setScrollPosition({ scrollTop: lineHeight });
     state.editorRef.current!.setPosition({ lineNumber: 2, column: state.editorRef.current!.getValue().length + 1 });
   })
-  state.setState({ onDidScrollChange });
+  state.set({ onDidScrollChange });
 }
 
-const respondToEditorTextChanges = (props: EditorProps, state: State) => {
+const respondToEditorTextChanges = (props: Props, state: State) => {
   if (!state.editorRef.current || state.onDidChangeModelContent) { return; }
   const onDidChangeModelContent = state.editorRef.current.onDidChangeModelContent(() => {
     const lines = state.editorRef.current!.getValue().split('\n')!;
@@ -80,10 +80,10 @@ const respondToEditorTextChanges = (props: EditorProps, state: State) => {
       props.onChange(lastLine.substring('store.'.length));
     }
   });
-  state.setState({ onDidChangeModelContent });
+  state.set({ onDidChangeModelContent });
 }
 
-const respondToEditorEnterKeyup = (props: EditorProps, state: State) => {
+const respondToEditorEnterKeyup = (props: Props, state: State) => {
   if (!state.editorRef.current || state.onKeyUp) { return; }
   const onKeyUp = state.editorRef.current.onKeyDown(e => {
     if (e.code !== 'Enter') return;
@@ -93,10 +93,10 @@ const respondToEditorEnterKeyup = (props: EditorProps, state: State) => {
     const lastLine = state.editorRef.current!.getModel()!.getLineContent(2);
     props.onEnter(lastLine.substring('store.'.length));
   });
-  state.setState({ onKeyUp });
+  state.set({ onKeyUp });
 }
 
-const useStateChangeResponder = (props: EditorProps, state: State) => {
+const useStateChangeResponder = (props: Props, state: State) => {
   const previousStateRef = useRef(props.state);
   if (!props.state) { return; }
   if (props.state !== previousStateRef.current) {

@@ -1,6 +1,6 @@
 import { BasicStore } from "../shared/types";
 
-export interface StateProps {
+export interface Props {
   state: Record<string, unknown>,
   className?: string,
   query: string,

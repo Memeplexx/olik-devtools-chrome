@@ -1,5 +1,5 @@
 import { deserialize } from "olik";
-import { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MouseEvent, MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BasicStore } from "./types";
 
 export const useKnownPropsOnly = <T extends HTMLElement>(
@@ -131,7 +131,7 @@ export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 	const [state, setState] = useState(record);
 	return {
 		...state,
-		setState: useCallback((arg: Partial<R> | ((r: R) => Partial<R>)) => {
+		set: useCallback((arg: Partial<R> | ((r: R) => Partial<R>)) => {
 			if (is.function<[R], Partial<R>>(arg)) {
 				setState(s => ({ ...s, ...arg(s) }));
 			} else {
@@ -197,3 +197,42 @@ export const usePropsForHTMLElement = <T extends HTMLElement>(element: T, props:
 	}, [props, element]);
 }
 
+export const useResizeObserver = (
+  arg: {
+		ref: MutableRefObject<HTMLElement | null>,
+    onChange: (size: { width: number, height: number }) => void,
+	}
+) => {
+	const callBackRef = useRef(arg.onChange);
+	callBackRef.current = arg.onChange;
+  useEffect(() => {
+    const observer = new ResizeObserver(entries => callBackRef.current({
+      width: entries[0].contentRect.width,
+      height: entries[0].contentRect.height,
+    }));
+    if (arg.ref.current) {
+      observer.observe(arg.ref.current);
+    }
+    return () => observer.disconnect();
+  }, [arg.ref, callBackRef]);
+}
+
+export const useAttributeObserver = <T extends HTMLElement>(
+	arg: {
+		ref: MutableRefObject<T | null>,
+		attributes: Array<keyof T>,
+		onChange: () => void,
+	}
+) => {
+	const callBackRef = useRef(arg.onChange);
+	callBackRef.current = arg.onChange;
+	const attributeFilterRef = useRef(arg.attributes);
+	attributeFilterRef.current = arg.attributes;
+	useEffect(() => {
+		const observer = new MutationObserver(callBackRef.current);
+		if (arg.ref.current) {
+			observer.observe(arg.ref.current, { attributes: true, attributeFilter: attributeFilterRef.current as string[] });
+		}
+		return () => observer.disconnect();
+	}, [arg.ref, attributeFilterRef, callBackRef]);
+}

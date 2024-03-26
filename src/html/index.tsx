@@ -8,6 +8,8 @@ type ReplaceKeyboardEvents<E extends HTMLElement, A extends HTMLAttributes<E>> =
     : A[key]
 };
 
+export type ShowIfProps = { showIf?: boolean };
+
 export type ButtonProps = ReplaceKeyboardEvents<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElement>>;
 
 export type InputProps = ReplaceKeyboardEvents<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>;
@@ -22,38 +24,38 @@ export type ElementProps = ReplaceKeyboardEvents<HTMLElement, HTMLAttributes<HTM
 
 export const possible = {
   div: forwardRef(function Div(
-    { children, showIf, ...props }: DivProps,
+    { children, showIf, ...props }: DivProps & ShowIfProps,
     ref?: ForwardedRef<HTMLDivElement>,
   ) {
     return showIf === false ? null : <div ref={ref} {...props}>{children}</div>;
   }),
   span: forwardRef(function Span(
-    { children, showIf, ...props }: SpanProps,
+    { children, showIf, ...props }: SpanProps & ShowIfProps,
     ref?: ForwardedRef<HTMLSpanElement>,
   ) {
     return showIf === false ? null : <span ref={ref} {...props}>{children}</span>;
   }),
   input: forwardRef(function Input(
-    { children, showIf, ...props }: InputProps,
+    { children, showIf, ...props }: InputProps & ShowIfProps,
     ref?: ForwardedRef<HTMLInputElement>
   ) {
     return showIf === false ? null : <input ref={ref} {...props}>{children}</input>;
   }),
   textarea: forwardRef(function Input(
-    { children, showIf, ...props }: TextAreaProps,
+    { children, showIf, ...props }: TextAreaProps & ShowIfProps,
     ref?: ForwardedRef<HTMLTextAreaElement>
   ) {
     return showIf === false ? null : <textarea ref={ref} {...props}>{children}</textarea>;
   }),
   button: forwardRef(function Button(
-    { children, showIf, ...props }: ButtonProps,
+    { children, showIf, ...props }: ButtonProps & ShowIfProps,
     ref?: ForwardedRef<HTMLButtonElement>
   ) {
     return showIf === false ? null : <button ref={ref} {...props}>{children}</button>;
   }),
   element: function Element<P>(ComponentType: ComponentType<P>) {
     return forwardRef(function Element(
-      { children, showIf, ...props }: P & { showIf?: boolean, children?: React.ReactNode },
+      { children, showIf, ...props }: P & { children?: React.ReactNode } & ShowIfProps,
       ref?: ForwardedRef<HTMLElement>
     ) {
       return showIf === false ? null : <ComponentType ref={ref} {...props as P}>{children}</ComponentType>;

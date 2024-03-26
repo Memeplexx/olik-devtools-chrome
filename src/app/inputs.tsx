@@ -35,18 +35,18 @@ export const useLocalState = () => {
   };
 }
 
-const instantiateStore = (arg: State) => {
-  if (arg.storeRef.current) { return; }
+const instantiateStore = (state: State) => {
+  if (state.storeRef.current) { return; }
   if (!chrome.runtime) {
-    arg.storeRef.current = getStore<Record<string, unknown>>(); // get store from demo app
+    state.storeRef.current = getStore<Record<string, unknown>>(); // get store from demo app
     setTimeout(() => {
-      arg.setState({ storeFullyInitialized: true });
+      state.set({ storeFullyInitialized: true });
       document.getElementById('olik-init')!.innerHTML = 'done';
     });
   } else {
     libState.initialState = undefined;
-    arg.storeRef.current = createStore<Record<string, unknown>>({});
-    arg.setState({ storeFullyInitialized: true });
+    state.storeRef.current = createStore<Record<string, unknown>>({});
+    state.set({ storeFullyInitialized: true });
     const notifyAppOfInitialization = () => document.getElementById('olik-init')!.innerHTML = 'done';
     chrome.tabs
       .query({ active: true })
@@ -55,12 +55,12 @@ const instantiateStore = (arg: State) => {
   }
 }
 
-const useMessageHandler = (props: State) => {
-  const { setState } = props;
-  const processEvent = useCallback((incoming: Message) => setState(s => {
+const useMessageHandler = (state: State) => {
+  const { set } = state;
+  const processEvent = useCallback((incoming: Message) => set(s => {
     if (!incoming.action) { return s; }
     if (incoming.action.type === '$load()') {
-      props.storeRef.current = null;
+      state.storeRef.current = null;
       return { storeFullyInitialized: false, items: [] };
     }
     const itemsFlattened = s.items.flatMap(ss => ss.items);
@@ -72,7 +72,7 @@ const useMessageHandler = (props: State) => {
       setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
       libState.disableDevtoolsDispatch = false;
     }
-    const fullStateAfter = props.storeRef.current!.$state;
+    const fullStateAfter = state.storeRef.current!.$state;
     const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
     const doReadState = (state: Record<string, unknown>) => {
       let stateActions = new Array<StateAction>();
@@ -103,20 +103,14 @@ const useMessageHandler = (props: State) => {
         payload,
         stateBefore,
         stateAfter,
-        setState,
-        idOuter: props.idRefOuter.current,
-        idInner: props.idRefInner.current,
+        set,
+        idOuter: state.idRefOuter.current,
+        idInner: state.idRefInner.current,
       };
       return {
-        id: ++props.idRefInner.current,
-        jsx: getTypeJsx({
-          ...commonProps,
-          hideUnchanged: false,
-        }),
-        jsxPruned: getTypeJsx({
-          ...commonProps,
-          hideUnchanged: true,
-        }),
+        id: ++state.idRefInner.current,
+        jsx: getTypeJsx({ ...commonProps, hideUnchanged: false }),
+        jsxPruned: getTypeJsx({ ...commonProps, hideUnchanged: true }),
         state: fullStateAfter,
         payload: incoming.action.payload,
         contractedKeys: [],
@@ -137,7 +131,7 @@ const useMessageHandler = (props: State) => {
         ] : [
           ...s.items,
           {
-            id: ++props.idRefOuter.current,
+            id: ++state.idRefOuter.current,
             event: currentEvent,
             items: [getNewItem()],
             visible: true,
@@ -145,10 +139,10 @@ const useMessageHandler = (props: State) => {
           }
         ],
     };
-  }), [props.idRefInner, props.idRefOuter, props.storeRef, setState]);
+  }), [state.idRefInner, state.idRefOuter, state.storeRef, set]);
 
   useEffect(() => {
-    if (!props.storeFullyInitialized) { return; }
+    if (!state.storeFullyInitialized) { return; }
     const messageListener = (e: MessageEvent<Message>) => {
       if (e.origin !== window.location.origin) return;
       if (e.data.source !== 'olik-devtools-extension') return;
@@ -180,7 +174,7 @@ const useMessageHandler = (props: State) => {
       window.removeEventListener('message', messageListener);
       chrome.runtime?.onMessage.removeListener(chromeMessageListener);
     }
-  }, [processEvent, props.storeFullyInitialized])
+  }, [processEvent, state.storeFullyInitialized])
 }
 
 const getTypeJsx = (arg: {
@@ -188,7 +182,7 @@ const getTypeJsx = (arg: {
   payload: unknown,
   stateBefore: unknown,
   stateAfter: unknown,
-  setState: ReturnType<typeof useLocalState>['setState'],
+  set: ReturnType<typeof useLocalState>['set'],
   idOuter: number,
   idInner: number,
   hideUnchanged: boolean,
@@ -222,7 +216,7 @@ const getTypeJsx = (arg: {
     unchanged.push('');
   }
 
-  const onClickNodeKey = (key: string) => arg.setState(s => ({
+  const onClickNodeKey = (key: string) => arg.set(s => ({
     items: s.items.map(itemOuter => {
       if (itemOuter.id !== arg.idOuter) { return itemOuter; }
       return {
@@ -230,25 +224,18 @@ const getTypeJsx = (arg: {
         items: itemOuter.items.map(itemInner => {
           if (itemInner.id !== arg.idInner) { return itemInner; }
           const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
+          const commonProps = {
+            actionType,
+            state: arg.stateAfter,
+            contractedKeys,
+            onClickNodeKey,
+            unchanged,
+          };
           return {
             ...itemInner,
             contractedKeys,
-            jsx: Tree({
-              actionType,
-              state: arg.stateAfter,
-              contractedKeys,
-              onClickNodeKey,
-              unchanged,
-              hideUnchanged: false,
-            }),
-            jsxPruned: Tree({
-              actionType,
-              state: arg.stateAfter,
-              contractedKeys,
-              onClickNodeKey,
-              unchanged,
-              hideUnchanged: true,
-            }),
+            jsx: Tree({ ...commonProps, hideUnchanged: false }),
+            jsxPruned: Tree({ ...commonProps, hideUnchanged: true }),
           } satisfies Item
         })
       }
