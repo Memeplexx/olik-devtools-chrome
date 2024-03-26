@@ -189,11 +189,11 @@ export const useEventHandlerForDocument = <Type extends 'click' | 'keyup' | 'key
 }
 
 
-export const usePropsForHTMLElement = <T extends HTMLElement>(element: T, props: Record<string, unknown>, whitelist = new Array<string>()) => {
+export const usePropsForHTMLElement = <T extends HTMLElement>(element: T, props: Record<string, unknown>) => {
 	return useMemo(() => {
 		return Object.keys(props)
-			.filter(k => (k in element) || whitelist.includes(k))
+			.filter(k => (k in element) || k.startsWith('data-'))
 			.reduce<Record<string, unknown>>((acc, key) => { acc[key] = props[key]; return acc; }, {});
-	}, [props, element, whitelist]);
+	}, [props, element]);
 }
 

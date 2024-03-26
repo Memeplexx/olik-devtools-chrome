@@ -19,7 +19,7 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
       }
     },
     onClickClear: () => {
-      inputs.setState(s => ({ ...s, items: s.items.map(i => ({ ...i, visible: false } ) ) }));
+      inputs.setState(s => ({ items: s.items.map(i => ({ ...i, visible: false } ) ) }));
     },
     onEditorChange: (query: string) => {
       inputs.setState({ query });

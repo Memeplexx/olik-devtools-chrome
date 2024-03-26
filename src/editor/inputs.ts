@@ -85,7 +85,7 @@ const respondToEditorTextChanges = (props: EditorProps, state: State) => {
 
 const respondToEditorEnterKeyup = (props: EditorProps, state: State) => {
   if (!state.editorRef.current || state.onKeyUp) { return; }
-  const onKeyUp = state.editorRef.current.onKeyDown((e) => {
+  const onKeyUp = state.editorRef.current.onKeyDown(e => {
     if (e.code !== 'Enter') return;
     e.preventDefault();
     const hasError = editor.getModelMarkers({}).some(e => e.startLineNumber === 2);
