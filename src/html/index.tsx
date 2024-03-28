@@ -60,5 +60,5 @@ export const possible = {
     ) {
       return showIf === false ? null : <ComponentType ref={ref} {...props as P}>{children}</ComponentType>;
     });
-  }
+  },
 }

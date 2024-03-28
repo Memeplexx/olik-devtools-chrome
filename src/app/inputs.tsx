@@ -1,6 +1,6 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { StateAction, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { is, isoDateRegexPattern, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
 import { Tree } from "../tree";
@@ -55,8 +55,63 @@ const instantiateStore = (state: State) => {
 }
 
 const useMessageHandler = (state: State) => {
-  const { set } = state;
-  const processEvent = useCallback((incoming: Message) => set(s => {
+  useEffect(() => {
+    const ml = (e: MessageEvent<Message>) => messageListener(state, e);
+    const cml = (e: Message) => chromeMessageListener(state, e);
+    window.addEventListener('message', ml);
+    chrome.runtime?.onMessage.addListener(cml);
+    return () => {
+      window.removeEventListener('message', ml);
+      chrome.runtime?.onMessage.removeListener(cml);
+    }
+  }, [state, state.storeFullyInitialized])
+}
+
+const messageListener = (state: State, event: MessageEvent<Message>) => {
+  if (event.origin !== window.location.origin) return;
+  if (event.data.source !== 'olik-devtools-extension') return;
+  processEvent(state, event.data);
+}
+
+const chromeMessageListener = (state: State, event: Message) => {
+  const recurse = (val: unknown): unknown => {
+    if (is.record(val)) {
+      Object.keys(val).forEach(key => val[key] = recurse(val[key]))
+    } else if (is.array(val)) {
+      return val.map(recurse);
+    } else if (is.string(val) && isoDateRegexPattern.test(val)) {
+      return new Date(val);
+    }
+    return val;
+  }
+  event.action.payload = recurse(event.action.payload);
+  event.action.payloadOrig = recurse(event.action.payloadOrig);
+  event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: recurse(sa.arg) }));
+  processEvent(state, event);
+}
+
+const doReadState = (state: Record<string, unknown>, incoming: Message, payload: unknown) => {
+  let stateActions = new Array<StateAction>();
+  const mergeMatchingIndex = incoming.stateActions.findIndex(s => s.name === '$mergeMatching');
+  if (mergeMatchingIndex !== -1) {
+    const withIndex = incoming.stateActions.findIndex(s => s.name === '$with');
+    const matcherPath = incoming.stateActions.slice(mergeMatchingIndex + 1, withIndex);
+    if (is.array<Record<string, unknown>>(payload)) {
+      const payloadSelection = payload.map(p => matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, p))
+      stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$filter' }, ...matcherPath, { name: '$in', arg: payloadSelection }];
+    } else {
+      const payloadSelection = matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, payload as Record<string, unknown>);
+      stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$find' }, ...matcherPath, { name: '$eq', arg: payloadSelection }];
+    }
+  } else {
+    stateActions = incoming.stateActions.slice(0, incoming.stateActions.length - 1);
+  }
+  stateActions.push({ name: '$state' });
+  return readState({ state, stateActions, cursor: { index: 0 } });
+}
+
+const processEvent = (state: State, incoming: Message) => {
+  state.set(s => {
     if (!incoming.action) { return s; }
     if (incoming.action.type === '$load()') {
       state.storeRef.current = null;
@@ -73,43 +128,80 @@ const useMessageHandler = (state: State) => {
     }
     const fullStateAfter = state.storeRef.current!.$state;
     const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
-    const doReadState = (state: Record<string, unknown>) => {
-      let stateActions = new Array<StateAction>();
-      const mergeMatchingIndex = incoming.stateActions.findIndex(s => s.name === '$mergeMatching');
-      if (mergeMatchingIndex !== -1) {
-        const withIndex = incoming.stateActions.findIndex(s => s.name === '$with');
-        const matcherPath = incoming.stateActions.slice(mergeMatchingIndex + 1, withIndex);
-        if (is.array<Record<string, unknown>>(payload)) {
-          const payloadSelection = payload.map(p => matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, p))
-          stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$filter' }, ...matcherPath, { name: '$in', arg: payloadSelection }];
-        } else {
-          const payloadSelection = matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, payload as Record<string, unknown>);
-          stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$find' }, ...matcherPath, { name: '$eq', arg: payloadSelection }];
-        }
-      } else {
-        stateActions = incoming.stateActions.slice(0, incoming.stateActions.length - 1);
-      }
-      stateActions.push({ name: '$state' });
-      return readState({ state, stateActions, cursor: { index: 0 } });
-    }
-    const stateBefore = doReadState(fullStateBefore);
-    const stateAfter = doReadState(fullStateAfter);
+    const stateBefore = doReadState(fullStateBefore, incoming, payload);
+    const stateAfter = doReadState(fullStateAfter, incoming, payload);
     const currentEvent = getCleanStackTrace(incoming.trace);
     const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
+    const segments = incoming.action.type.split('.');
+    const func = segments.pop()!.slice(0, -2);
+    const actionType = [...segments, func].join('.')
+    const unchanged = new Array<string>();
+    const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
+      const recurse = (before: unknown, after: unknown, keyCollector: string) => {
+        if (is.record(after)) {
+          if (JSON.stringify(after) === JSON.stringify(before)) {
+            unchanged.push(keyCollector);
+          }
+          Object.keys(after).forEach(key => recurse(is.record(before) ? before[key] : {}, after[key], `${keyCollector}.${key}`));
+        } else if (is.array(after)) {
+          if (JSON.stringify(after) === JSON.stringify(before)) {
+            unchanged.push(keyCollector);
+          }
+          after.forEach((_, i) => recurse(is.array(before) ? before[i] : [], after[i], `${keyCollector}.${i}`));
+        } else if (before === after) {
+          unchanged.push(keyCollector);
+        }
+      }
+      recurse(stateBefore, stateAfter, '');
+    }
+    if (['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge'].includes(func)) {
+      updateUnchanged(stateBefore, stateAfter);
+    } else if (['$clear'].includes(func) && is.array(stateBefore) && !stateBefore.length) {
+      unchanged.push('');
+    }
+    const onClickNodeKey = (key: string) => state.set(s => ({
+      items: s.items.map(itemOuter => {
+        if (itemOuter.id !== state.idRefOuter.current) { return itemOuter; }
+        return {
+          ...itemOuter,
+          items: itemOuter.items.map(itemInner => {
+            if (itemInner.id !== state.idRefInner.current) { return itemInner; }
+            const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
+            const commonProps = {
+              actionType,
+              state: stateAfter,
+              contractedKeys,
+              onClickNodeKey,
+              unchanged,
+            };
+            return {
+              ...itemInner,
+              contractedKeys,
+              jsx: Tree({ ...commonProps, hideUnchanged: false }),
+              jsxPruned: Tree({ ...commonProps, hideUnchanged: true }),
+            } satisfies Item
+          })
+        }
+      })
+    }));
     const getNewItem = () => {
       const commonProps = {
         type: incoming.action.type,
-        payload,
+        state: payload,
         stateBefore,
         stateAfter,
-        set,
+        set: state.set,
         idOuter: state.idRefOuter.current,
         idInner: state.idRefInner.current,
+        unchanged,
+        actionType,
+        contractedKeys: [],
+        onClickNodeKey,
       };
       return {
         id: ++state.idRefInner.current,
-        jsx: getTypeJsx({ ...commonProps, hideUnchanged: false }),
-        jsxPruned: getTypeJsx({ ...commonProps, hideUnchanged: true }),
+        jsx: Tree({ ...commonProps, hideUnchanged: false }),
+        jsxPruned: Tree({ ...commonProps, hideUnchanged: true }),
         state: fullStateAfter,
         payload: incoming.action.payload,
         contractedKeys: [],
@@ -138,116 +230,8 @@ const useMessageHandler = (state: State) => {
           }
         ],
     };
-  }), [state.idRefInner, state.idRefOuter, state.storeRef, set]);
-
-  useEffect(() => {
-    if (!state.storeFullyInitialized) { return; }
-    const messageListener = (e: MessageEvent<Message>) => {
-      if (e.origin !== window.location.origin) return;
-      if (e.data.source !== 'olik-devtools-extension') return;
-      processEvent(e.data);
-    }
-    const chromeMessageListener = (event: Message) => {
-      const recurse = (val: unknown): unknown => {
-        if (is.record(val)) {
-          Object.keys(val).forEach(key => val[key] = recurse(val[key]))
-        } else if (is.array(val)) {
-          return val.map(recurse);
-        } else if (is.string(val) && isoDateRegexPattern.test(val)) {
-          return new Date(val);
-        }
-        return val;
-      }
-      event.action.payload = recurse(event.action.payload);
-      event.action.payloadOrig = recurse(event.action.payloadOrig);
-      event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: recurse(sa.arg) }));
-      processEvent(event);
-    }
-    if (!chrome.runtime) {
-      window.addEventListener('message', messageListener);
-    } else {
-      chrome.runtime.onMessage.addListener(chromeMessageListener);
-    }
-    return () => {
-      window.removeEventListener('message', messageListener);
-      chrome.runtime?.onMessage.removeListener(chromeMessageListener);
-    }
-  }, [processEvent, state.storeFullyInitialized])
-}
-
-const getTypeJsx = (arg: {
-  type: string,
-  payload: unknown,
-  stateBefore: unknown,
-  stateAfter: unknown,
-  set: State['set'],
-  idOuter: number,
-  idInner: number,
-  hideUnchanged: boolean,
-}) => {
-  // export const updateFunctionsConst = ['$set', '$setUnique', '$patch', '$patchDeep', '$delete', '$setNew', '$add', '$subtract', '$clear', '$push', '$with', '$toggle', '$merge', '$deDuplicate'] as const;
-  const segments = arg.type.split('.');
-  const func = segments.pop()!.slice(0, -2);
-  const actionType = [...segments, func].join('.')
-  const unchanged = new Array<string>();
-  const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
-    const recurse = (before: unknown, after: unknown, keyCollector: string) => {
-      if (is.record(after)) {
-        if (JSON.stringify(after) === JSON.stringify(before)) {
-          unchanged.push(keyCollector);
-        }
-        Object.keys(after).forEach(key => recurse(is.record(before) ? before[key] : {}, after[key], `${keyCollector}.${key}`));
-      } else if (is.array(after)) {
-        if (JSON.stringify(after) === JSON.stringify(before)) {
-          unchanged.push(keyCollector);
-        }
-        after.forEach((_, i) => recurse(is.array(before) ? before[i] : [], after[i], `${keyCollector}.${i}`));
-      } else if (before === after) {
-        unchanged.push(keyCollector);
-      }
-    }
-    recurse(stateBefore, stateAfter, '');
-  }
-  if (['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge'].includes(func)) {
-    updateUnchanged(arg.stateBefore, arg.stateAfter);
-  } else if (['$clear'].includes(func) && is.array(arg.stateBefore) && !arg.stateBefore.length) {
-    unchanged.push('');
-  }
-
-  const onClickNodeKey = (key: string) => arg.set(s => ({
-    items: s.items.map(itemOuter => {
-      if (itemOuter.id !== arg.idOuter) { return itemOuter; }
-      return {
-        ...itemOuter,
-        items: itemOuter.items.map(itemInner => {
-          if (itemInner.id !== arg.idInner) { return itemInner; }
-          const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
-          const commonProps = {
-            actionType,
-            state: arg.stateAfter,
-            contractedKeys,
-            onClickNodeKey,
-            unchanged,
-          };
-          return {
-            ...itemInner,
-            contractedKeys,
-            jsx: Tree({ ...commonProps, hideUnchanged: false }),
-            jsxPruned: Tree({ ...commonProps, hideUnchanged: true }),
-          } satisfies Item
-        })
-      }
-    })
-  }));
-  return Tree({
-    actionType,
-    state: arg.payload,
-    contractedKeys: [],
-    unchanged,
-    onClickNodeKey,
-    hideUnchanged: arg.hideUnchanged,
   });
-}
+};
 
 const getTimeDiff = (from: Date, to: Date) => {
   const milliseconds = differenceInMilliseconds(from, to);
