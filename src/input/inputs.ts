@@ -44,29 +44,24 @@ export const useDerivedState = <V extends InputValue>(
   props: Props<V>,
   state: State,
 ) => {
+  const val = props.value;
   const valueAsString = useMemo(() => {
-    if (is.null(props.value)) return 'null';
-    if (is.undefined(props.value)) return '';
-    if (is.boolean(props.value)) return props.value.toString();
-    if (is.number(props.value)) return props.value.toString();
-    if (is.string(props.value)) return props.value.toString();
-    if (is.date(props.value)) return props.value.toISOString();
-  }, [props.value]) as string;
-  const inputType = useMemo(() => is.number(props.value) ? 'number' : 'string', [props.value]);
+    if (is.null(val)) return 'null';
+    if (is.undefined(val)) return '';
+    if (is.boolean(val)) return val.toString();
+    if (is.number(val)) return val.toString();
+    if (is.string(val)) return val.toString();
+    if (is.date(val)) return val.toISOString();
+  }, [val]) as string;
   const showTextArea = !!props.allowTextArea && props.type === 'string';
-  const inputsProps = usePropsForHTMLElement(showTextArea ? textAreaEl : inputEl, props);
-  const max = useMemo(() => is.number(props.value) ? props.value : 0, [props.value]);
-  const showQuote = useMemo(() => props.allowQuotesToBeShown && is.string(props.value), [props.allowQuotesToBeShown, props.value]);
-  const showCloseQuote = useMemo(() => props.allowQuotesToBeShown && is.string(props.value) && !showTextArea, [props.allowQuotesToBeShown, props.value, showTextArea]);
   return {
     showPopup: props.allowTypeSelectorPopup && state.isHovered,
     inputSize: Math.max(1, valueAsString.length),
-    inputType,
-    max,
-    showQuote,
-    showCloseQuote,
+    inputType: useMemo(() => is.number(val) ? 'number' : 'string', [val]),
+    max: useMemo(() => is.number(val) ? val : 0, [val]),
+    showQuote: useMemo(() => props.allowQuotesToBeShown && is.string(val), [props.allowQuotesToBeShown, val]),
+    inputsProps: usePropsForHTMLElement(showTextArea ? textAreaEl : inputEl, props),
     valueAsString,
-    inputsProps,
     showTextArea,
   };
 }
