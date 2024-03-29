@@ -114,38 +114,45 @@ const processEvent = (state: State, incoming: Message) => {
     }
     const date = new Date();
     const jsxProps = getJsxProps(s as State, incoming);
+    const storeState = s.storeRef.current!.$state;
     const newItem = {
       id: ++s.idRefInner.current,
       jsx: Tree({ ...jsxProps, hideUnchanged: false }),
       jsxPruned: Tree({ ...jsxProps, hideUnchanged: true }),
-      state: s.storeRef.current!.$state,
+      state: storeState,
       payload: incoming.action.payload,
       contractedKeys: [],
       time: getTimeDiff(date, s.items.flatMap(ss => ss.items).at(-1)?.date ?? date),
       date,
     } satisfies Item;
     const currentEvent = getCleanStackTrace(incoming.trace);
-    const previousEvent = s.items[s.items.length - 1]?.event ?? '';
-    return {
-      storeState: s.storeRef.current!.$state,
-      items: currentEvent.toString() === previousEvent.toString()
-        ? [
+    const lastItem = s.items[s.items.length - 1] ?? { event: '' };
+    document.querySelector(`[data-key=".${incoming.action.type.split('.').slice(0, -1).join('.')}"]`)?.scrollIntoView({ behavior: 'smooth' })
+    if (currentEvent.toString() === lastItem.event.toString()) {
+      return {
+        storeState,
+        items: [
           ...s.items.slice(0, s.items.length - 1),
           {
-            ...s.items[s.items.length - 1],
-            items: [...s.items[s.items.length - 1].items, newItem],
+            ...lastItem,
+            items: [...lastItem.items, newItem],
             visible: true,
-          }
-        ] : [
-          ...s.items,
-          {
-            id: ++s.idRefOuter.current,
-            event: currentEvent,
-            items: [newItem],
-            visible: true,
-            headerExpanded: false,
           }
         ],
+      };
+    }
+    return {
+      storeState,
+      items: [
+        ...s.items,
+        {
+          id: ++s.idRefOuter.current,
+          event: currentEvent,
+          items: [newItem],
+          visible: true,
+          headerExpanded: false,
+        }
+      ],
     };
   });
 };
@@ -218,17 +225,11 @@ const getJsxProps = (state: State, incoming: Message) => {
 
 const getTimeDiff = (from: Date, to: Date) => {
   const milliseconds = differenceInMilliseconds(from, to);
-  if (milliseconds < 10 * 1000) {
-    return `${milliseconds} ms`;
-  } else if (milliseconds < 60 * 1000) {
-    return `${differenceInSeconds(from, to)} s`;
-  } else if (milliseconds < 60 * 60 * 1000) {
-    return `${differenceInMinutes(from, to)} m`;
-  } else if (milliseconds < 24 * 60 * 60 * 1000) {
-    return `${differenceInHours(from, to)} h`;
-  } else {
-    return to.toLocaleDateString();
-  }
+  if (milliseconds < 10 * 1000) return `${milliseconds} ms`;
+  if (milliseconds < 60 * 1000) return `${differenceInSeconds(from, to)} s`;
+  if (milliseconds < 60 * 60 * 1000) return `${differenceInMinutes(from, to)} m`;
+  if (milliseconds < 24 * 60 * 60 * 1000) return `${differenceInHours(from, to)} h`;
+  return to.toLocaleDateString();
 }
 
 const getCleanStackTrace = (stack: string) => stack
