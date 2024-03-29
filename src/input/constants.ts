@@ -11,20 +11,21 @@ export type InputValue = string | number | boolean | Date | null;
 
 export type TextInputElement = HTMLInputElement | HTMLTextAreaElement;
 
-export type Props<V extends InputValue> = {
-  value: V,
-  valueType: ValueType,
-  onChange: (value: V) => void,
-  onChangeCommit: (value: V) => void,
-  onChangeType?: (type: ValueType) => void,
-  allowQuotesToBeShown?: boolean,
-  allowTypeSelectorPopup?: boolean,
-  allowTextArea?: boolean,
-  additionalOptions?: PopupListProps['children'],
-  readOnly?: boolean,
-  onChangeInputElement?: (isTextArea: boolean) => void,
-} & Omit<HTMLAttributes<TextInputElement>, 'onChange' | 'value'>
-;
+export type Props<V extends InputValue>
+  = {
+    value: V,
+    onChange: (value: V) => void,
+    onChangeCommit: (value: V) => void,
+    valueType: ValueType,
+    onChangeValueType?: (type: ValueType) => void,
+    allowQuotesToBeShown?: boolean,
+    allowTypeSelectorPopup?: boolean,
+    allowTextArea?: boolean,
+    additionalOptions?: PopupListProps['children'],
+    readOnly?: boolean,
+    onChangeInputElement?: (isTextArea: boolean) => void,
+  }
+  & Omit<HTMLAttributes<TextInputElement>, 'onChange' | 'value'>;
 
 export type State = ReturnType<typeof useLocalState>;
 

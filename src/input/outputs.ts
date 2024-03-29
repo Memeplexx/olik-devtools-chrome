@@ -66,7 +66,7 @@ export const useOutputs = <V extends InputValue>(
     props.onMouseOut?.(event);
   },
   onClickChangeType: (type: ValueType) => () => {
-    props.onChangeType?.(type);
+    props.onChangeValueType?.(type);
     const { value } = state.inputRef.current!;
     const valueOfNewType = (() => {
       if (type === 'string') return value;
