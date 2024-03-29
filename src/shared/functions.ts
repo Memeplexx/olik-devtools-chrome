@@ -1,5 +1,5 @@
 import { deserialize } from "olik";
-import { MouseEvent, MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
+import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { BasicStore } from "./types";
 
 export const useKnownPropsOnly = <T extends HTMLElement>(
@@ -101,7 +101,19 @@ export const is = {
 }
 
 export const silentlyApplyStateAction = (store: BasicStore, queryString: string) => {
-	const query = queryString.split('.').filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e);
+	const splitString = (str: string) => {
+		const segments = new Array<string>();
+		let parenOpened = false;
+		str.split('').forEach(char => {
+			if (char === '.' && !parenOpened) { segments.push(''); return; }
+			if (char === '(') { parenOpened = true; }
+			if (char === ')') { parenOpened = false; }
+			if (!segments.length) { segments.push(''); }
+			segments[segments.length - 1] += char;
+		});
+		return segments;
+	}
+	const query = splitString(queryString).filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e);
 	if (!chrome.runtime) {
 		query.forEach(key => {
 			const arg = key.match(/\(([^)]*)\)/)?.[1];
@@ -129,11 +141,10 @@ export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 	const stateRef = useRef({
 		...record,
 		set: (arg: Partial<R> | ((r: R) => Partial<R>)) => {
-			if (is.function<[R], Partial<R>>(arg)) {
-				Object.assign(stateRef, arg(stateRef));
-			} else {
-				Object.assign(stateRef, arg);
-			}
+			const newState = is.function<[R], Partial<R>>(arg) ? arg(stateRef) : arg;
+			const unChanged = Object.keys(newState).every(key => stateRef[key] === newState[key]);
+			if (unChanged) return;
+			Object.assign(stateRef, newState);
 			setCount(c => c + 1);
 		}
 	}).current;
@@ -197,7 +208,7 @@ export const usePropsForHTMLElement = <T extends HTMLElement>(element: T, props:
 
 export const useResizeObserver = (
   arg: {
-		ref: MutableRefObject<HTMLElement | null>,
+		element: HTMLElement | null,
     onChange: (size: { width: number, height: number }) => void,
 	}
 ) => {
@@ -208,16 +219,16 @@ export const useResizeObserver = (
       width: entries[0].contentRect.width,
       height: entries[0].contentRect.height,
     }));
-    if (arg.ref.current) {
-      observer.observe(arg.ref.current);
+    if (arg.element) {
+      observer.observe(arg.element);
     }
     return () => observer.disconnect();
-  }, [arg.ref]);
+  }, [arg.element]);
 }
 
 export const useAttributeObserver = <T extends HTMLElement>(
 	arg: {
-		ref: MutableRefObject<T | null>,
+		element: T | null,
 		attributes: Array<keyof T>,
 		onChange: () => void,
 	}
@@ -228,9 +239,9 @@ export const useAttributeObserver = <T extends HTMLElement>(
 	attributeFilterRef.current = arg.attributes;
 	useEffect(() => {
 		const observer = new MutationObserver(callBackRef.current);
-		if (arg.ref.current) {
-			observer.observe(arg.ref.current, { attributes: true, attributeFilter: attributeFilterRef.current as string[] });
+		if (arg.element) {
+			observer.observe(arg.element, { attributes: true, attributeFilter: attributeFilterRef.current as string[] });
 		}
 		return () => observer.disconnect();
-	}, [arg.ref]);
+	}, [arg.element]);
 }

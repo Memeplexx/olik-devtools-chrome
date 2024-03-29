@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { PopupList } from "../popup-list";
@@ -6,7 +7,6 @@ import { RecurseArgs, RenderNodeArgs, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
 import { ActionType, BraceNode, ChildNode, Colon, CommaNode, Ellipses, KeyNode, ParentNode, ParenthesisNode, ValueNode, Wrapper } from "./styles";
-import { ReactNode } from "react";
 
 
 export const Tree = (

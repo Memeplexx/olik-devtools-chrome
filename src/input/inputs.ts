@@ -128,7 +128,7 @@ const useAnimateOnValueChange = (
   state: State,
 ) => {
   useAttributeObserver({
-    ref: state.inputRef,
+    element: state.inputRef.current,
     attributes: ['value'],
     onChange: () => {
       if (!state.animationEnabled.current) return;
@@ -140,10 +140,10 @@ const useAnimateOnValueChange = (
 }
 
 const useTextAreaReSizer = (
-  state: State
+  state: State,
 ) => {
   useResizeObserver({
-    ref: state.textMeasurerRef,
+    element: state.textMeasurerRef.current,
     onChange: size => {
       state.set({ textAreaWidth: size.width, textAreaHeight: size.height });
     },
