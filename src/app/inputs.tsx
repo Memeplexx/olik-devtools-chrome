@@ -9,30 +9,25 @@ import { Item, ItemWrapper, Message, State } from "./constants";
 export const useInputs = () => {
   const localState = useLocalState();
   instantiateStore(localState);
-  useMessageHandler(localState);
+  useMessageHandler(localState.set);
   return localState;
 }
 
-export const useLocalState = () => {
-  const record = useRecord({
-    error: '',
-    storeFullyInitialized: false,
-    storeState: null as Record<string, unknown> | null,
-    storeStateVersion: null as Record<string, unknown> | null,
-    selectedId: null as number | null,
-    items: new Array<ItemWrapper>(),
-    hideUnchanged: false,
-    query: '',
-    showOptions: false,
-  });
-  return {
-    ...record,
-    storeRef: useRef<BasicStore | null>(null),
-    treeRef: useRef<HTMLDivElement | null>(null),
-    idRefOuter: useRef(0),
-    idRefInner: useRef(0),
-  };
-}
+export const useLocalState = () => useRecord({
+  error: '',
+  storeFullyInitialized: false,
+  storeState: null as Record<string, unknown> | null,
+  storeStateVersion: null as Record<string, unknown> | null,
+  selectedId: null as number | null,
+  items: new Array<ItemWrapper>(),
+  hideUnchanged: false,
+  query: '',
+  showOptions: false,
+  storeRef: useRef<BasicStore | null>(null),
+  treeRef: useRef<HTMLDivElement | null>(null),
+  idRefOuter: useRef(0),
+  idRefInner: useRef(0),
+});
 
 const instantiateStore = (state: State) => {
   if (state.storeRef.current) { return; }
@@ -54,26 +49,26 @@ const instantiateStore = (state: State) => {
   }
 }
 
-const useMessageHandler = (state: State) => {
+const useMessageHandler = (set: State['set']) => {
   useEffect(() => {
-    const ml = (e: MessageEvent<Message>) => messageListener(state, e);
-    const cml = (e: Message) => chromeMessageListener(state, e);
+    const ml = (e: MessageEvent<Message>) => messageListener(set, e);
+    const cml = (e: Message) => chromeMessageListener(set, e);
     window.addEventListener('message', ml);
     chrome.runtime?.onMessage.addListener(cml);
     return () => {
       window.removeEventListener('message', ml);
       chrome.runtime?.onMessage.removeListener(cml);
     }
-  }, [state, state.storeFullyInitialized])
+  }, [set])
 }
 
-const messageListener = (state: State, event: MessageEvent<Message>) => {
+const messageListener = (set: State['set'], event: MessageEvent<Message>) => {
   if (event.origin !== window.location.origin) return;
   if (event.data.source !== 'olik-devtools-extension') return;
-  processEvent(state, event.data);
+  processEvent(set, event.data);
 }
 
-const chromeMessageListener = (state: State, event: Message) => {
+const chromeMessageListener = (set: State['set'], event: Message) => {
   const recurse = (val: unknown): unknown => {
     if (is.record(val)) {
       Object.keys(val).forEach(key => val[key] = recurse(val[key]))
@@ -87,7 +82,7 @@ const chromeMessageListener = (state: State, event: Message) => {
   event.action.payload = recurse(event.action.payload);
   event.action.payloadOrig = recurse(event.action.payloadOrig);
   event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: recurse(sa.arg) }));
-  processEvent(state, event);
+  processEvent(set, event);
 }
 
 const doReadState = (state: Record<string, unknown>, incoming: Message, payload: unknown) => {
@@ -110,127 +105,120 @@ const doReadState = (state: Record<string, unknown>, incoming: Message, payload:
   return readState({ state, stateActions, cursor: { index: 0 } });
 }
 
-const processEvent = (state: State, incoming: Message) => {
-  state.set(s => {
+const processEvent = (set: State['set'], incoming: Message) => {
+  set(s => {
     if (!incoming.action) { return s; }
     if (incoming.action.type === '$load()') {
-      state.storeRef.current = null;
+      s.storeRef.current = null;
       return { storeFullyInitialized: false, items: [] };
     }
-    const itemsFlattened = s.items.flatMap(ss => ss.items);
-    const fullStateBefore = !itemsFlattened.length ? {} : itemsFlattened[itemsFlattened.length - 1].state;
-    const date = new Date();
-    const time = !itemsFlattened.length ? '0ms' : getTimeDiff(date, itemsFlattened[itemsFlattened.length - 1].date);
     if (chrome.runtime) {
       libState.disableDevtoolsDispatch = true;
-      setNewStateAndNotifyListeners({ stateActions: incoming.stateActions });
+      setNewStateAndNotifyListeners(incoming);
       libState.disableDevtoolsDispatch = false;
     }
-    const fullStateAfter = state.storeRef.current!.$state;
-    const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
-    const stateBefore = doReadState(fullStateBefore, incoming, payload);
-    const stateAfter = doReadState(fullStateAfter, incoming, payload);
+    const date = new Date();
+    const jsxProps = getJsxProps(s as State, incoming);
+    const newItem = {
+      id: ++s.idRefInner.current,
+      jsx: Tree({ ...jsxProps, hideUnchanged: false }),
+      jsxPruned: Tree({ ...jsxProps, hideUnchanged: true }),
+      state: s.storeRef.current!.$state,
+      payload: incoming.action.payload,
+      contractedKeys: [],
+      time: getTimeDiff(date, s.items.flatMap(ss => ss.items).at(-1)?.date ?? date),
+      date,
+    } satisfies Item;
     const currentEvent = getCleanStackTrace(incoming.trace);
-    const previousEvent = !s.items.length ? '' : s.items[s.items.length - 1].event;
-    const segments = incoming.action.type.split('.');
-    const func = segments.pop()!.slice(0, -2);
-    const actionType = [...segments, func].join('.')
-    const unchanged = new Array<string>();
-    const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
-      const recurse = (before: unknown, after: unknown, keyCollector: string) => {
-        if (is.record(after)) {
-          if (JSON.stringify(after) === JSON.stringify(before)) {
-            unchanged.push(keyCollector);
-          }
-          Object.keys(after).forEach(key => recurse(is.record(before) ? before[key] : {}, after[key], `${keyCollector}.${key}`));
-        } else if (is.array(after)) {
-          if (JSON.stringify(after) === JSON.stringify(before)) {
-            unchanged.push(keyCollector);
-          }
-          after.forEach((_, i) => recurse(is.array(before) ? before[i] : [], after[i], `${keyCollector}.${i}`));
-        } else if (before === after) {
-          unchanged.push(keyCollector);
-        }
-      }
-      recurse(stateBefore, stateAfter, '');
-    }
-    if (['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge'].includes(func)) {
-      updateUnchanged(stateBefore, stateAfter);
-    } else if (['$clear'].includes(func) && is.array(stateBefore) && !stateBefore.length) {
-      unchanged.push('');
-    }
-    const onClickNodeKey = (key: string) => state.set(s => ({
-      items: s.items.map(itemOuter => {
-        if (itemOuter.id !== state.idRefOuter.current) { return itemOuter; }
-        return {
-          ...itemOuter,
-          items: itemOuter.items.map(itemInner => {
-            if (itemInner.id !== state.idRefInner.current) { return itemInner; }
-            const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
-            const commonProps = {
-              actionType,
-              state: stateAfter,
-              contractedKeys,
-              onClickNodeKey,
-              unchanged,
-            };
-            return {
-              ...itemInner,
-              contractedKeys,
-              jsx: Tree({ ...commonProps, hideUnchanged: false }),
-              jsxPruned: Tree({ ...commonProps, hideUnchanged: true }),
-            } satisfies Item
-          })
-        }
-      })
-    }));
-    const getNewItem = () => {
-      const commonProps = {
-        type: incoming.action.type,
-        state: payload,
-        stateBefore,
-        stateAfter,
-        set: state.set,
-        idOuter: state.idRefOuter.current,
-        idInner: state.idRefInner.current,
-        unchanged,
-        actionType,
-        contractedKeys: [],
-        onClickNodeKey,
-      };
-      return {
-        id: ++state.idRefInner.current,
-        jsx: Tree({ ...commonProps, hideUnchanged: false }),
-        jsxPruned: Tree({ ...commonProps, hideUnchanged: true }),
-        state: fullStateAfter,
-        payload: incoming.action.payload,
-        contractedKeys: [],
-        time,
-        date,
-      } satisfies Item;
-    };
+    const previousEvent = s.items[s.items.length - 1]?.event ?? '';
     return {
-      storeState: fullStateAfter,
+      storeState: s.storeRef.current!.$state,
       items: currentEvent.toString() === previousEvent.toString()
         ? [
           ...s.items.slice(0, s.items.length - 1),
           {
             ...s.items[s.items.length - 1],
-            items: [...s.items[s.items.length - 1].items, getNewItem()],
+            items: [...s.items[s.items.length - 1].items, newItem],
             visible: true,
           }
         ] : [
           ...s.items,
           {
-            id: ++state.idRefOuter.current,
+            id: ++s.idRefOuter.current,
             event: currentEvent,
-            items: [getNewItem()],
+            items: [newItem],
             visible: true,
             headerExpanded: false,
           }
         ],
     };
   });
+};
+
+const getJsxProps = (state: State, incoming: Message) => {
+  const fullStateBefore = state.items.flatMap(s => s.items).at(-1)?.state ?? {};
+  const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
+  const stateBefore = doReadState(fullStateBefore, incoming, payload);
+  const stateAfter = doReadState(state.storeRef.current!.$state, incoming, payload);
+  const segments = incoming.action.type.split('.');
+  const func = segments.pop()!.slice(0, -2);
+  const actionType = [...segments, func].join('.')
+  const unchanged = new Array<string>();
+  const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
+    const recurse = (before: unknown, after: unknown, keyCollector: string) => {
+      if (is.record(after)) {
+        if (JSON.stringify(after) === JSON.stringify(before)) {
+          unchanged.push(keyCollector);
+        }
+        Object.keys(after).forEach(key => recurse(is.record(before) ? before[key] : {}, after[key], `${keyCollector}.${key}`));
+      } else if (is.array(after)) {
+        if (JSON.stringify(after) === JSON.stringify(before)) {
+          unchanged.push(keyCollector);
+        }
+        after.forEach((_, i) => recurse(is.array(before) ? before[i] : [], after[i], `${keyCollector}.${i}`));
+      } else if (before === after) {
+        unchanged.push(keyCollector);
+      }
+    }
+    recurse(stateBefore, stateAfter, '');
+  }
+  if (['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge'].includes(func)) {
+    updateUnchanged(stateBefore, stateAfter);
+  } else if (['$clear'].includes(func) && is.array(stateBefore) && !stateBefore.length) {
+    unchanged.push('');
+  }
+  const onClickNodeKey = (key: string) => state.set(s => ({
+    items: s.items.map(itemOuter => {
+      if (itemOuter.id !== state.idRefOuter.current) { return itemOuter; }
+      return {
+        ...itemOuter,
+        items: itemOuter.items.map(itemInner => {
+          if (itemInner.id !== state.idRefInner.current) { return itemInner; }
+          const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
+          const commonProps = {
+            actionType,
+            state: stateAfter,
+            contractedKeys,
+            onClickNodeKey,
+            unchanged,
+          };
+          return {
+            ...itemInner,
+            contractedKeys,
+            jsx: Tree({ ...commonProps, hideUnchanged: false }),
+            jsxPruned: Tree({ ...commonProps, hideUnchanged: true }),
+          } satisfies Item
+        })
+      }
+    })
+  }));
+  return {
+    state: payload,
+    unchanged,
+    actionType,
+    contractedKeys: [],
+    onClickNodeKey,
+  };
 };
 
 const getTimeDiff = (from: Date, to: Date) => {
