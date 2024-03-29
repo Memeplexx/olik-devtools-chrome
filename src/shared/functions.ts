@@ -1,5 +1,5 @@
 import { deserialize } from "olik";
-import { MouseEvent, MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MouseEvent, MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
 import { BasicStore } from "./types";
 
 export const useKnownPropsOnly = <T extends HTMLElement>(
@@ -125,18 +125,19 @@ export const silentlyApplyStateAction = (store: BasicStore, queryString: string)
 }
 
 export const useRecord = <R extends Record<string, unknown>>(record: R) => {
-	const [state, setState] = useState(record);
-  const applySetState = useCallback((arg: Partial<R> | ((r: R) => Partial<R>)) => {
-    if (is.function<[R], Partial<R>>(arg)) {
-      setState(s => ({ ...s, ...arg(s) }));
-    } else {
-      setState(s => ({ ...s, ...arg }));
-    }
-  }, []);
-  return useMemo(() => ({
-		...state,
-		set: applySetState,
-  }), [applySetState, state]);
+	const [, setCount] = useState(0);
+	const stateRef = useRef({
+		...record,
+		set: (arg: Partial<R> | ((r: R) => Partial<R>)) => {
+			if (is.function<[R], Partial<R>>(arg)) {
+				Object.assign(stateRef, arg(stateRef));
+			} else {
+				Object.assign(stateRef, arg);
+			}
+			setCount(c => c + 1);
+		}
+	}).current;
+	return stateRef;
 }
 
 export type Keys =

@@ -1,11 +1,11 @@
 import { ChangeEvent, FocusEvent, MouseEvent } from "react";
 import { TypedKeyboardEvent, is, isoDateRegexPattern, useEventHandlerForDocument } from "../shared/functions";
-import { Props, InputValue, State, TextInputElement, ValueType } from "./constants";
+import { Props, InputValue, State, TextInputElement, ValueType, Inputs } from "./constants";
 
 
 export const useOutputs = <V extends InputValue>(
   props: Props<V>,
-  state: State
+  state: Inputs,
 ) => ({
   onClick: (event: MouseEvent<TextInputElement>) => {
     if (props.type === 'boolean') {

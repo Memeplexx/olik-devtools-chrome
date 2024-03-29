@@ -2,46 +2,41 @@ import { StateAction, deserialize, readState, updateFunctions } from "olik";
 import { ForwardedRef, ReactNode } from "react";
 import { useForwardedRef, useRecord } from "../shared/functions";
 import { Tree } from "../tree";
-import { Props } from "./constants";
+import { Props, State } from "./constants";
 
 
 export const useInputs = (
-  props: Props, 
+  props: Props,
   ref: ForwardedRef<HTMLDivElement>
 ) => {
   const localState = useLocalState(ref);
   return {
     ...localState,
-    data: tryReadState({ ...props, ...localState }),
+    data: tryReadState(props, localState),
   };
 }
 
-const useLocalState = (ref: ForwardedRef<HTMLDivElement>) => {
-  const record = useRecord({
-    contractedKeys: new Array<string>(),
-  });
-  return {
-    ...record,
-    containerRef: useForwardedRef<HTMLDivElement>(ref),
-  }
-}
+export const useLocalState = (ref: ForwardedRef<HTMLDivElement>) => useRecord({
+  contractedKeys: new Array<string>(),
+  containerRef: useForwardedRef<HTMLDivElement>(ref),
+});
 
-const tryReadState = (arg: ReturnType<typeof useLocalState> & Props): ReactNode => {
-  const onClickNodeKey = (key: string) => arg.set(s => ({
+const tryReadState = (props: Props, state: State): ReactNode => {
+  const onClickNodeKey = (key: string) => state.set(s => ({
     ...s,
     contractedKeys: s.contractedKeys.includes(key)
       ? s.contractedKeys.filter(k => k !== key)
       : [...s.contractedKeys, key]
   }));
   try {
-    const state = doReadState(arg.query, arg.state || {});
-    if (state === undefined) { throw new Error(); }
-    return Tree({ onClickNodeKey, unchanged: [], ...arg, state });
+    const stateRead = doReadState(props.query, props.state || {});
+    if (stateRead === undefined) { throw new Error(); }
+    return Tree({ onClickNodeKey, unchanged: [], ...state, ...props, state: stateRead });
   } catch (e) {
-    const segments = arg.query.split('.').filter(e => !!e).slice(0, -1);
-    return segments.length === 0 
-      ? Tree({ onClickNodeKey, unchanged: [], ...arg }) 
-      : tryReadState({ ...arg, query: segments.join('.') });
+    const segments = props.query.split('.').filter(e => !!e).slice(0, -1);
+    return segments.length === 0
+      ? Tree({ onClickNodeKey, unchanged: [], ...props, ...state })
+      : tryReadState({ ...props, query: segments.join('.') }, state);
   }
 };
 

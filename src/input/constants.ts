@@ -1,6 +1,6 @@
 import { HTMLAttributes } from "react";
 import { PopupListProps } from "../popup-list/consts";
-import { useLocalState } from "./inputs";
+import { useDerivedState, useInputs, useLocalState } from "./inputs";
 
 
 export const types = ['string', 'number', 'boolean', 'date', 'null'] as const;
@@ -27,3 +27,7 @@ export type Props<V extends InputValue> = {
 ;
 
 export type State = ReturnType<typeof useLocalState>;
+
+export type Derived = ReturnType<typeof useDerivedState>;
+
+export type Inputs = ReturnType<typeof useInputs>;

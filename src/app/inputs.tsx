@@ -9,13 +9,12 @@ import { Item, ItemWrapper, Message, State } from "./constants";
 export const useInputs = () => {
   const localState = useLocalState();
   instantiateStore(localState);
-  useMessageHandler(localState.set);
+  useMessageHandler(localState);
   return localState;
 }
 
 export const useLocalState = () => useRecord({
   error: '',
-  storeFullyInitialized: false,
   storeState: null as Record<string, unknown> | null,
   storeStateVersion: null as Record<string, unknown> | null,
   selectedId: null as number | null,
@@ -33,14 +32,10 @@ const instantiateStore = (state: State) => {
   if (state.storeRef.current) { return; }
   if (!chrome.runtime) {
     state.storeRef.current = getStore<Record<string, unknown>>(); // get store from demo app
-    setTimeout(() => {
-      state.set({ storeFullyInitialized: true });
-      document.getElementById('olik-init')!.innerHTML = 'done';
-    });
+    setTimeout(() => document.getElementById('olik-init')!.innerHTML = 'done');
   } else {
     libState.initialState = undefined;
     state.storeRef.current = createStore<Record<string, unknown>>({});
-    state.set({ storeFullyInitialized: true });
     const notifyAppOfInitialization = () => document.getElementById('olik-init')!.innerHTML = 'done';
     chrome.tabs
       .query({ active: true })
@@ -49,26 +44,26 @@ const instantiateStore = (state: State) => {
   }
 }
 
-const useMessageHandler = (set: State['set']) => {
+const useMessageHandler = (state: State) => {
   useEffect(() => {
-    const ml = (e: MessageEvent<Message>) => messageListener(set, e);
-    const cml = (e: Message) => chromeMessageListener(set, e);
-    window.addEventListener('message', ml);
-    chrome.runtime?.onMessage.addListener(cml);
+    const msgListener = (event: MessageEvent<Message>) => messageListener(state, event);
+    const chromeListener = (event: Message) => chromeMessageListener(state, event);
+    window.addEventListener('message', msgListener);
+    chrome.runtime?.onMessage.addListener(chromeListener);
     return () => {
-      window.removeEventListener('message', ml);
-      chrome.runtime?.onMessage.removeListener(cml);
+      window.removeEventListener('message', msgListener);
+      chrome.runtime?.onMessage.removeListener(chromeListener);
     }
-  }, [set])
+  }, [state])
 }
 
-const messageListener = (set: State['set'], event: MessageEvent<Message>) => {
+const messageListener = (state: State, event: MessageEvent<Message>) => {
   if (event.origin !== window.location.origin) return;
   if (event.data.source !== 'olik-devtools-extension') return;
-  processEvent(set, event.data);
+  processEvent(state, event.data);
 }
 
-const chromeMessageListener = (set: State['set'], event: Message) => {
+const chromeMessageListener = (state: State, event: Message) => {
   const recurse = (val: unknown): unknown => {
     if (is.record(val)) {
       Object.keys(val).forEach(key => val[key] = recurse(val[key]))
@@ -82,7 +77,7 @@ const chromeMessageListener = (set: State['set'], event: Message) => {
   event.action.payload = recurse(event.action.payload);
   event.action.payloadOrig = recurse(event.action.payloadOrig);
   event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: recurse(sa.arg) }));
-  processEvent(set, event);
+  processEvent(state, event);
 }
 
 const doReadState = (state: Record<string, unknown>, incoming: Message, payload: unknown) => {
@@ -105,8 +100,8 @@ const doReadState = (state: Record<string, unknown>, incoming: Message, payload:
   return readState({ state, stateActions, cursor: { index: 0 } });
 }
 
-const processEvent = (set: State['set'], incoming: Message) => {
-  set(s => {
+const processEvent = (state: State, incoming: Message) => {
+  state.set(s => {
     if (!incoming.action) { return s; }
     if (incoming.action.type === '$load()') {
       s.storeRef.current = null;
@@ -189,11 +184,11 @@ const getJsxProps = (state: State, incoming: Message) => {
   }
   const onClickNodeKey = (key: string) => state.set(s => ({
     items: s.items.map(itemOuter => {
-      if (itemOuter.id !== state.idRefOuter.current) { return itemOuter; }
+      if (itemOuter.id !== s.idRefOuter.current) { return itemOuter; }
       return {
         ...itemOuter,
         items: itemOuter.items.map(itemInner => {
-          if (itemInner.id !== state.idRefInner.current) { return itemInner; }
+          if (itemInner.id !== s.idRefInner.current) { return itemInner; }
           const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
           const commonProps = {
             actionType,

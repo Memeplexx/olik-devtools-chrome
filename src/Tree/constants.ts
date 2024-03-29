@@ -4,7 +4,6 @@ import { useLocalState } from "./inputs";
 
 export interface TreeProps {
   state: unknown,
-  stateDef?: unknown,
   onClickNodeKey: (key: string) => void,
   contractedKeys: string[],
   actionType?: string,

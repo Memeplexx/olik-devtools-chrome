@@ -2,7 +2,7 @@ import flatpickr from "flatpickr";
 import { Instance } from "flatpickr/dist/types/instance";
 import { ForwardedRef, useEffect, useMemo, useRef } from "react";
 import { is, useAttributeObserver, useForwardedRef, usePropsForHTMLElement, useRecord, useResizeObserver } from "../shared/functions";
-import { Props, InputValue, State, TextInputElement } from "./constants";
+import { Props, InputValue, State, TextInputElement, Derived } from "./constants";
 
 const inputEl = document.createElement('input');
 const textAreaEl = document.createElement('textarea');
@@ -11,26 +11,39 @@ export const useInputs = <V extends InputValue>(
   props: Props<V>,
   forwardedRef: ForwardedRef<TextInputElement>
 ) => {
-  const localState = useLocalState(props, forwardedRef);
-  useInitializer(localState);
-  useDatePicker(props, localState);
-  useAnimateOnValueChange(localState);
-  useInputElementChanger(props, localState);
-  useTextAreaReSizer(localState);
-  return localState;
+  const state = useLocalState(forwardedRef);
+  const derived = useDerivedState(props, state);
+  useInitializer(state);
+  useDatePicker(props, state, derived);
+  useAnimateOnValueChange(state);
+  useInputElementChanger(props, state, derived);
+  useTextAreaReSizer(state);
+  return {
+    ...state,
+    ...derived,
+  };
 }
 
-export const useLocalState = <V extends InputValue>(
-  props: Props<V>,
+export const useLocalState = (
   forwardedRef: ForwardedRef<TextInputElement>
+) => useRecord({
+  initialized: false,
+  isHovered: false,
+  animate: true,
+  textAreaWidth: 0,
+  textAreaHeight: 0,
+  inputRef: useForwardedRef(forwardedRef),
+  textMeasurerRef: useRef<HTMLSpanElement>(null),
+  valueBefore: useRef(''),
+  onEscapePressed: useRef(false),
+  calendarOpened: useRef(false),
+  animationEnabled: useRef(true),
+});
+
+export const useDerivedState = <V extends InputValue>(
+  props: Props<V>,
+  state: State,
 ) => {
-  const localState = useRecord({
-    initialized: false,
-    isHovered: false,
-    animate: true,
-    textAreaWidth: 0,
-    textAreaHeight: 0,
-  });
   const valueAsString = useMemo(() => {
     if (is.null(props.value)) return 'null';
     if (is.undefined(props.value)) return '';
@@ -46,14 +59,7 @@ export const useLocalState = <V extends InputValue>(
   const showQuote = useMemo(() => props.allowQuotesToBeShown && is.string(props.value), [props.allowQuotesToBeShown, props.value]);
   const showCloseQuote = useMemo(() => props.allowQuotesToBeShown && is.string(props.value) && !showTextArea, [props.allowQuotesToBeShown, props.value, showTextArea]);
   return {
-    ...localState,
-    inputRef: useForwardedRef(forwardedRef),
-    textMeasurerRef: useRef<HTMLSpanElement>(null),
-    valueBefore: useRef(''),
-    onEscapePressed: useRef(false),
-    calendarOpened: useRef(false),
-    animationEnabled: useRef(true),
-    showPopup: props.allowTypeSelectorPopup && localState.isHovered,
+    showPopup: props.allowTypeSelectorPopup && state.isHovered,
     inputSize: Math.max(1, valueAsString.length),
     inputType,
     max,
@@ -68,22 +74,22 @@ export const useLocalState = <V extends InputValue>(
 const useInitializer = (
   state: State
 ) => {
-  const { set } = state;
   useEffect(() => {
-    set({ initialized: true });
-  }, [set]);
+    state.set({ initialized: true });
+  }, [state]);
 }
 
 const useDatePicker = <V extends InputValue>(
   props: Props<V>,
   state: State,
+  derived: Derived,
 ) => {
   const flatPickerRef = useRef<Instance | null>(null);
   const dateChanged = useRef(false);
   if (is.date(props.value) && !flatPickerRef.current && state.inputRef.current) {
     flatPickerRef.current = flatpickr(state.inputRef.current, {
       enableTime: true,
-      defaultDate: state.valueAsString,
+      defaultDate: derived.valueAsString,
       formatDate: d => d.toISOString(),
       onOpen: () => {
         dateChanged.current = false;
@@ -106,15 +112,16 @@ const useDatePicker = <V extends InputValue>(
 
 const useInputElementChanger = <V extends InputValue>(
   props: Props<V>,
-  state: State
+  state: State,
+  derived: Derived,
 ) => {
   if (!state.initialized) {
-    setTimeout(() => props.onChangeInputElement?.(state.showTextArea));
+    setTimeout(() => props.onChangeInputElement?.(derived.showTextArea));
   }
-  const wasTextArea = useRef(state.showTextArea);
-  if (wasTextArea.current == state.showTextArea) { return; }
-  wasTextArea.current = state.showTextArea;
-  setTimeout(() => props.onChangeInputElement?.(state.showTextArea));
+  const wasTextArea = useRef(derived.showTextArea);
+  if (wasTextArea.current == derived.showTextArea) { return; }
+  wasTextArea.current = derived.showTextArea;
+  setTimeout(() => props.onChangeInputElement?.(derived.showTextArea));
 }
 
 const useAnimateOnValueChange = (

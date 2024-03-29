@@ -19,19 +19,14 @@ export const useInputs = (props: Props) => {
   return state;
 }
 
-export const useLocalState = () => {
-  const record = useRecord({
-    defaultEditorValue: '',
-    onDidScrollChange: null as null | IDisposable,
-    onDidChangeModelContent: null as null | IDisposable,
-    onKeyUp: null as null | IDisposable,
-  });
-  return {
-    ...record,
-    divEl: useRef<HTMLDivElement>(null),
-    editorRef: useRef<editor.IStandaloneCodeEditor | null>(null),
-  };
-}
+export const useLocalState = () => useRecord({
+  defaultEditorValue: '',
+  onDidScrollChange: null as null | IDisposable,
+  onDidChangeModelContent: null as null | IDisposable,
+  onKeyUp: null as null | IDisposable,
+  divEl: useRef<HTMLDivElement>(null),
+  editorRef: useRef<editor.IStandaloneCodeEditor | null>(null),
+});
 
 const instantiateEditor = (props: Props, state: State) => {
   if (!state.divEl.current || state.editorRef.current || !props.state) { return; }
@@ -39,8 +34,7 @@ const instantiateEditor = (props: Props, state: State) => {
   editor.defineTheme('olik-editor-theme', editorTheme);
   state.editorRef.current = editor.create(state.divEl.current, editorRefOptions);
   state.editorRef.current.setScrollPosition({ scrollTop: lineHeight });
-  const defaultEditorValue = reGenerateTypeDefinitions(props, state);
-  state.editorRef.current.setValue(defaultEditorValue);
+  state.editorRef.current.setValue(reGenerateTypeDefinitions(props, state));
 }
 
 const reGenerateTypeDefinitions = (props: Props, state: State) => {
