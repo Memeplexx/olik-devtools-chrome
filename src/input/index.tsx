@@ -23,7 +23,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
     onBlur: outputs.onBlur,
     onFocus: outputs.onFocus,
     $initialized: inputs.initialized,
-    $valueType: props.type,
+    $valueType: props.valueType,
     $animate: inputs.animate,
   };
   return (
@@ -42,7 +42,6 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
             {...inputs.inputsProps}
             {...commonInputProps}
             showIf={!inputs.showTextArea}
-            type={inputs.inputType}
             min='0'
             max={inputs.max}
             size={inputs.inputSize}
@@ -88,7 +87,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
                 text: type,
                 icon: IoIosSwap,
                 onClick: outputs.onClickChangeType(type),
-                showIf: type !== props.type,
+                showIf: type !== props.valueType,
               })),
             ]}
           />

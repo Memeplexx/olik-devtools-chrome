@@ -8,7 +8,7 @@ export const useOutputs = <V extends InputValue>(
   state: Inputs,
 ) => ({
   onClick: (event: MouseEvent<TextInputElement>) => {
-    if (props.type === 'boolean') {
+    if (props.valueType === 'boolean') {
       props.onChangeCommit(!props.value as V);
       state.inputRef.current?.blur();
     }
@@ -27,11 +27,11 @@ export const useOutputs = <V extends InputValue>(
   onChange: (event: ChangeEvent<TextInputElement>) => {
     const inputVal = event.target.value;
     const valueOfNewType = (() => {
-      if (is.string(props.value)) return inputVal;
-      if (is.number(props.value)) return inputVal.trim() === '' ? 0 : parseFloat(inputVal);
-      if (is.boolean(props.value)) return inputVal === 'true';
-      if (is.date(props.value)) return new Date(inputVal);
-      if (is.null(props.value)) return null;
+      if (props.valueType === 'string') return inputVal;
+      if (props.valueType === 'number') return inputVal.trim() === '' ? '' : inputVal.trim() === '-' ? '-' : parseFloat(inputVal);
+      if (props.valueType === 'boolean') return inputVal === 'true';
+      if (props.valueType === 'date') return new Date(isoDateRegexPattern.test(inputVal) ? inputVal : 0);
+      if (props.valueType === 'null') return null;
     })() as V;
     props.onChange?.(valueOfNewType);
   },
@@ -42,8 +42,6 @@ export const useOutputs = <V extends InputValue>(
       event.preventDefault();
     } else if (is.date(props.value)) {
       event.preventDefault();
-    } else if (is.number(props.value) && /^[a-zA-Z]$/.test(event.key)) {
-      event.preventDefault();
     }
     state.animationEnabled.current = false;
   },
@@ -52,7 +50,7 @@ export const useOutputs = <V extends InputValue>(
     if (state.calendarOpened.current) return;
     if (state.onEscapePressed.current) return;
     if (state.inputRef.current!.value === state.valueBefore.current) return;
-    if (props.type === 'boolean') return;
+    if (props.valueType === 'boolean') return;
     props.onChangeCommit(props.value);
   },
   onFocus: (event: FocusEvent<TextInputElement>) => {
@@ -72,7 +70,7 @@ export const useOutputs = <V extends InputValue>(
     const { value } = state.inputRef.current!;
     const valueOfNewType = (() => {
       if (type === 'string') return value;
-      if (type === 'number') return (/^[0-9]$/.test(value) ? +value : 0);
+      if (type === 'number') return (/^-?\d*\.?\d+$/.test(value) ? +value : 0);
       if (type === 'boolean') return (value === 'true');
       if (type === 'date') return new Date(isoDateRegexPattern.test(value) ? value : 0);
       if (type === 'null') return null;

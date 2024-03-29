@@ -53,13 +53,12 @@ export const useDerivedState = <V extends InputValue>(
     if (is.string(val)) return val.toString();
     if (is.date(val)) return val.toISOString();
   }, [val]) as string;
-  const showTextArea = !!props.allowTextArea && props.type === 'string';
+  const showTextArea = !!props.allowTextArea && props.valueType === 'string';
   return {
     showPopup: props.allowTypeSelectorPopup && state.isHovered,
     inputSize: Math.max(1, valueAsString.length),
-    inputType: useMemo(() => is.number(val) ? 'number' : 'string', [val]),
     max: useMemo(() => is.number(val) ? val : 0, [val]),
-    showQuote: useMemo(() => props.allowQuotesToBeShown && is.string(val), [props.allowQuotesToBeShown, val]),
+    showQuote: useMemo(() => props.allowQuotesToBeShown && props.valueType === 'string', [props.allowQuotesToBeShown, props.valueType]),
     inputsProps: usePropsForHTMLElement(showTextArea ? textAreaEl : inputEl, props),
     valueAsString,
     showTextArea,

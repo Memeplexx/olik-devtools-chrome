@@ -219,14 +219,13 @@ export const useResizeObserver = (
 	const callBackRef = useRef(arg.onChange);
 	callBackRef.current = arg.onChange;
 	useEffect(() => {
+		if (!arg.element) return;
 		const observer = new ResizeObserver(entries => callBackRef.current({
 			width: entries[0].contentRect.width,
 			height: entries[0].contentRect.height,
 		}));
-		if (arg.element) {
-			observer.observe(arg.element);
-		}
-		return () => observer.disconnect();
+		observer.observe(arg.element);
+		return () => observer?.disconnect();
 	}, [arg.element]);
 }
 
@@ -242,10 +241,9 @@ export const useAttributeObserver = <T extends HTMLElement>(
 	const attributeFilterRef = useRef(arg.attributes);
 	attributeFilterRef.current = arg.attributes;
 	useEffect(() => {
+		if (!arg.element) return;
 		const observer = new MutationObserver(callBackRef.current);
-		if (arg.element) {
-			observer.observe(arg.element, { attributes: true, attributeFilter: attributeFilterRef.current as string[] });
-		}
-		return () => observer.disconnect();
+		observer.observe(arg.element, { attributes: true, attributeFilter: attributeFilterRef.current as string[] });
+		return () => observer?.disconnect();
 	}, [arg.element]);
 }

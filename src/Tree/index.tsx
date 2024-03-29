@@ -84,7 +84,7 @@ export const RenderedNode = function RenderedNode(
               allowQuotesToBeShown={true}
               allowTypeSelectorPopup={true}
               allowTextArea={true}
-              type={inputs.type}
+              valueType={inputs.type}
               onClick={outputs.onClickValueNode}
               onChangeType={outputs.onChangeValueType}
               onChangeCommit={outputs.onChangeCommitValue}
@@ -153,7 +153,7 @@ export const RenderedNode = function RenderedNode(
                   onBlur={outputs.onBlurObjectKey}
                   allowTypeSelectorPopup={false}
                   allowQuotesToBeShown={false}
-                  type='string'
+                  valueType='string'
                 />
                 <Colon
                   children=':'
