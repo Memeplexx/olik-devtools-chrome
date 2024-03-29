@@ -74,11 +74,12 @@ export const RenderedNode = function RenderedNode(
         $unchanged={inputs.isUnchanged}
         onMouseOver={outputs.onMouseOverValueNode}
         onMouseOut={outputs.onMouseOutValueNode}
+        data-key={props.keyConcat}
         children={
           is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.onChangeState ? inputs.nodeEl : (
             <ValueNode
               $type={inputs.nodeType}
-              data-key={props.keyConcat}
+              data-key-input={props.keyConcat}
               value={inputs.value}
               onChange={outputs.onChangeValue}
               allowQuotesToBeShown={true}
@@ -122,6 +123,7 @@ export const RenderedNode = function RenderedNode(
     <Wrapper
       $wrappingTextArea={inputs.isShowingTextArea}
       key={props.index}
+      data-key={props.keyConcat}
       children={
         <>
           <ParentNode
@@ -142,7 +144,7 @@ export const RenderedNode = function RenderedNode(
                 />
                 <KeyNode
                   showIf={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
-                  data-key={props.keyConcat}
+                  data-key-input={props.keyConcat}
                   ref={inputs.keyNodeRef}
                   readOnly={!props.onChangeState || !inputs.isEditingObjectKey}
                   value={inputs.key}

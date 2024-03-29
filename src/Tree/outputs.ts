@@ -16,7 +16,7 @@ export const useOutputs = (props: RenderNodeArgs, state: State) => ({
     if (!is.array(props.item)) throw new Error();
     const el = JSON.stringify(getSimplifiedObjectPayload(props.item[0]));
     props.onChangeState!(`${props.keyConcat}.$push(${el})`);
-    tryFocusInput(`[data-key="${props.keyConcat}.${props.item.length}"]`);
+    tryFocusInput(`[data-key-input="${props.keyConcat}.${props.item.length}"]`);
   },
   onClickAddToObject: () => {
     if (!is.record(props.item)) throw new Error();
@@ -24,7 +24,7 @@ export const useOutputs = (props: RenderNodeArgs, state: State) => ({
     const recurse = (tryKey: string, count: number): string => !keys.includes(tryKey) ? tryKey : recurse(`<key-${count++}>`, count);
     const key = recurse('<key>', 0);
     props.onChangeState!(`${props.keyConcat}.$setNew(${JSON.stringify({ [key]: '<value>' })})`);
-    tryFocusInput(`[data-key="${props.keyConcat}.${key}"]`);
+    tryFocusInput(`[data-key-input="${props.keyConcat}.${key}"]`);
   },
   onClickEditKey: () => {
     state.set({ showOptions: false });
