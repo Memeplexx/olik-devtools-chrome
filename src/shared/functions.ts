@@ -3,37 +3,37 @@ import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { BasicStore } from "./types";
 
 export const useKnownPropsOnly = <T extends HTMLElement>(
-  element: T,
-  props: Record<string, unknown>
+	element: T,
+	props: Record<string, unknown>
 ) => {
-  return useMemo(() => {
-    return Object.keys(props)
-        .filter(key => key in element)
-        .reduce<Record<string, unknown>>((acc, key) => {
-          acc[key] = props[key];
-          return acc; 
-        }, {});
-  }, [props, element]);
+	return useMemo(() => {
+		return Object.keys(props)
+			.filter(key => key in element)
+			.reduce<Record<string, unknown>>((acc, key) => {
+				acc[key] = props[key];
+				return acc;
+			}, {});
+	}, [props, element]);
 }
 
 export const usePropsWithDefaults = <P extends Record<string, unknown>, I extends P, D extends P>(incomingProps: I, defaultProps: D) => {
 
-  // We need a ref of incomingProps so we can compare previous props to incoming props
-  const inRef = useRef<P>(incomingProps);
+	// We need a ref of incomingProps so we can compare previous props to incoming props
+	const inRef = useRef<P>(incomingProps);
 
-  // We need a ref of result because we might want to return exactly the same object if props have not changed
-  const outRef = useRef<P>({ ...defaultProps, incomingProps });
+	// We need a ref of result because we might want to return exactly the same object if props have not changed
+	const outRef = useRef<P>({ ...defaultProps, incomingProps });
 
-  // props object has changed so we can return a new object which is a spread of defaultProps and incomingProps
-  if (inRef.current !== incomingProps) {
-    inRef.current = incomingProps;
-    outRef.current = { ...defaultProps, ...incomingProps };
-    return outRef.current as I & D;
-  }
+	// props object has changed so we can return a new object which is a spread of defaultProps and incomingProps
+	if (inRef.current !== incomingProps) {
+		inRef.current = incomingProps;
+		outRef.current = { ...defaultProps, ...incomingProps };
+		return outRef.current as I & D;
+	}
 
-  // one or more props have changed.
-  Object.assign(outRef.current, incomingProps);
-  return outRef.current as I & D;
+	// one or more props have changed.
+	Object.assign(outRef.current, incomingProps);
+	return outRef.current as I & D;
 }
 
 export const useForwardedRef = <T>(forwardedRef: React.ForwardedRef<T>) => {
@@ -98,6 +98,9 @@ export const is = {
 	htmlElement: (val: unknown): val is HTMLElement => {
 		return val instanceof HTMLElement;
 	},
+	ref: <T>(val: unknown): val is React.RefObject<T> => {
+		return is.record(val) && 'current' in val;
+	}
 }
 
 export const silentlyApplyStateAction = (store: BasicStore, queryString: string) => {
@@ -142,7 +145,8 @@ export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 		...record,
 		set: (arg: Partial<R> | ((r: R) => Partial<R>)) => {
 			const newState = is.function<[R], Partial<R>>(arg) ? arg(stateRef) : arg;
-			const unChanged = Object.keys(newState).every(key => is.function(newState[key]) || stateRef[key] === newState[key]);
+			const unChanged = Object.keys(newState)
+				.every(key => is.function(newState[key]) /*|| is.ref(newState[key])*/ || stateRef[key] === newState[key]);
 			if (unChanged) return;
 			Object.assign(stateRef, newState);
 			setCount(c => c + 1);
@@ -152,49 +156,49 @@ export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 }
 
 export type Keys =
-  | 'Backspace'
-  | 'Tab'
-  | 'Enter'
-  | 'Shift'
-  | 'Control'
-  | 'Alt'
-  | 'CapsLock'
-  | 'Escape'
-  | 'Space'
-  | 'PageUp'
-  | 'PageDown'
-  | 'End'
-  | 'Home'
-  | 'ArrowLeft'
-  | 'ArrowUp'
-  | 'ArrowRight'
-  | 'ArrowDown'
-  | 'Insert'
-  | 'Delete';
+	| 'Backspace'
+	| 'Tab'
+	| 'Enter'
+	| 'Shift'
+	| 'Control'
+	| 'Alt'
+	| 'CapsLock'
+	| 'Escape'
+	| 'Space'
+	| 'PageUp'
+	| 'PageDown'
+	| 'End'
+	| 'Home'
+	| 'ArrowLeft'
+	| 'ArrowUp'
+	| 'ArrowRight'
+	| 'ArrowDown'
+	| 'Insert'
+	| 'Delete';
 
 export interface TypedKeyboardEvent<T extends HTMLElement> extends React.KeyboardEvent<T> {
-  key: Keys,
-  target: T,
+	key: Keys,
+	target: T,
 }
 export type EventMap<T> = T extends 'click' ? MouseEvent<HTMLElement> & { target: HTMLElement } : T extends 'keyup' | 'keydown' ? TypedKeyboardEvent<HTMLElement> : never;
 export const useEventHandlerForDocument = <Type extends 'click' | 'keyup' | 'keydown'>(
-  type: Type,
-  handler: (event: EventMap<Type>) => void
+	type: Type,
+	handler: (event: EventMap<Type>) => void
 ) => {
-  const listenerName = `onDocument${type.substring(0, 1).toUpperCase()}${type.substring(1)}`;
-  Object.defineProperty(handler, 'name', { value: listenerName });
-  const ref = useRef(handler)
-  ref.current = handler;
-  useEffect(() => {
-    const listener = ((event: EventMap<Type>) => {
-      if (ref.current) {
-        ref.current(event);
-      }
-    }) as unknown as EventListener;
-    Object.defineProperty(listener, 'name', { value: listenerName });
-    document.addEventListener(type, listener);
-    return () => document.removeEventListener(type, listener);
-  }, [listenerName, type]);
+	const listenerName = `onDocument${type.substring(0, 1).toUpperCase()}${type.substring(1)}`;
+	Object.defineProperty(handler, 'name', { value: listenerName });
+	const ref = useRef(handler)
+	ref.current = handler;
+	useEffect(() => {
+		const listener = ((event: EventMap<Type>) => {
+			if (ref.current) {
+				ref.current(event);
+			}
+		}) as unknown as EventListener;
+		Object.defineProperty(listener, 'name', { value: listenerName });
+		document.addEventListener(type, listener);
+		return () => document.removeEventListener(type, listener);
+	}, [listenerName, type]);
 }
 
 
@@ -207,23 +211,23 @@ export const usePropsForHTMLElement = <T extends HTMLElement>(element: T, props:
 }
 
 export const useResizeObserver = (
-  arg: {
+	arg: {
 		element: HTMLElement | null,
-    onChange: (size: { width: number, height: number }) => void,
+		onChange: (size: { width: number, height: number }) => void,
 	}
 ) => {
 	const callBackRef = useRef(arg.onChange);
 	callBackRef.current = arg.onChange;
-  useEffect(() => {
-    const observer = new ResizeObserver(entries => callBackRef.current({
-      width: entries[0].contentRect.width,
-      height: entries[0].contentRect.height,
-    }));
-    if (arg.element) {
-      observer.observe(arg.element);
-    }
-    return () => observer.disconnect();
-  }, [arg.element]);
+	useEffect(() => {
+		const observer = new ResizeObserver(entries => callBackRef.current({
+			width: entries[0].contentRect.width,
+			height: entries[0].contentRect.height,
+		}));
+		if (arg.element) {
+			observer.observe(arg.element);
+		}
+		return () => observer.disconnect();
+	}, [arg.element]);
 }
 
 export const useAttributeObserver = <T extends HTMLElement>(
