@@ -15,15 +15,13 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
   const inputs = useInputs(props, forwardedRef);
   const outputs = useOutputs(props, inputs);
   const commonInputProps = {
-    value: inputs.valueAsString,
+    value: inputs.value,
     onKeyDown: outputs.onKeyDown,
     onKeyUp: outputs.onKeyUp,
     onChange: outputs.onChange,
     onClick: outputs.onClick,
     onBlur: outputs.onBlur,
     onFocus: outputs.onFocus,
-    onMouseOver: outputs.onMouseOver,
-    onMouseOut: outputs.onMouseOut,
     $initialized: inputs.initialized,
     $valueType: props.valueType,
     $animate: inputs.animate,
@@ -31,6 +29,8 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
   return (
     <Wrapper
       $isTextArea={inputs.showTextArea}
+      onMouseOver={outputs.onMouseOver}
+      onMouseOut={outputs.onMouseOut}
       children={
         <>
           <Quote
@@ -65,7 +65,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
                   children={
                     <>
                       <TextMeasurer
-                        children={inputs.valueAsString}
+                        children={inputs.value}
                       />
                       <Quote
                         showIf={inputs.showQuote}

@@ -57,13 +57,11 @@ export const useOutputs = <V extends InputValue>(
     state.valueBefore.current = state.inputRef.current!.value;
     props.onFocus?.(event);
   },
-  onMouseOver: (event: MouseEvent<TextInputElement>) => {
+  onMouseOver: () => {
     state.set({ isHovered: true });
-    props.onMouseOver?.(event);
   },
-  onMouseOut: (event: MouseEvent<TextInputElement>) => {
+  onMouseOut: () => {
     state.set({ isHovered: false });
-    props.onMouseOut?.(event);
   },
   onClickChangeType: (type: ValueType) => () => {
     props.onChangeValueType?.(type);

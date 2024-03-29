@@ -45,7 +45,7 @@ export const useDerivedState = <V extends InputValue>(
   state: State,
 ) => {
   const val = props.value;
-  const valueAsString = useMemo(() => {
+  const value = useMemo(() => {
     if (is.null(val)) return 'null';
     if (is.undefined(val)) return '';
     if (is.boolean(val)) return val.toString();
@@ -56,11 +56,11 @@ export const useDerivedState = <V extends InputValue>(
   const showTextArea = !!props.allowTextArea && props.valueType === 'string';
   return {
     showPopup: props.allowTypeSelectorPopup && state.isHovered,
-    inputSize: Math.max(1, valueAsString.length),
+    inputSize: Math.max(1, value.length),
     max: useMemo(() => is.number(val) ? val : 0, [val]),
     showQuote: useMemo(() => props.allowQuotesToBeShown && props.valueType === 'string', [props.allowQuotesToBeShown, props.valueType]),
     inputsProps: usePropsForHTMLElement(showTextArea ? textAreaEl : inputEl, props),
-    valueAsString,
+    value,
     showTextArea,
   };
 }
@@ -83,7 +83,7 @@ const useDatePicker = <V extends InputValue>(
   if (is.date(props.value) && !flatPickerRef.current && state.inputRef.current) {
     flatPickerRef.current = flatpickr(state.inputRef.current, {
       enableTime: true,
-      defaultDate: derived.valueAsString,
+      defaultDate: derived.value,
       formatDate: d => d.toISOString(),
       onOpen: () => {
         dateChanged.current = false;
