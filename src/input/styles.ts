@@ -10,11 +10,6 @@ export const Input = styled(possible.input)<{ $initialized: boolean, $valueType:
     background-color: rgba(255,255,255,0.1);
   }
   text-align: center;
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
   ${p => p.$animate ? css`transition: 0.4s opacity` : ''};
   ${p => p.$initialized ? css`opacity: 1` : css`opacity: 0`};
   ${p => p.readOnly && css`pointer-events: none;`}
