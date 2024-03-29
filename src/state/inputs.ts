@@ -1,6 +1,6 @@
 import { StateAction, deserialize, readState, updateFunctions } from "olik";
 import { ForwardedRef, ReactNode } from "react";
-import { useForwardedRef, useRecord } from "../shared/functions";
+import { silentlyApplyStateAction, useForwardedRef, useRecord } from "../shared/functions";
 import { Tree } from "../tree";
 import { Props, State } from "./constants";
 
@@ -22,21 +22,27 @@ export const useLocalState = (ref: ForwardedRef<HTMLDivElement>) => useRecord({
 });
 
 const tryReadState = (props: Props, state: State): ReactNode => {
-  const onClickNodeKey = (key: string) => state.set(s => ({
-    ...s,
-    contractedKeys: s.contractedKeys.includes(key)
-      ? s.contractedKeys.filter(k => k !== key)
-      : [...s.contractedKeys, key]
-  }));
+  const commonTreeProps = {
+    unchanged: [],
+    contractedKeys: state.contractedKeys,
+    onChangeState: (actionType: string) => silentlyApplyStateAction(props.store, actionType),
+    onClickNodeKey: (key: string) => state.set(s => ({
+      ...s,
+      contractedKeys: s.contractedKeys.includes(key)
+        ? s.contractedKeys.filter(k => k !== key)
+        : [...s.contractedKeys, key]
+    })),
+  }
   try {
     const stateRead = doReadState(props.query, props.state || {});
     if (stateRead === undefined) { throw new Error(); }
-    return Tree({ onClickNodeKey, unchanged: [], ...state, ...props, state: stateRead });
+    return Tree({ ...commonTreeProps, state: stateRead });
   } catch (e) {
     const segments = props.query.split('.').filter(e => !!e).slice(0, -1);
-    return segments.length === 0
-      ? Tree({ onClickNodeKey, unchanged: [], ...props, ...state })
-      : tryReadState({ ...props, query: segments.join('.') }, state);
+    if (segments.length === 0) {
+      return Tree({ ...commonTreeProps, state: props.state });
+    }
+    return tryReadState({ ...props, query: segments.join('.') }, state);
   }
 };
 

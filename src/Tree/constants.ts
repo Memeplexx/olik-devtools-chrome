@@ -1,15 +1,14 @@
 import { ReactNode } from "react";
-import { BasicStore } from "../shared/types";
 import { useLocalState } from "./inputs";
 
 export interface TreeProps {
   state: unknown,
-  onClickNodeKey: (key: string) => void,
+  onChangeState?: (actionType: string) => unknown,
   contractedKeys: string[],
+  onClickNodeKey: (key: string) => void,
   actionType?: string,
   unchanged: string[],
   hideUnchanged?: boolean,
-  store?: BasicStore,
 }
 
 export type RenderNodeArgs

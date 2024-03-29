@@ -75,7 +75,7 @@ export const RenderedNode = function RenderedNode(
         onMouseOver={outputs.onMouseOverValueNode}
         onMouseOut={outputs.onMouseOutValueNode}
         children={
-          is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.store ? inputs.nodeEl : (
+          is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.onChangeState ? inputs.nodeEl : (
             <ValueNode
               $type={inputs.nodeType}
               data-key={props.keyConcat}
@@ -144,7 +144,7 @@ export const RenderedNode = function RenderedNode(
                   showIf={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
                   data-key={props.keyConcat}
                   ref={inputs.keyNodeRef}
-                  readOnly={!props.store || !inputs.isEditingObjectKey}
+                  readOnly={!props.onChangeState || !inputs.isEditingObjectKey}
                   value={inputs.key}
                   $unchanged={inputs.isUnchanged}
                   onChange={outputs.onChangeKey}
