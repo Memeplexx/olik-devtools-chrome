@@ -142,7 +142,7 @@ export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 		...record,
 		set: (arg: Partial<R> | ((r: R) => Partial<R>)) => {
 			const newState = is.function<[R], Partial<R>>(arg) ? arg(stateRef) : arg;
-			const unChanged = Object.keys(newState).every(key => stateRef[key] === newState[key]);
+			const unChanged = Object.keys(newState).every(key => is.function(newState[key]) || stateRef[key] === newState[key]);
 			if (unChanged) return;
 			Object.assign(stateRef, newState);
 			setCount(c => c + 1);
