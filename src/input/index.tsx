@@ -22,14 +22,14 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
     onClick: outputs.onClick,
     onBlur: outputs.onBlur,
     onFocus: outputs.onFocus,
+    onMouseOver: outputs.onMouseOver,
+    onMouseOut: outputs.onMouseOut,
     $initialized: inputs.initialized,
     $valueType: props.valueType,
     $animate: inputs.animate,
   };
   return (
     <Wrapper
-      onMouseOver={outputs.onMouseOver}
-      onMouseOut={outputs.onMouseOut}
       $isTextArea={inputs.showTextArea}
       children={
         <>
