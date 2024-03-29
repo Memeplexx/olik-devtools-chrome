@@ -1,5 +1,5 @@
 import { ButtonHTMLAttributes, ComponentType, ForwardedRef, HTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes, forwardRef,  } from "react";
-import { TypedKeyboardEvent } from "../shared/functions";
+import { TypedKeyboardEvent } from "../shared/types";
 
 
 type ReplaceKeyboardEvents<E extends HTMLElement, A extends HTMLAttributes<E>> = {

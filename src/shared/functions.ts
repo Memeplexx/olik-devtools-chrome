@@ -1,6 +1,6 @@
 import { deserialize } from "olik";
-import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
-import { BasicStore } from "./types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { BasicStore, EventMap } from "./types";
 
 export const useKnownPropsOnly = <T extends HTMLElement>(
 	element: T,
@@ -155,32 +155,7 @@ export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 	return stateRef;
 }
 
-export type Keys =
-	| 'Backspace'
-	| 'Tab'
-	| 'Enter'
-	| 'Shift'
-	| 'Control'
-	| 'Alt'
-	| 'CapsLock'
-	| 'Escape'
-	| 'Space'
-	| 'PageUp'
-	| 'PageDown'
-	| 'End'
-	| 'Home'
-	| 'ArrowLeft'
-	| 'ArrowUp'
-	| 'ArrowRight'
-	| 'ArrowDown'
-	| 'Insert'
-	| 'Delete';
 
-export interface TypedKeyboardEvent<T extends HTMLElement> extends React.KeyboardEvent<T> {
-	key: Keys,
-	target: T,
-}
-export type EventMap<T> = T extends 'click' ? MouseEvent<HTMLElement> & { target: HTMLElement } : T extends 'keyup' | 'keydown' ? TypedKeyboardEvent<HTMLElement> : never;
 export const useEventHandlerForDocument = <Type extends 'click' | 'keyup' | 'keydown'>(
 	type: Type,
 	handler: (event: EventMap<Type>) => void

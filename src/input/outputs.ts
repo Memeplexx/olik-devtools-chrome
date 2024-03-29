@@ -1,6 +1,7 @@
 import { ChangeEvent, FocusEvent, MouseEvent } from "react";
-import { TypedKeyboardEvent, is, isoDateRegexPattern, useEventHandlerForDocument } from "../shared/functions";
+import { is, isoDateRegexPattern, useEventHandlerForDocument } from "../shared/functions";
 import { Props, InputValue, State, TextInputElement, ValueType, Inputs } from "./constants";
+import { TypedKeyboardEvent } from "../shared/types";
 
 
 export const useOutputs = <V extends InputValue>(

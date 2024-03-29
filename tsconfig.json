@@ -24,6 +24,6 @@
 
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src"],
+  "include": ["src", "src/shared/index.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
