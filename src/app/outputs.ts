@@ -13,12 +13,13 @@ export const useOutputs = (state: State) => ({
       state.set({ selectedId: null });
       silentlyUpdateAppStoreState(state, itemsFlattened[itemsFlattened.length - 1].state);
     } else {
-      state.set({ selectedId, storeStateVersion: itemsFlattened.find(i => i.id === selectedId)!.state });
-      silentlyUpdateAppStoreState(state, itemsFlattened.find(i => i.id === selectedId)!.state);
+      const item = itemsFlattened.find(i => i.id === selectedId);
+      state.set({ selectedId, storeStateVersion: item!.state });
+      silentlyUpdateAppStoreState(state, item!.state);
     }
   },
   onClickClear: () => {
-    state.set(s => ({ items: s.items.map(i => ({ ...i, visible: false } ) ) }));
+    state.set(s => ({ items: s.items.map(i => ({ ...i, visible: false })) }));
   },
   onEditorChange: (query: string) => {
     state.set({ query });

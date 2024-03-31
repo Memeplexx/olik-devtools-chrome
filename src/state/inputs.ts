@@ -24,6 +24,7 @@ export const useLocalState = (ref: ForwardedRef<HTMLDivElement>) => useRecord({
 const tryReadState = (props: Props, state: State): ReactNode => {
   const commonTreeProps = {
     unchanged: [],
+    changed: props.changed,
     contractedKeys: state.contractedKeys,
     onChangeState: (actionType: string) => silentlyApplyStateAction(props.store, actionType),
     onClickNodeKey: (key: string) => state.set(s => ({

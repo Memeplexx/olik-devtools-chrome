@@ -8,6 +8,7 @@ export interface TreeProps {
   onClickNodeKey: (key: string) => void,
   actionType?: string,
   unchanged: string[],
+  changed: string[],
   hideUnchanged?: boolean,
 }
 

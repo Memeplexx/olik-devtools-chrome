@@ -76,6 +76,9 @@ const useDerivedState = (
     if (is.date(props.item)) return props.item.toISOString();
     return props.item;
   }, [props.item]) as ReactNode,
+  highlight: useMemo(() => {
+    return props.changed.includes(props.keyConcat);
+  }, [props.changed, props.keyConcat]),
 });
 
 const useValueUpdater = (

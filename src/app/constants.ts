@@ -7,7 +7,6 @@ export type Message = {
   action: OlikAction,
   stateActions: StateAction[],
   trace: string,
-  payloadTypeObject: Record<string, unknown>,
 }
 
 export type ItemWrapper = {
@@ -24,6 +23,7 @@ export type Item = {
   payload: unknown,
   id: number,
   state: Record<string, unknown>,
+  changed: string[],
   location?: string,
   contractedKeys: string[],
   time: string,

@@ -3,6 +3,7 @@ import { useLocalState } from "./inputs";
 
 export interface Props {
   state: Record<string, unknown>,
+  changed: string[],
   className?: string,
   query: string,
   store: BasicStore,

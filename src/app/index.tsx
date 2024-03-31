@@ -38,6 +38,7 @@ export const App = () => {
                             <StatePanel
                               ref={inputs.treeRef}
                               state={storeStateVersion ?? inputs.storeState!}
+                              changed={inputs.changed}
                               query={inputs.query}
                               store={inputs.storeRef.current!}
                             />

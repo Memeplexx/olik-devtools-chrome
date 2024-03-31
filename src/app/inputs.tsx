@@ -17,6 +17,7 @@ export const useLocalState = () => useRecord({
   error: '',
   storeState: null as Record<string, unknown> | null,
   storeStateVersion: null as Record<string, unknown> | null,
+  changed: new Array<string>(),
   selectedId: null as number | null,
   items: new Array<ItemWrapper>(),
   hideUnchanged: false,
@@ -115,6 +116,8 @@ const processEvent = (state: State, incoming: Message) => {
     const date = new Date();
     const jsxProps = getJsxProps(s as State, incoming);
     const storeState = s.storeRef.current!.$state;
+    const lastItem = s.items[s.items.length - 1] ?? { event: '' };
+    const changed = jsxProps.changed;
     const newItem = {
       id: ++s.idRefInner.current,
       jsx: Tree({ ...jsxProps, hideUnchanged: false }),
@@ -124,13 +127,15 @@ const processEvent = (state: State, incoming: Message) => {
       contractedKeys: [],
       time: getTimeDiff(date, s.items.flatMap(ss => ss.items).at(-1)?.date ?? date),
       date,
+      changed,
     } satisfies Item;
     const currentEvent = getCleanStackTrace(incoming.trace);
-    const lastItem = s.items[s.items.length - 1] ?? { event: '' };
-    document.querySelector(`[data-key=".${incoming.action.type.split('.').slice(0, -1).join('.')}"]`)?.scrollIntoView({ behavior: 'smooth' })
+    const scrollTo = jsxProps.changed[0];
+    document.querySelector(`[data-key-input="${scrollTo}"]`)?.scrollIntoView({ behavior: 'smooth' });
     if (currentEvent.toString() === lastItem.event.toString()) {
       return {
         storeState,
+        changed,
         items: [
           ...s.items.slice(0, s.items.length - 1),
           {
@@ -143,6 +148,7 @@ const processEvent = (state: State, incoming: Message) => {
     }
     return {
       storeState,
+      changed,
       items: [
         ...s.items,
         {
@@ -184,11 +190,31 @@ const getJsxProps = (state: State, incoming: Message) => {
     }
     recurse(stateBefore, stateAfter, '');
   }
-  if (['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge'].includes(func)) {
+  if (['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge', '$toggle', '$add', '$subtract', '$push'].includes(func)) {
     updateUnchanged(stateBefore, stateAfter);
   } else if (['$clear'].includes(func) && is.array(stateBefore) && !stateBefore.length) {
     unchanged.push('');
   }
+  const changed = new Array<string>();
+  const updateChanged = (stateBefore: unknown, stateAfter: unknown) => {
+    const recurse = (before: unknown, after: unknown, keyCollector: string) => {
+      if (is.record(after)) {
+        if (JSON.stringify(after) !== JSON.stringify(before) && keyCollector !== '') {
+          changed.push(keyCollector);
+        }
+        Object.keys(after).forEach(key => recurse(is.record(before) ? before[key] : {}, after[key], `${keyCollector}.${key}`));
+      } else if (is.array(after)) {
+        if (JSON.stringify(after) !== JSON.stringify(before)) {
+          changed.push(keyCollector);
+        }
+        after.forEach((_, i) => recurse(is.array(before) ? before[i] : [], after[i], `${keyCollector}.${i}`));
+      } else if (before !== after) {
+        changed.push(keyCollector);
+      }
+    }
+    recurse(stateBefore, stateAfter, '');
+  }
+  updateChanged(fullStateBefore, state.storeRef.current!.$state);
   const onClickNodeKey = (key: string) => state.set(s => ({
     items: s.items.map(itemOuter => {
       if (itemOuter.id !== s.idRefOuter.current) { return itemOuter; }
@@ -203,6 +229,7 @@ const getJsxProps = (state: State, incoming: Message) => {
             contractedKeys,
             onClickNodeKey,
             unchanged,
+            changed,
           };
           return {
             ...itemInner,
@@ -217,6 +244,7 @@ const getJsxProps = (state: State, incoming: Message) => {
   return {
     state: payload,
     unchanged,
+    changed,
     actionType,
     contractedKeys: [],
     onClickNodeKey,

@@ -24,6 +24,7 @@ export type Props<V extends InputValue>
     additionalOptions?: PopupListProps['children'],
     readOnly?: boolean,
     onChangeInputElement?: (isTextArea: boolean) => void,
+    highlight: boolean,
   }
   & Omit<HTMLAttributes<TextInputElement>, 'onChange' | 'value'>;
 
