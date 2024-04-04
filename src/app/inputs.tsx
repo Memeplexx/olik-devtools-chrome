@@ -114,10 +114,19 @@ const processEvent = (state: State, incoming: Message) => {
       libState.disableDevtoolsDispatch = false;
     }
     const date = new Date();
-    const jsxProps = getJsxProps(s as State, incoming);
+    const deconstructed = deconstructIncoming(state, incoming);
+    const unchanged = updateUnchanged(deconstructed);
+    const changed = updateChanged(deconstructed.fullStateBefore, state.storeRef.current!.$state);
+    const jsxProps = {
+      state: deconstructed.payload,
+      unchanged,
+      changed,
+      actionType: deconstructed.actionType,
+      contractedKeys: [],
+      onClickNodeKey: onClickNodeKey(state, incoming, deconstructed.actionType, deconstructed.stateAfter, changed, unchanged),
+    };
     const storeState = s.storeRef.current!.$state;
     const lastItem = s.items[s.items.length - 1] ?? { event: '' };
-    const changed = jsxProps.changed;
     const newItem = {
       id: ++s.idRefInner.current,
       jsx: Tree({ ...jsxProps, hideUnchanged: false }),
@@ -163,14 +172,8 @@ const processEvent = (state: State, incoming: Message) => {
   });
 };
 
-const getJsxProps = (state: State, incoming: Message) => {
-  const fullStateBefore = state.items.flatMap(s => s.items).at(-1)?.state ?? {};
-  const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
-  const stateBefore = doReadState(fullStateBefore, incoming, payload);
-  const stateAfter = doReadState(state.storeRef.current!.$state, incoming, payload);
-  const segments = incoming.action.type.split('.');
-  const func = segments.pop()!.slice(0, -2);
-  const actionType = [...segments, func].join('.')
+const updateUnchanged = (args: ReturnType<typeof deconstructIncoming>) => {
+  const { stateBefore, stateAfter, func } = args;
   const unchanged = new Array<string>();
   const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
@@ -195,6 +198,10 @@ const getJsxProps = (state: State, incoming: Message) => {
   } else if (['$clear'].includes(func) && is.array(stateBefore) && !stateBefore.length) {
     unchanged.push('');
   }
+  return unchanged;
+}
+
+const updateChanged = (stateBefore: unknown, stateAfter: unknown) => {
   const changed = new Array<string>();
   const updateChanged = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
@@ -214,8 +221,12 @@ const getJsxProps = (state: State, incoming: Message) => {
     }
     recurse(stateBefore, stateAfter, '');
   }
-  updateChanged(fullStateBefore, state.storeRef.current!.$state);
-  const onClickNodeKey = (key: string) => state.set(s => ({
+  updateChanged(stateBefore, stateAfter);
+  return changed;
+}
+
+const onClickNodeKey = (state: State, incoming: Message, actionType: string, stateAfter: unknown, changed: string[], unchanged: string[]) => (key: string) => {
+  state.set(s => ({
     items: s.items.map(itemOuter => {
       if (itemOuter.id !== s.idRefOuter.current) { return itemOuter; }
       return {
@@ -227,7 +238,7 @@ const getJsxProps = (state: State, incoming: Message) => {
             actionType,
             state: stateAfter,
             contractedKeys,
-            onClickNodeKey,
+            onClickNodeKey: onClickNodeKey(state, incoming, actionType, stateAfter, changed, unchanged),
             unchanged,
             changed,
           };
@@ -241,15 +252,18 @@ const getJsxProps = (state: State, incoming: Message) => {
       }
     })
   }));
-  return {
-    state: payload,
-    unchanged,
-    changed,
-    actionType,
-    contractedKeys: [],
-    onClickNodeKey,
-  };
-};
+}
+
+const deconstructIncoming = (state: State, incoming: Message) => {
+  const fullStateBefore = state.items.flatMap(s => s.items).at(-1)?.state ?? {};
+  const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
+  const stateBefore = doReadState(fullStateBefore, incoming, payload);
+  const stateAfter = doReadState(state.storeRef.current!.$state, incoming, payload);
+  const segments = incoming.action.type.split('.');
+  const func = segments.pop()!.slice(0, -2);
+  const actionType = [...segments, func].join('.');
+  return { fullStateBefore, stateBefore, stateAfter, payload, func, actionType };
+}
 
 const getTimeDiff = (from: Date, to: Date) => {
   const milliseconds = differenceInMilliseconds(from, to);

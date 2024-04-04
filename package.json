@@ -14,7 +14,7 @@
     "date-fns": "^3.4.0",
     "flatpickr": "^4.6.13",
     "monaco-editor": "^0.40.0",
-    "olik": "1.0.95",
+    "olik": "1.0.96",
     "olik-react": "1.0.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
