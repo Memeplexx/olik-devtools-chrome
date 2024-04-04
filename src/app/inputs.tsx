@@ -1,5 +1,5 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
-import { StateAction, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
+import { StateAction, assertIsRecord, createStore, getStore, libState, newRecord, readState, setNewStateAndNotifyListeners } from "olik";
 import { useEffect, useRef } from "react";
 import { is, isoDateRegexPattern, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
@@ -76,13 +76,12 @@ const chromeMessageListener = (state: State, event: Message) => {
     return val;
   }
   event.action.payload = recurse(event.action.payload);
-  event.action.payloadOrig = recurse(event.action.payloadOrig);
   event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: recurse(sa.arg) }));
   processEvent(state, event);
 }
 
 const readSelectedState = (state: Record<string, unknown>, incoming: Message) => {
-  const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
+  const payload = incoming.action.payload;
   let stateActions = new Array<StateAction>();
   const mergeMatchingIndex = incoming.stateActions.findIndex(s => s.name === '$mergeMatching');
   if (mergeMatchingIndex !== -1) {
@@ -102,7 +101,7 @@ const readSelectedState = (state: Record<string, unknown>, incoming: Message) =>
   return readState({ state, stateActions, cursor: { index: 0 } });
 }
 
-const processEvent = (state: State, incoming: Message) => {console.log(incoming);
+const processEvent = (state: State, incoming: Message) => {
   state.set(s => {
     if (!incoming.action) { return s; }
     if (incoming.action.type === '$load()') {
@@ -125,7 +124,7 @@ const processEvent = (state: State, incoming: Message) => {console.log(incoming)
     const unchanged = getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming });
     const changed = getChangedKeys({ fullStateBefore, fullStateAfter });
     const jsxProps = {
-      state: incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload,
+      state: applyPayloadPaths(incoming),
       unchanged,
       changed,
       actionType,
@@ -206,6 +205,30 @@ const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }:
   return unchanged;
 }
 
+const applyPayloadPaths = (incoming: Message) => {
+  const { payload, payloadPaths } = incoming.action;
+  if (!payloadPaths) return payload;
+  assertIsRecord(payloadPaths);
+  let payloadCopy = JSON.parse(JSON.stringify(incoming.action.payload)) as unknown;
+  Object.keys(payloadPaths).forEach(path => {
+    const segments = path.split('.');
+    const recurse = (value: unknown, depth: number): unknown => {
+      if (is.record(value))
+        return Object.keys(value).reduce((prev, curr) => {
+          prev[curr] = curr === segments[depth] ? recurse(value[curr], depth + 1) : value[curr];
+          return prev;
+        }, newRecord());
+      if (is.array(value))
+        return value.map((e, i) => {
+          return i.toString() === segments[depth] ? recurse(value[i], depth + 1) : e;
+        });
+      return payloadPaths[path] as unknown;
+    }
+    payloadCopy = recurse(payloadCopy, 0);
+  });
+  return payloadCopy;
+}
+
 const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: unknown, fullStateAfter: unknown }) => {
   const changed = new Array<string>();
   const updateChanged = (stateBefore: unknown, stateAfter: unknown) => {
@@ -230,7 +253,7 @@ const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: 
   return changed;
 }
 
-const onClickNodeKey = (args : { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], unchanged: string[] }) => {
+const onClickNodeKey = (args: { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], unchanged: string[] }) => {
   const { state, actionType, selectedStateAfter, changed, unchanged } = args;
   return (key: string) => {
     state.set(s => ({

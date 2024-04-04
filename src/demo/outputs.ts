@@ -60,8 +60,12 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
       })
     },
     setEmptyArrayDeep2: () => {
-      store.$set({
-        arrNested: [[]]
+      store.$patch({
+        arrNested: [
+          [
+            store.obj.one.four,
+          ]
+        ]
       })
     },
   };
