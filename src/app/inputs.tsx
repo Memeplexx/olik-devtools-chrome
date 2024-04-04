@@ -101,6 +101,28 @@ const doReadState = (state: Record<string, unknown>, incoming: Message, payload:
   return readState({ state, stateActions, cursor: { index: 0 } });
 }
 
+// const getNewItem = ({ changed, unchanged }: { changed: string[], unchanged: string[] }) => {
+//   const jsxProps = {
+//     state: payload,
+//     unchanged,
+//     changed,
+//     actionType,
+//     contractedKeys: [],
+//     onClickNodeKey: onClickNodeKey({ state, actionType, stateAfter, changed, unchanged }),
+//   };
+//   const newItem = {
+//     id: ++s.idRefInner.current,
+//     jsx: Tree({ ...jsxProps, hideUnchanged: false }),
+//     jsxPruned: Tree({ ...jsxProps, hideUnchanged: true }),
+//     state: fullStateAfter,
+//     payload: incoming.action.payload,
+//     contractedKeys: [],
+//     time,
+//     date,
+//     changed,
+//   } satisfies Item;
+// }
+
 const processEvent = (state: State, incoming: Message) => {
   state.set(s => {
     if (!incoming.action) { return s; }
@@ -113,37 +135,49 @@ const processEvent = (state: State, incoming: Message) => {
       setNewStateAndNotifyListeners(incoming);
       libState.disableDevtoolsDispatch = false;
     }
+
+    const fullStateBefore = state.items.flatMap(s => s.items).at(-1)?.state ?? {};
+    const fullStateAfter = state.storeRef.current!.$state;
+    const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
+    const stateBefore = doReadState(fullStateBefore, incoming, payload);
+    const stateAfter = doReadState(fullStateAfter, incoming, payload);
+    const segments = incoming.action.type.split('.');
+    const func = segments.pop()!.slice(0, -2);
+    const actionType = [...segments, func].join('.');
     const date = new Date();
-    const deconstructed = deconstructIncoming(state, incoming);
-    const unchanged = updateUnchanged(deconstructed);
-    const changed = updateChanged(deconstructed.fullStateBefore, state.storeRef.current!.$state);
+    const time = getTimeDiff(date, state.items.flatMap(ss => ss.items).at(-1)?.date ?? date)
+
+    const unchanged = updateUnchanged({ stateBefore, stateAfter, func });
+    const changed = updateChanged({ fullStateBefore, fullStateAfter });
+
     const jsxProps = {
-      state: deconstructed.payload,
+      state: payload,
       unchanged,
       changed,
-      actionType: deconstructed.actionType,
+      actionType,
       contractedKeys: [],
-      onClickNodeKey: onClickNodeKey(state, incoming, deconstructed.actionType, deconstructed.stateAfter, changed, unchanged),
+      onClickNodeKey: onClickNodeKey({ state, actionType, stateAfter, changed, unchanged }),
     };
-    const storeState = s.storeRef.current!.$state;
-    const lastItem = s.items[s.items.length - 1] ?? { event: '' };
     const newItem = {
       id: ++s.idRefInner.current,
       jsx: Tree({ ...jsxProps, hideUnchanged: false }),
       jsxPruned: Tree({ ...jsxProps, hideUnchanged: true }),
-      state: storeState,
+      state: fullStateAfter,
       payload: incoming.action.payload,
       contractedKeys: [],
-      time: getTimeDiff(date, s.items.flatMap(ss => ss.items).at(-1)?.date ?? date),
+      time,
       date,
       changed,
     } satisfies Item;
+    // const newItem = getNewTtem();
+
+
     const currentEvent = getCleanStackTrace(incoming.trace);
-    const scrollTo = jsxProps.changed[0];
-    document.querySelector(`[data-key-input="${scrollTo}"]`)?.scrollIntoView({ behavior: 'smooth' });
+    document.querySelector(`[data-key-input="${changed[0]}"]`)?.scrollIntoView({ behavior: 'smooth' });
+    const lastItem = s.items[s.items.length - 1] ?? { event: '' };
     if (currentEvent.toString() === lastItem.event.toString()) {
       return {
-        storeState,
+        storeState: fullStateAfter,
         changed,
         items: [
           ...s.items.slice(0, s.items.length - 1),
@@ -156,7 +190,7 @@ const processEvent = (state: State, incoming: Message) => {
       };
     }
     return {
-      storeState,
+      storeState: fullStateAfter,
       changed,
       items: [
         ...s.items,
@@ -172,8 +206,7 @@ const processEvent = (state: State, incoming: Message) => {
   });
 };
 
-const updateUnchanged = (args: ReturnType<typeof deconstructIncoming>) => {
-  const { stateBefore, stateAfter, func } = args;
+const updateUnchanged = ({ stateBefore, stateAfter, func }: { stateBefore: unknown, stateAfter: unknown, func: string }) => {
   const unchanged = new Array<string>();
   const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
@@ -201,7 +234,7 @@ const updateUnchanged = (args: ReturnType<typeof deconstructIncoming>) => {
   return unchanged;
 }
 
-const updateChanged = (stateBefore: unknown, stateAfter: unknown) => {
+const updateChanged = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: unknown, fullStateAfter: unknown }) => {
   const changed = new Array<string>();
   const updateChanged = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
@@ -221,48 +254,40 @@ const updateChanged = (stateBefore: unknown, stateAfter: unknown) => {
     }
     recurse(stateBefore, stateAfter, '');
   }
-  updateChanged(stateBefore, stateAfter);
+  updateChanged(fullStateBefore, fullStateAfter);
   return changed;
 }
 
-const onClickNodeKey = (state: State, incoming: Message, actionType: string, stateAfter: unknown, changed: string[], unchanged: string[]) => (key: string) => {
-  state.set(s => ({
-    items: s.items.map(itemOuter => {
-      if (itemOuter.id !== s.idRefOuter.current) { return itemOuter; }
-      return {
-        ...itemOuter,
-        items: itemOuter.items.map(itemInner => {
-          if (itemInner.id !== s.idRefInner.current) { return itemInner; }
-          const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
-          const commonProps = {
-            actionType,
-            state: stateAfter,
-            contractedKeys,
-            onClickNodeKey: onClickNodeKey(state, incoming, actionType, stateAfter, changed, unchanged),
-            unchanged,
-            changed,
-          };
-          return {
-            ...itemInner,
-            contractedKeys,
-            jsx: Tree({ ...commonProps, hideUnchanged: false }),
-            jsxPruned: Tree({ ...commonProps, hideUnchanged: true }),
-          } satisfies Item
-        })
-      }
-    })
-  }));
-}
-
-const deconstructIncoming = (state: State, incoming: Message) => {
-  const fullStateBefore = state.items.flatMap(s => s.items).at(-1)?.state ?? {};
-  const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
-  const stateBefore = doReadState(fullStateBefore, incoming, payload);
-  const stateAfter = doReadState(state.storeRef.current!.$state, incoming, payload);
-  const segments = incoming.action.type.split('.');
-  const func = segments.pop()!.slice(0, -2);
-  const actionType = [...segments, func].join('.');
-  return { fullStateBefore, stateBefore, stateAfter, payload, func, actionType };
+const onClickNodeKey = (args : { state: State, actionType: string, stateAfter: unknown, changed: string[], unchanged: string[] }) => {
+  const { state, actionType, stateAfter, changed, unchanged } = args;
+  return (key: string) => {
+    state.set(s => ({
+      items: s.items.map(itemOuter => {
+        if (itemOuter.id !== s.idRefOuter.current) { return itemOuter; }
+        return {
+          ...itemOuter,
+          items: itemOuter.items.map(itemInner => {
+            if (itemInner.id !== s.idRefInner.current) { return itemInner; }
+            const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
+            const commonProps = {
+              actionType,
+              state: stateAfter,
+              contractedKeys,
+              onClickNodeKey: onClickNodeKey(args),
+              unchanged,
+              changed,
+            };
+            return {
+              ...itemInner,
+              contractedKeys,
+              jsx: Tree({ ...commonProps, hideUnchanged: false }),
+              jsxPruned: Tree({ ...commonProps, hideUnchanged: true }),
+            } satisfies Item
+          })
+        }
+      })
+    }));
+  };
 }
 
 const getTimeDiff = (from: Date, to: Date) => {
