@@ -81,7 +81,8 @@ const chromeMessageListener = (state: State, event: Message) => {
   processEvent(state, event);
 }
 
-const doReadState = (state: Record<string, unknown>, incoming: Message, payload: unknown) => {
+const readSelectedState = (state: Record<string, unknown>, incoming: Message) => {
+  const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
   let stateActions = new Array<StateAction>();
   const mergeMatchingIndex = incoming.stateActions.findIndex(s => s.name === '$mergeMatching');
   if (mergeMatchingIndex !== -1) {
@@ -101,29 +102,7 @@ const doReadState = (state: Record<string, unknown>, incoming: Message, payload:
   return readState({ state, stateActions, cursor: { index: 0 } });
 }
 
-// const getNewItem = ({ changed, unchanged }: { changed: string[], unchanged: string[] }) => {
-//   const jsxProps = {
-//     state: payload,
-//     unchanged,
-//     changed,
-//     actionType,
-//     contractedKeys: [],
-//     onClickNodeKey: onClickNodeKey({ state, actionType, stateAfter, changed, unchanged }),
-//   };
-//   const newItem = {
-//     id: ++s.idRefInner.current,
-//     jsx: Tree({ ...jsxProps, hideUnchanged: false }),
-//     jsxPruned: Tree({ ...jsxProps, hideUnchanged: true }),
-//     state: fullStateAfter,
-//     payload: incoming.action.payload,
-//     contractedKeys: [],
-//     time,
-//     date,
-//     changed,
-//   } satisfies Item;
-// }
-
-const processEvent = (state: State, incoming: Message) => {
+const processEvent = (state: State, incoming: Message) => {console.log(incoming);
   state.set(s => {
     if (!incoming.action) { return s; }
     if (incoming.action.type === '$load()') {
@@ -135,28 +114,23 @@ const processEvent = (state: State, incoming: Message) => {
       setNewStateAndNotifyListeners(incoming);
       libState.disableDevtoolsDispatch = false;
     }
-
-    const fullStateBefore = state.items.flatMap(s => s.items).at(-1)?.state ?? {};
+    const mostRecentItem = state.items.at(-1)?.items.at(-1);
+    const fullStateBefore = mostRecentItem?.state ?? {};
     const fullStateAfter = state.storeRef.current!.$state;
-    const payload = incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload;
-    const stateBefore = doReadState(fullStateBefore, incoming, payload);
-    const stateAfter = doReadState(fullStateAfter, incoming, payload);
-    const segments = incoming.action.type.split('.');
-    const func = segments.pop()!.slice(0, -2);
-    const actionType = [...segments, func].join('.');
+    const selectedStateBefore = readSelectedState(fullStateBefore, incoming);
+    const selectedStateAfter = readSelectedState(fullStateAfter, incoming);
+    const actionType = incoming.stateActions.map(s => s.name).join('.');
     const date = new Date();
-    const time = getTimeDiff(date, state.items.flatMap(ss => ss.items).at(-1)?.date ?? date)
-
-    const unchanged = updateUnchanged({ stateBefore, stateAfter, func });
-    const changed = updateChanged({ fullStateBefore, fullStateAfter });
-
+    const time = getTimeDiff(date, mostRecentItem?.date ?? date)
+    const unchanged = getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming });
+    const changed = getChangedKeys({ fullStateBefore, fullStateAfter });
     const jsxProps = {
-      state: payload,
+      state: incoming.action.payloadOrig !== undefined ? incoming.action.payloadOrig : incoming.action.payload,
       unchanged,
       changed,
       actionType,
       contractedKeys: [],
-      onClickNodeKey: onClickNodeKey({ state, actionType, stateAfter, changed, unchanged }),
+      onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged }),
     };
     const newItem = {
       id: ++s.idRefInner.current,
@@ -169,12 +143,9 @@ const processEvent = (state: State, incoming: Message) => {
       date,
       changed,
     } satisfies Item;
-    // const newItem = getNewTtem();
-
-
     const currentEvent = getCleanStackTrace(incoming.trace);
     document.querySelector(`[data-key-input="${changed[0]}"]`)?.scrollIntoView({ behavior: 'smooth' });
-    const lastItem = s.items[s.items.length - 1] ?? { event: '' };
+    const lastItem = s.items.at(-1)! ?? { event: [] };
     if (currentEvent.toString() === lastItem.event.toString()) {
       return {
         storeState: fullStateAfter,
@@ -206,7 +177,8 @@ const processEvent = (state: State, incoming: Message) => {
   });
 };
 
-const updateUnchanged = ({ stateBefore, stateAfter, func }: { stateBefore: unknown, stateAfter: unknown, func: string }) => {
+const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }: { selectedStateBefore: unknown, selectedStateAfter: unknown, incoming: Message }) => {
+  const func = incoming.stateActions.at(-1)!.name;
   const unchanged = new Array<string>();
   const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
@@ -227,14 +199,14 @@ const updateUnchanged = ({ stateBefore, stateAfter, func }: { stateBefore: unkno
     recurse(stateBefore, stateAfter, '');
   }
   if (['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge', '$toggle', '$add', '$subtract', '$push'].includes(func)) {
-    updateUnchanged(stateBefore, stateAfter);
-  } else if (['$clear'].includes(func) && is.array(stateBefore) && !stateBefore.length) {
+    updateUnchanged(selectedStateBefore, selectedStateAfter);
+  } else if (['$clear'].includes(func) && is.array(selectedStateBefore) && !selectedStateBefore.length) {
     unchanged.push('');
   }
   return unchanged;
 }
 
-const updateChanged = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: unknown, fullStateAfter: unknown }) => {
+const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: unknown, fullStateAfter: unknown }) => {
   const changed = new Array<string>();
   const updateChanged = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
@@ -258,8 +230,8 @@ const updateChanged = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: u
   return changed;
 }
 
-const onClickNodeKey = (args : { state: State, actionType: string, stateAfter: unknown, changed: string[], unchanged: string[] }) => {
-  const { state, actionType, stateAfter, changed, unchanged } = args;
+const onClickNodeKey = (args : { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], unchanged: string[] }) => {
+  const { state, actionType, selectedStateAfter, changed, unchanged } = args;
   return (key: string) => {
     state.set(s => ({
       items: s.items.map(itemOuter => {
@@ -271,7 +243,7 @@ const onClickNodeKey = (args : { state: State, actionType: string, stateAfter: u
             const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
             const commonProps = {
               actionType,
-              state: stateAfter,
+              state: selectedStateAfter,
               contractedKeys,
               onClickNodeKey: onClickNodeKey(args),
               unchanged,
