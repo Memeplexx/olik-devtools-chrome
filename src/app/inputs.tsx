@@ -75,13 +75,12 @@ const chromeMessageListener = (state: State, event: Message) => {
     }
     return val;
   }
-  event.action.payload = recurse(event.action.payload);
   event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: recurse(sa.arg) }));
   processEvent(state, event);
 }
 
 const readSelectedState = (state: Record<string, unknown>, incoming: Message) => {
-  const payload = incoming.action.payload;
+  const payload = incoming.stateActions.at(-1)!.arg;
   let stateActions = new Array<StateAction>();
   const mergeMatchingIndex = incoming.stateActions.findIndex(s => s.name === '$mergeMatching');
   if (mergeMatchingIndex !== -1) {
@@ -118,15 +117,17 @@ const processEvent = (state: State, incoming: Message) => {
     const fullStateAfter = state.storeRef.current!.$state;
     const selectedStateBefore = readSelectedState(fullStateBefore, incoming);
     const selectedStateAfter = readSelectedState(fullStateAfter, incoming);
-    const actionType = incoming.stateActions.map(s => s.name).join('.');
+    const actionType = incoming.action.type.split('.').slice(0, -1).join('.')
     const date = new Date();
     const time = getTimeDiff(date, mostRecentItem?.date ?? date)
     const unchanged = getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming });
     const changed = getChangedKeys({ fullStateBefore, fullStateAfter });
+    const removed = getRemovedKeys({ fullStateBefore, fullStateAfter });
     const jsxProps = {
       state: applyPayloadPaths(incoming),
       unchanged,
       changed,
+      removed,
       actionType,
       contractedKeys: [],
       onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged }),
@@ -136,11 +137,12 @@ const processEvent = (state: State, incoming: Message) => {
       jsx: Tree({ ...jsxProps, hideUnchanged: false }),
       jsxPruned: Tree({ ...jsxProps, hideUnchanged: true }),
       state: fullStateAfter,
-      payload: incoming.action.payload,
+      payload: incoming.stateActions.at(-1)!.arg,
       contractedKeys: [],
       time,
       date,
       changed,
+      removed,
     } satisfies Item;
     const currentEvent = getCleanStackTrace(incoming.trace);
     document.querySelector(`[data-key-input="${changed[0]}"]`)?.scrollIntoView({ behavior: 'smooth' });
@@ -149,6 +151,7 @@ const processEvent = (state: State, incoming: Message) => {
       return {
         storeState: fullStateAfter,
         changed,
+        removed,
         items: [
           ...s.items.slice(0, s.items.length - 1),
           {
@@ -162,6 +165,7 @@ const processEvent = (state: State, incoming: Message) => {
     return {
       storeState: fullStateAfter,
       changed,
+      removed,
       items: [
         ...s.items,
         {
@@ -206,10 +210,11 @@ const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }:
 }
 
 const applyPayloadPaths = (incoming: Message) => {
-  const { payload, payloadPaths } = incoming.action;
+  const payload = incoming.stateActions.at(-1)!.arg;
+  const { payloadPaths } = incoming.action;
   if (!payloadPaths) return payload;
   assertIsRecord(payloadPaths);
-  let payloadCopy = JSON.parse(JSON.stringify(incoming.action.payload)) as unknown;
+  let payloadCopy = JSON.parse(JSON.stringify(payload)) as unknown;
   Object.keys(payloadPaths).forEach(path => {
     const segments = path.split('.');
     const recurse = (value: unknown, depth: number): unknown => {
@@ -251,6 +256,32 @@ const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: 
   }
   updateChanged(fullStateBefore, fullStateAfter);
   return changed;
+}
+
+const getRemovedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: unknown, fullStateAfter: unknown }) => {
+  const deleted = new Array<string>();
+  const updateDeleted = (stateBefore: unknown, stateAfter: unknown) => {
+    const recurse = (before: unknown, after: unknown, keyCollector: string) => {
+      if (is.record(before) && is.record(after)) {
+        Object.keys(before).forEach(key => {
+          if (!(key in after)) {
+            deleted.push(`${keyCollector}.${key}`);
+          }
+          recurse(before[key], after[key], `${keyCollector}.${key}`);
+        });
+      } else if (is.array(before) && is.array(after)) {
+        before.forEach((_, i) => {
+          if (!(i in after)) {
+            deleted.push(`${keyCollector}.${i}`);
+          }
+          recurse(before[i], after[i], `${keyCollector}.${i}`);
+        });
+      }
+    }
+    recurse(stateBefore, stateAfter, '');
+  }
+  updateDeleted(fullStateBefore, fullStateAfter);
+  return deleted;
 }
 
 const onClickNodeKey = (args: { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], unchanged: string[] }) => {

@@ -1,10 +1,10 @@
-import { OlikAction, StateAction } from "olik"
+import { ActionForDevtools, StateAction } from "olik"
 import { useLocalState } from "./inputs";
 import { ReactNode } from "react";
 
 export type Message = {
   source: string,
-  action: OlikAction,
+  action: ActionForDevtools,
   stateActions: StateAction[],
   trace: string,
 }
@@ -24,6 +24,7 @@ export type Item = {
   id: number,
   state: Record<string, unknown>,
   changed: string[],
+  removed: string[],
   location?: string,
   contractedKeys: string[],
   time: string,
