@@ -113,9 +113,9 @@ const processEvent = (state: State, incoming: Message) => {
       setNewStateAndNotifyListeners(incoming);
       libState.disableDevtoolsDispatch = false;
     }
-    const mostRecentItem = state.items.at(-1)?.items.at(-1);
+    const mostRecentItem = s.items.at(-1)?.items.at(-1);
     const fullStateBefore = mostRecentItem?.state ?? {};
-    const fullStateAfter = state.storeRef.current!.$state;
+    const fullStateAfter = s.storeRef.current!.$state;
     const selectedStateBefore = readSelectedState(fullStateBefore, incoming);
     const selectedStateAfter = readSelectedState(fullStateAfter, incoming);
     const segments = incoming.action.type.split('.');
@@ -150,9 +150,10 @@ const processEvent = (state: State, incoming: Message) => {
     const currentEvent = getCleanStackTrace(incoming.trace);
     document.querySelector(`[data-key-input="${changed[0]}"]`)?.scrollIntoView({ behavior: 'smooth' });
     const lastItem = s.items.at(-1)! ?? { event: [] };
+    const storeState = removed.length ? fullStateBefore : fullStateAfter;
     if (currentEvent.toString() === lastItem.event.toString()) {
       return {
-        storeState: fullStateAfter,
+        storeState,
         changed,
         removed,
         items: [
@@ -166,7 +167,7 @@ const processEvent = (state: State, incoming: Message) => {
       };
     }
     return {
-      storeState: removed.length ? fullStateBefore : fullStateAfter,
+      storeState,
       changed,
       removed,
       items: [
@@ -265,26 +266,23 @@ const getRemovedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: 
   const removed = new Array<string>();
   const updateDeleted = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
-      if (is.record(before)) {
+      if (is.record(before))
         Object.keys(before).forEach(key => {
           const afterVal = (after as Record<string, unknown>)?.[key];
-          if (afterVal === undefined) {
+          if (afterVal === undefined) 
             removed.push(`${keyCollector}.${key}`);
-          }
           recurse(before[key], afterVal, `${keyCollector}.${key}`);
         });
-      } else if (is.array(before)) {
+      if (is.array(before))
         before.forEach((_, i) => {
-          const afterVal = (after as Record<string, unknown>)?.[i];
+          const afterVal = (after as Array<unknown>)?.[i];
           const key = i.toString();
-          if (afterVal === undefined) {
+          if (afterVal === undefined) 
             removed.push(`${keyCollector}.${key}`);
-          }
           recurse(before[i], afterVal, `${keyCollector}.${i}`);
         });
-      } if (after !== undefined && before === undefined) {
+      if (after !== undefined && before === undefined)
         removed.push(keyCollector);
-      }
     }
     recurse(stateBefore, stateAfter, '');
   }
