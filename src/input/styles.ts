@@ -3,26 +3,27 @@ import { possible } from "../html";
 import { ValueType } from "./constants";
 
 
-const commonInputProps = css<{ $initialized: boolean, $valueType: ValueType, $animate: boolean, readOnly?: boolean, $highlight: boolean }>`
+const commonInputProps = css<{ $initialized: boolean, $valueType: ValueType, $animate: boolean, readOnly?: boolean, $isChanged: boolean, $isRemoved: boolean }>`
   :focus {
     outline: 1px solid #add8e6;
   }
   :hover {
     background-color: rgba(255,255,255,0.1);
   }
-  ${p => p.$highlight ? css`background-color: rgba(255,255,255,0.2); color: white!important; border-radius: 2px;` : css``};
+  ${p => p.$isChanged ? css`background-color: rgba(255,255,255,0.2); color: white!important; border-radius: 2px;` : css``};
+  ${p => p.$isRemoved ? css`background-color: rgba(255,0,0,0.4); color: white!important; border-radius: 2px; text-decoration: line-through;` : css``};
   ${p => p.$animate ? css`transition: 0.4s opacity` : ''};
   ${p => p.$initialized ? css`opacity: 1` : css`opacity: 0`};
   ${p => p.readOnly && css`pointer-events: none;`}
   ${p => p.readOnly ? css`cursor: not-allowed` : p.$valueType === 'boolean' || p.$valueType === 'date' ? css`cursor: pointer` : css`cursor: text`};
 `;
 
-export const Input = styled(possible.input)<{ $initialized: boolean, $valueType: ValueType, $animate: boolean, $highlight: boolean }>`
+export const Input = styled(possible.input)<{ $initialized: boolean, $valueType: ValueType, $animate: boolean, $isChanged: boolean, $isRemoved: boolean }>`
   ${commonInputProps};
   text-align: center;
 `;
 
-export const TextArea = styled(possible.textarea)<{ $initialized: boolean, $valueType: ValueType, $animate: boolean, $highlight: boolean, $height: number, $width: number }>`
+export const TextArea = styled(possible.textarea)<{ $initialized: boolean, $valueType: ValueType, $animate: boolean, $isChanged: boolean, $isRemoved: boolean, $height: number, $width: number }>`
   ${commonInputProps};
   overflow: hidden;
   resize: none;

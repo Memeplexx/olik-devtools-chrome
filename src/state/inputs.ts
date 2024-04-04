@@ -1,4 +1,4 @@
-import { StateAction, deserialize, readState, updateFunctions } from "olik";
+import { StateAction, deserialize, is, readState } from "olik";
 import { ForwardedRef, ReactNode } from "react";
 import { silentlyApplyStateAction, useForwardedRef, useRecord } from "../shared/functions";
 import { Tree } from "../tree";
@@ -25,6 +25,7 @@ const tryReadState = (props: Props, state: State): ReactNode => {
   const commonTreeProps = {
     unchanged: [],
     changed: props.changed,
+    removed: props.removed,
     contractedKeys: state.contractedKeys,
     onChangeState: (actionType: string) => silentlyApplyStateAction(props.store, actionType),
     onClickNodeKey: (key: string) => state.set(s => ({
@@ -54,7 +55,7 @@ const doReadState = (type: string, state: unknown) => {
     .map(seg => {
       const arg = seg.match(/\(([^)]*)\)/)?.[1];
       const containsParenthesis = arg !== null && arg !== undefined;
-      if (containsParenthesis && !updateFunctions.includes(seg)) {
+      if (containsParenthesis && !is.anyUpdateFunction(seg)) {
         const functionName = seg.split('(')[0];
         const typedArg = deserialize(arg);
         return { name: functionName, arg: typedArg };

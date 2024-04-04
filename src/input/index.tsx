@@ -25,7 +25,8 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
     $initialized: inputs.initialized,
     $valueType: props.valueType,
     $animate: inputs.animate,
-    $highlight: props.highlight,
+    $isChanged: props.isChanged,
+    $isRemoved: props.isRemoved,
   };
   return (
     <Wrapper

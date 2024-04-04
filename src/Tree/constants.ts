@@ -9,6 +9,7 @@ export interface TreeProps {
   actionType?: string,
   unchanged: string[],
   changed: string[],
+  removed: string[],
   hideUnchanged?: boolean,
 }
 

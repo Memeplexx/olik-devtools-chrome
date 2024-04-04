@@ -18,6 +18,7 @@ export const useLocalState = () => useRecord({
   storeState: null as Record<string, unknown> | null,
   storeStateVersion: null as Record<string, unknown> | null,
   changed: new Array<string>(),
+  removed: new Array<string>(),
   selectedId: null as number | null,
   items: new Array<ItemWrapper>(),
   hideUnchanged: false,
@@ -117,7 +118,9 @@ const processEvent = (state: State, incoming: Message) => {
     const fullStateAfter = state.storeRef.current!.$state;
     const selectedStateBefore = readSelectedState(fullStateBefore, incoming);
     const selectedStateAfter = readSelectedState(fullStateAfter, incoming);
-    const actionType = incoming.action.type.split('.').slice(0, -1).join('.')
+    const segments = incoming.action.type.split('.');
+    const func = segments.pop()!.slice(0, -2);
+    const actionType = [...segments, func].join('.');
     const date = new Date();
     const time = getTimeDiff(date, mostRecentItem?.date ?? date)
     const unchanged = getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming });
@@ -130,7 +133,7 @@ const processEvent = (state: State, incoming: Message) => {
       removed,
       actionType,
       contractedKeys: [],
-      onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged }),
+      onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged, removed }),
     };
     const newItem = {
       id: ++s.idRefInner.current,
@@ -163,7 +166,7 @@ const processEvent = (state: State, incoming: Message) => {
       };
     }
     return {
-      storeState: fullStateAfter,
+      storeState: removed.length ? fullStateBefore : fullStateAfter,
       changed,
       removed,
       items: [
@@ -259,33 +262,38 @@ const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: 
 }
 
 const getRemovedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: unknown, fullStateAfter: unknown }) => {
-  const deleted = new Array<string>();
+  const removed = new Array<string>();
   const updateDeleted = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
-      if (is.record(before) && is.record(after)) {
+      if (is.record(before)) {
         Object.keys(before).forEach(key => {
-          if (!(key in after)) {
-            deleted.push(`${keyCollector}.${key}`);
+          const afterVal = (after as Record<string, unknown>)?.[key];
+          if (afterVal === undefined) {
+            removed.push(`${keyCollector}.${key}`);
           }
-          recurse(before[key], after[key], `${keyCollector}.${key}`);
+          recurse(before[key], afterVal, `${keyCollector}.${key}`);
         });
-      } else if (is.array(before) && is.array(after)) {
+      } else if (is.array(before)) {
         before.forEach((_, i) => {
-          if (!(i in after)) {
-            deleted.push(`${keyCollector}.${i}`);
+          const afterVal = (after as Record<string, unknown>)?.[i];
+          const key = i.toString();
+          if (afterVal === undefined) {
+            removed.push(`${keyCollector}.${key}`);
           }
-          recurse(before[i], after[i], `${keyCollector}.${i}`);
+          recurse(before[i], afterVal, `${keyCollector}.${i}`);
         });
+      } if (after !== undefined && before === undefined) {
+        removed.push(keyCollector);
       }
     }
     recurse(stateBefore, stateAfter, '');
   }
   updateDeleted(fullStateBefore, fullStateAfter);
-  return deleted;
+  return removed;
 }
 
-const onClickNodeKey = (args: { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], unchanged: string[] }) => {
-  const { state, actionType, selectedStateAfter, changed, unchanged } = args;
+const onClickNodeKey = (args: { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], removed: string[], unchanged: string[] }) => {
+  const { state, actionType, selectedStateAfter, changed, unchanged, removed } = args;
   return (key: string) => {
     state.set(s => ({
       items: s.items.map(itemOuter => {
@@ -302,6 +310,7 @@ const onClickNodeKey = (args: { state: State, actionType: string, selectedStateA
               onClickNodeKey: onClickNodeKey(args),
               unchanged,
               changed,
+              removed,
             };
             return {
               ...itemInner,
