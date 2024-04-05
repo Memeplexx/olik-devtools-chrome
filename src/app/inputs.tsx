@@ -19,6 +19,7 @@ export const useLocalState = () => useRecord({
   storeStateVersion: null as Record<string, unknown> | null,
   changed: new Array<string>(),
   removed: new Array<string>(),
+  added: new Array<string>(),
   selectedId: null as number | null,
   items: new Array<ItemWrapper>(),
   hideUnchanged: false,
@@ -124,16 +125,18 @@ const processEvent = (state: State, incoming: Message) => {
     const date = new Date();
     const time = getTimeDiff(date, mostRecentItem?.date ?? date)
     const unchanged = getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming });
-    const changed = getChangedKeys({ fullStateBefore, fullStateAfter });
-    const removed = getRemovedKeys({ fullStateBefore, fullStateAfter });
+    const changed = getChangedKeys({ fullStateBefore, fullStateAfter, incoming });
+    const added = getAddedKeys({ fullStateBefore, fullStateAfter, incoming });
+    const removed = getRemovedKeys({ fullStateBefore, fullStateAfter, incoming });
     const jsxProps = {
       state: applyPayloadPaths(incoming),
       unchanged,
       changed,
       removed,
+      added,
       actionType,
       contractedKeys: [],
-      onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged, removed }),
+      onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged, removed, added }),
     };
     const newItem = {
       id: ++s.idRefInner.current,
@@ -146,9 +149,10 @@ const processEvent = (state: State, incoming: Message) => {
       date,
       changed,
       removed,
+      added,
     } satisfies Item;
     const currentEvent = getCleanStackTrace(incoming.trace);
-    document.querySelector(`[data-key-input="${changed[0]}"]`)?.scrollIntoView({ behavior: 'smooth' });
+    scrollToUpdatedNode([...changed, ...removed, ...added]);
     const lastItem = s.items.at(-1)! ?? { event: [] };
     const storeState = removed.length ? fullStateBefore : fullStateAfter;
     if (currentEvent.toString() === lastItem.event.toString()) {
@@ -156,6 +160,7 @@ const processEvent = (state: State, incoming: Message) => {
         storeState,
         changed,
         removed,
+        added,
         items: [
           ...s.items.slice(0, s.items.length - 1),
           {
@@ -170,6 +175,7 @@ const processEvent = (state: State, incoming: Message) => {
       storeState,
       changed,
       removed,
+      added,
       items: [
         ...s.items,
         {
@@ -183,6 +189,13 @@ const processEvent = (state: State, incoming: Message) => {
     };
   });
 };
+
+const scrollToUpdatedNode = (selectors: string[]) => {
+  setTimeout(() => setTimeout(() => {
+    const element = selectors.find(e => document.querySelector(`[data-key-input="${e}"]`));
+    element && document.querySelector(`[data-key-input="${element}"]`)?.scrollIntoView({ behavior: 'smooth' });
+  }))
+}
 
 const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }: { selectedStateBefore: unknown, selectedStateAfter: unknown, incoming: Message }) => {
   const func = incoming.stateActions.at(-1)!.name;
@@ -238,60 +251,87 @@ const applyPayloadPaths = (incoming: Message) => {
   return payloadCopy;
 }
 
-const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: unknown, fullStateAfter: unknown }) => {
-  const changed = new Array<string>();
-  const updateChanged = (stateBefore: unknown, stateAfter: unknown) => {
-    const recurse = (before: unknown, after: unknown, keyCollector: string) => {
-      if (is.record(after)) {
-        if (JSON.stringify(after) !== JSON.stringify(before) && keyCollector !== '') {
-          changed.push(keyCollector);
-        }
-        Object.keys(after).forEach(key => recurse(is.record(before) ? before[key] : {}, after[key], `${keyCollector}.${key}`));
-      } else if (is.array(after)) {
-        if (JSON.stringify(after) !== JSON.stringify(before)) {
-          changed.push(keyCollector);
-        }
-        after.forEach((_, i) => recurse(is.array(before) ? before[i] : [], after[i], `${keyCollector}.${i}`));
-      } else if (before !== after) {
-        changed.push(keyCollector);
-      }
-    }
-    recurse(stateBefore, stateAfter, '');
+const getChangedKeys = ({ fullStateBefore, fullStateAfter, incoming }: { fullStateBefore: unknown, fullStateAfter: unknown, incoming: Message }) => {
+  if (['$delete()', '$setNew()', '$push()'].some(s => incoming.action.type.endsWith(s))) {
+    return [];
   }
-  updateChanged(fullStateBefore, fullStateAfter);
-  return changed;
+  const result = new Array<string>();
+  const recurse = (before: unknown, after: unknown, keyCollector: string) => {
+    if (is.record(before) && is.record(after))
+      Object.keys(before).forEach(key => {
+        if (before[key] !== after[key]) 
+          result.push(`${keyCollector}.${key}`);
+        recurse(before[key], after[key], `${keyCollector}.${key}`);
+      });
+    if (is.array(before) && is.array(after))
+      before.forEach((_, i) => {
+        if (before[i] !== after[i]) 
+          result.push(`${keyCollector}.${i}`);
+        recurse(before[i], after[i], `${keyCollector}.${i}`);
+      });
+    if (before !== after)
+      result.push(keyCollector);
+  }
+  recurse(fullStateBefore, fullStateAfter, '');
+  return result;
 }
 
-const getRemovedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: unknown, fullStateAfter: unknown }) => {
-  const removed = new Array<string>();
-  const updateDeleted = (stateBefore: unknown, stateAfter: unknown) => {
-    const recurse = (before: unknown, after: unknown, keyCollector: string) => {
-      if (is.record(before))
-        Object.keys(before).forEach(key => {
-          const afterVal = (after as Record<string, unknown>)?.[key];
-          if (afterVal === undefined) 
-            removed.push(`${keyCollector}.${key}`);
-          recurse(before[key], afterVal, `${keyCollector}.${key}`);
-        });
-      if (is.array(before))
-        before.forEach((_, i) => {
-          const afterVal = (after as Array<unknown>)?.[i];
-          const key = i.toString();
-          if (afterVal === undefined) 
-            removed.push(`${keyCollector}.${key}`);
-          recurse(before[i], afterVal, `${keyCollector}.${i}`);
-        });
-      if (after !== undefined && before === undefined)
-        removed.push(keyCollector);
-    }
-    recurse(stateBefore, stateAfter, '');
+const getRemovedKeys = ({ fullStateBefore, fullStateAfter, incoming }: { fullStateBefore: unknown, fullStateAfter: unknown, incoming: Message }) => {
+  if (!incoming.action.type.endsWith('$delete()')) {
+    return [];
   }
-  updateDeleted(fullStateBefore, fullStateAfter);
-  return removed;
+  const result = new Array<string>();
+  const recurse = (before: unknown, after: unknown, keyCollector: string) => {
+    if (is.record(before))
+      Object.keys(before).forEach(key => {
+        const afterVal = (after as Record<string, unknown>)?.[key];
+        if (afterVal === undefined) 
+          result.push(`${keyCollector}.${key}`);
+        recurse(before[key], afterVal, `${keyCollector}.${key}`);
+      });
+    if (is.array(before))
+      before.forEach((element, i) => {
+        const afterVal = (after as Array<unknown>)?.find(e => e === element);
+        if (afterVal === undefined) 
+          result.push(`${keyCollector}.${i}`);
+        recurse(before[i], afterVal, `${keyCollector}.${i}`);
+      });
+    if (after !== undefined && before === undefined)
+      result.push(keyCollector);
+  }
+  recurse(fullStateBefore, fullStateAfter, '');
+  return result;
 }
 
-const onClickNodeKey = (args: { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], removed: string[], unchanged: string[] }) => {
-  const { state, actionType, selectedStateAfter, changed, unchanged, removed } = args;
+const getAddedKeys = ({ fullStateBefore, fullStateAfter, incoming }: { fullStateBefore: unknown, fullStateAfter: unknown, incoming: Message }) => {
+  if (!['$setNew()', '$push()'].some(s => incoming.action.type.endsWith(s))) {
+    return [];
+  }
+  const result = new Array<string>();
+  const recurse = (before: unknown, after: unknown, keyCollector: string) => {
+    if (is.record(after))
+      Object.keys(after).forEach(key => {
+        const beforeVal = (before as Record<string, unknown>)?.[key];
+        if (beforeVal === undefined) 
+          result.push(`${keyCollector}.${key}`);
+        recurse(beforeVal, after[key], `${keyCollector}.${key}`);
+      });
+    if (is.array(after))
+      after.forEach((element, i) => {
+        const beforeVal = (before as Array<unknown>)?.find(e => e === element);
+        if (beforeVal === undefined) 
+          result.push(`${keyCollector}.${i}`);
+        recurse(beforeVal, element, `${keyCollector}.${i}`);
+      });
+    if (before !== undefined && after === undefined)
+      result.push(keyCollector);
+  }
+  recurse(fullStateBefore, fullStateAfter, '');
+  return result;
+}
+
+const onClickNodeKey = (args: { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], removed: string[], unchanged: string[], added: string[] }) => {
+  const { state, actionType, selectedStateAfter, changed, unchanged, removed, added } = args;
   return (key: string) => {
     state.set(s => ({
       items: s.items.map(itemOuter => {
@@ -309,6 +349,7 @@ const onClickNodeKey = (args: { state: State, actionType: string, selectedStateA
               unchanged,
               changed,
               removed,
+              added,
             };
             return {
               ...itemInner,

@@ -92,6 +92,7 @@ export const RenderedNode = function RenderedNode(
               onChangeInputElement={outputs.onChangeInputElement}
               isChanged={inputs.isChanged}
               isRemoved={inputs.isRemoved}
+              isAdded={inputs.isAdded}
               additionalOptions={(!props.isArrayElement || !inputs.showArrayOptions) ? [] : [
                 {
                   onClick: outputs.onClickCopy,
@@ -152,6 +153,7 @@ export const RenderedNode = function RenderedNode(
                   value={inputs.key}
                   isChanged={inputs.isChanged}
                   isRemoved={inputs.isRemoved}
+                  isAdded={inputs.isAdded}
                   $unchanged={inputs.isUnchanged}
                   onChange={outputs.onChangeKey}
                   onChangeCommit={outputs.onChangeCommitObjectKey}

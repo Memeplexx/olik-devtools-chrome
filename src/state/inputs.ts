@@ -26,6 +26,7 @@ const tryReadState = (props: Props, state: State): ReactNode => {
     unchanged: [],
     changed: props.changed,
     removed: props.removed,
+    added: props.added,
     contractedKeys: state.contractedKeys,
     onChangeState: (actionType: string) => silentlyApplyStateAction(props.store, actionType),
     onClickNodeKey: (key: string) => state.set(s => ({

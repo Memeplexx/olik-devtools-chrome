@@ -30,12 +30,14 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
       store.arr.$push({ id: Math.max(...store.$state.arr.map(a => a.id)), text: 'new' });
     },
     delete: () => {
-      const id = store.$state.arr[0].id;
+      const id = store.$state.arr[0]?.id;
       if (!id) return;
       store.arr.$find.id.$eq(id).$delete();
     },
     findAndSet: () => {
-      store.arr.$find.id.$eq(1).text.$set('changed');
+      const id = store.$state.arr[0]?.id;
+      if (!id) return;
+      store.arr.$find.id.$eq(id).text.$set('changed');
     },
     onClickLongStackTrace: () => {
       shared.thing();

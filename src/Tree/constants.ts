@@ -10,6 +10,7 @@ export interface TreeProps {
   unchanged: string[],
   changed: string[],
   removed: string[],
+  added: string[],
   hideUnchanged?: boolean,
 }
 
