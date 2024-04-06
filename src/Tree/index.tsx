@@ -40,6 +40,7 @@ export const Tree = (
           isLast={index === arr.length - 1}
           isTopLevel={key === ''}
           objectKey={key}
+          isArrayElement={false}
         />
       ));
     }
@@ -53,6 +54,7 @@ export const Tree = (
           item={val}
           isLast={true}
           isTopLevel={true}
+          isArrayElement={false}
         />
       );
     }
@@ -99,9 +101,9 @@ export const RenderedNode = function RenderedNode(
                   text: 'copy node'
                 },
                 {
-                  onClick: outputs.onClickDeleteArrayElement,
+                  onClick: outputs.onClickRemoveFromArray,
                   icon: FaTrash,
-                  text: 'delete node'
+                  text: 'remove array element'
                 },
               ]}
             />
@@ -205,6 +207,12 @@ export const RenderedNode = function RenderedNode(
                       icon: IoMdAdd,
                       text: 'add array element',
                       showIf: is.array(props.item)
+                    },
+                    {
+                      onClick: outputs.onClickRemoveFromArray,
+                      icon: FaTrash,
+                      text: 'remove array element',
+                      showIf: !props.isTopLevel && !!props.isArrayElement
                     },
                     {
                       onClick: outputs.onClickAddToObject,

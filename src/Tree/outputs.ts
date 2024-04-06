@@ -89,7 +89,7 @@ export const useOutputs = (props: RenderNodeArgs, state: State) => ({
     state.set({ isEditingObjectKey: false });
     props.onChangeState!(`${props.keyConcat}.$setKey(${value!.toString()})`);
   },
-  onClickDeleteArrayElement: () => {
+  onClickRemoveFromArray: () => {
     props.onChangeState!(`${props.keyConcat}.$delete()`);
     state.set({ showArrayOptions: false });
   },
