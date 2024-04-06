@@ -116,7 +116,7 @@ export const silentlyApplyStateAction = (store: BasicStore, queryString: string)
 		});
 		return segments;
 	}
-	const query = splitString(queryString).filter(e => !!e).map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e);
+	const query = splitString(queryString).filter(e => e !== '').map(e => !isNaN(e as unknown as number) ? `$at(${e})` : e);
 	if (!chrome.runtime) {
 		query.forEach(key => {
 			const arg = key.match(/\(([^)]*)\)/)?.[1];

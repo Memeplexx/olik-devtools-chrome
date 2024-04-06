@@ -82,9 +82,6 @@ const useDerivedState = (
   isRemoved: useMemo(() => {
     return props.removed.includes(props.keyConcat);
   }, [props.removed, props.keyConcat]),
-  isAdded: useMemo(() => {
-    return props.added.includes(props.keyConcat);
-  }, [props.added, props.keyConcat]),
 });
 
 const useValueUpdater = (

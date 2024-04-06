@@ -5,7 +5,6 @@ export interface Props {
   state: Record<string, unknown>,
   changed: string[],
   removed: string[],
-  added: string[],
   className?: string,
   query: string,
   store: BasicStore,

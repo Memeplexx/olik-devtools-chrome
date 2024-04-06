@@ -56,6 +56,7 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
     },
     setEmptyArray: () => {
       store.arr.$set([]);
+      // store.arr.$clear();
     },
     setEmptyArrayDeep: () => {
       store.obj.two.$set({

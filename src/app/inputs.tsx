@@ -1,10 +1,10 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
-import { StateAction, assertIsRecord, createStore, getStore, libState, newRecord, readState, setNewStateAndNotifyListeners } from "olik";
+import { DevtoolsAction, StateAction, assertIsRecord, createStore, getStore, libState, newRecord, readState, setNewStateAndNotifyListeners, is as olikis } from "olik";
 import { useEffect, useRef } from "react";
 import { is, isoDateRegexPattern, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
 import { Tree } from "../tree";
-import { Item, ItemWrapper, Message, State } from "./constants";
+import { Item, ItemWrapper, State } from "./constants";
 
 export const useInputs = () => {
   const localState = useLocalState();
@@ -49,8 +49,8 @@ const instantiateStore = (state: State) => {
 
 const useMessageHandler = (state: State) => {
   useEffect(() => {
-    const msgListener = (event: MessageEvent<Message>) => messageListener(state, event);
-    const chromeListener = (event: Message) => chromeMessageListener(state, event);
+    const msgListener = (event: MessageEvent<DevtoolsAction>) => messageListener(state, event);
+    const chromeListener = (event: DevtoolsAction) => chromeMessageListener(state, event);
     window.addEventListener('message', msgListener);
     chrome.runtime?.onMessage.addListener(chromeListener);
     return () => {
@@ -60,13 +60,13 @@ const useMessageHandler = (state: State) => {
   }, [state])
 }
 
-const messageListener = (state: State, event: MessageEvent<Message>) => {
+const messageListener = (state: State, event: MessageEvent<DevtoolsAction>) => {
   if (event.origin !== window.location.origin) return;
   if (event.data.source !== 'olik-devtools-extension') return;
   processEvent(state, event.data);
 }
 
-const chromeMessageListener = (state: State, event: Message) => {
+const chromeMessageListener = (state: State, event: DevtoolsAction) => {
   const recurse = (val: unknown): unknown => {
     if (is.record(val)) {
       Object.keys(val).forEach(key => val[key] = recurse(val[key]))
@@ -81,7 +81,7 @@ const chromeMessageListener = (state: State, event: Message) => {
   processEvent(state, event);
 }
 
-const readSelectedState = (state: Record<string, unknown>, incoming: Message) => {
+const readSelectedState = (state: Record<string, unknown>, incoming: DevtoolsAction) => {
   const payload = incoming.stateActions.at(-1)!.arg;
   let stateActions = new Array<StateAction>();
   const mergeMatchingIndex = incoming.stateActions.findIndex(s => s.name === '$mergeMatching');
@@ -102,10 +102,10 @@ const readSelectedState = (state: Record<string, unknown>, incoming: Message) =>
   return readState({ state, stateActions, cursor: { index: 0 } });
 }
 
-const processEvent = (state: State, incoming: Message) => {
+const processEvent = (state: State, incoming: DevtoolsAction) => {
   state.set(s => {
-    if (!incoming.action) { return s; }
-    if (incoming.action.type === '$load()') {
+    if (!incoming.actionType) { return s; }
+    if (incoming.actionType === '$load()') {
       s.storeRef.current = null;
       return { storeFullyInitialized: false, items: [] };
     }
@@ -119,24 +119,22 @@ const processEvent = (state: State, incoming: Message) => {
     const fullStateAfter = s.storeRef.current!.$state;
     const selectedStateBefore = readSelectedState(fullStateBefore, incoming);
     const selectedStateAfter = readSelectedState(fullStateAfter, incoming);
-    const segments = incoming.action.type.split('.');
+    const segments = incoming.actionType.split('.');
     const func = segments.pop()!.slice(0, -2);
     const actionType = [...segments, func].join('.');
     const date = new Date();
-    const time = getTimeDiff(date, mostRecentItem?.date ?? date)
+    const time = getTimeDiff(date, mostRecentItem?.date ?? date);
     const unchanged = getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming });
-    const changed = getChangedKeys({ fullStateBefore, fullStateAfter, incoming });
-    const added = getAddedKeys({ fullStateBefore, fullStateAfter, incoming });
-    const removed = getRemovedKeys({ fullStateBefore, fullStateAfter, incoming });
+    const removed = getRemovedFromArrayPaths({ selectedStateBefore, incoming });
+    const changed = removed.length ? [] : getChangedKeys({ fullStateBefore, fullStateAfter });
     const jsxProps = {
       state: applyPayloadPaths(incoming),
       unchanged,
-      changed,
       removed,
-      added,
+      changed,
       actionType,
       contractedKeys: [],
-      onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged, removed, added }),
+      onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged, removed }),
     };
     const newItem = {
       id: ++s.idRefInner.current,
@@ -149,10 +147,9 @@ const processEvent = (state: State, incoming: Message) => {
       date,
       changed,
       removed,
-      added,
     } satisfies Item;
-    const currentEvent = getCleanStackTrace(incoming.trace);
-    scrollToUpdatedNode([...changed, ...removed, ...added]);
+    const currentEvent = getCleanStackTrace(incoming.trace!);
+    scrollToUpdatedNode([...changed, ...removed]);
     const lastItem = s.items.at(-1)! ?? { event: [] };
     const storeState = removed.length ? fullStateBefore : fullStateAfter;
     if (currentEvent.toString() === lastItem.event.toString()) {
@@ -160,7 +157,6 @@ const processEvent = (state: State, incoming: Message) => {
         storeState,
         changed,
         removed,
-        added,
         items: [
           ...s.items.slice(0, s.items.length - 1),
           {
@@ -175,7 +171,6 @@ const processEvent = (state: State, incoming: Message) => {
       storeState,
       changed,
       removed,
-      added,
       items: [
         ...s.items,
         {
@@ -197,7 +192,7 @@ const scrollToUpdatedNode = (selectors: string[]) => {
   }))
 }
 
-const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }: { selectedStateBefore: unknown, selectedStateAfter: unknown, incoming: Message }) => {
+const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }: { selectedStateBefore: unknown, selectedStateAfter: unknown, incoming: DevtoolsAction }) => {
   const func = incoming.stateActions.at(-1)!.name;
   const unchanged = new Array<string>();
   const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
@@ -226,9 +221,9 @@ const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }:
   return unchanged;
 }
 
-const applyPayloadPaths = (incoming: Message) => {
+const applyPayloadPaths = (incoming: DevtoolsAction) => {
   const payload = incoming.stateActions.at(-1)!.arg;
-  const { payloadPaths } = incoming.action;
+  const { payloadPaths } = incoming;
   if (!payloadPaths) return payload;
   assertIsRecord(payloadPaths);
   let payloadCopy = JSON.parse(JSON.stringify(payload)) as unknown;
@@ -251,10 +246,7 @@ const applyPayloadPaths = (incoming: Message) => {
   return payloadCopy;
 }
 
-const getChangedKeys = ({ fullStateBefore, fullStateAfter, incoming }: { fullStateBefore: unknown, fullStateAfter: unknown, incoming: Message }) => {
-  if (['$delete()', '$setNew()', '$push()'].some(s => incoming.action.type.endsWith(s))) {
-    return [];
-  }
+const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: unknown, fullStateAfter: unknown }) => {
   const result = new Array<string>();
   const recurse = (before: unknown, after: unknown, keyCollector: string) => {
     if (is.record(before) && is.record(after))
@@ -276,62 +268,79 @@ const getChangedKeys = ({ fullStateBefore, fullStateAfter, incoming }: { fullSta
   return result;
 }
 
-const getRemovedKeys = ({ fullStateBefore, fullStateAfter, incoming }: { fullStateBefore: unknown, fullStateAfter: unknown, incoming: Message }) => {
-  if (!incoming.action.type.endsWith('$delete()')) {
+const getRemovedFromArrayPaths = ({ selectedStateBefore, incoming }: { selectedStateBefore: unknown, incoming: DevtoolsAction }): string[] => {
+  const stateActions = incoming.stateActions;
+  if (stateActions.at(-1)?.name !== '$delete' || !stateActions.some(sa => sa.name === '$find' || sa.name === '$filter' || sa.name === '$at')) {
     return [];
   }
-  const result = new Array<string>();
-  const recurse = (before: unknown, after: unknown, keyCollector: string) => {
-    if (is.record(before))
-      Object.keys(before).forEach(key => {
-        const afterVal = (after as Record<string, unknown>)?.[key];
-        if (afterVal === undefined) 
-          result.push(`${keyCollector}.${key}`);
-        recurse(before[key], afterVal, `${keyCollector}.${key}`);
-      });
-    if (is.array(before))
-      before.forEach((element, i) => {
-        const afterVal = (after as Array<unknown>)?.find(e => e === element);
-        if (afterVal === undefined) 
-          result.push(`${keyCollector}.${i}`);
-        recurse(before[i], afterVal, `${keyCollector}.${i}`);
-      });
-    if (after !== undefined && before === undefined)
-      result.push(keyCollector);
-  }
-  recurse(fullStateBefore, fullStateAfter, '');
-  return result;
+  const rootPaths = new Array<string>();
+  let queryOpened = false;
+  stateActions.forEach((sa, i) => {
+    if (sa.name === '$at') {
+      rootPaths.push(`${sa.arg as number}`);
+      return;
+    }
+    if (sa.searchIndices?.length) {
+      rootPaths.push(sa.searchIndices.join(','));
+      queryOpened = true;
+    }
+    const nextName = stateActions[i + 1]?.name;
+    if (olikis.anyComparatorProp(sa.name) && ('$and' === nextName || '$or' === nextName)) {
+      queryOpened = false;
+      return;
+    }
+    if (!queryOpened && !olikis.anyUpdateFunction(sa.name)) {
+      rootPaths.push(sa.name);
+    }
+  })
+
+  const rootPathsForIndices = (() => {
+    if (!rootPaths.some(r => r.includes(','))) {
+      return [rootPaths.join('.')];
+    } else {
+      const newResult = new Array<string>();
+      rootPaths.forEach(r => {
+        const split = r.split(',');
+        const copy = newResult.slice();
+        newResult.length = 0;
+        split.forEach(s => {
+          if (copy.length === 0) {
+            newResult.push(s);
+          } else {
+            copy.forEach(r => newResult.push(`${r}.${s}`))
+          }
+        })
+      })
+      return newResult;
+    }
+  })();
+
+  const leafPaths = new Array<string>();
+  rootPathsForIndices.forEach(thing => {
+    const segs = thing.split('.');
+    const leaf = segs.reduce((prev, curr) => {
+      prev[curr];
+      return prev;
+    }, selectedStateBefore as Record<string, unknown>)
+    if (is.array(leaf)) {
+      leaf.forEach((_, i) => {
+        leafPaths.push(`${thing}.${i}`);
+      })
+    } else if (is.record(leaf)) {
+      Object.keys(leaf).forEach(k => {
+        leafPaths.push(`${thing}.${k}`);
+      })
+    } else {
+      leafPaths.push(thing);
+    }
+  });
+
+  return leafPaths.map(e => `.${e}`);
 }
 
-const getAddedKeys = ({ fullStateBefore, fullStateAfter, incoming }: { fullStateBefore: unknown, fullStateAfter: unknown, incoming: Message }) => {
-  if (!['$setNew()', '$push()'].some(s => incoming.action.type.endsWith(s))) {
-    return [];
-  }
-  const result = new Array<string>();
-  const recurse = (before: unknown, after: unknown, keyCollector: string) => {
-    if (is.record(after))
-      Object.keys(after).forEach(key => {
-        const beforeVal = (before as Record<string, unknown>)?.[key];
-        if (beforeVal === undefined) 
-          result.push(`${keyCollector}.${key}`);
-        recurse(beforeVal, after[key], `${keyCollector}.${key}`);
-      });
-    if (is.array(after))
-      after.forEach((element, i) => {
-        const beforeVal = (before as Array<unknown>)?.find(e => e === element);
-        if (beforeVal === undefined) 
-          result.push(`${keyCollector}.${i}`);
-        recurse(beforeVal, element, `${keyCollector}.${i}`);
-      });
-    if (before !== undefined && after === undefined)
-      result.push(keyCollector);
-  }
-  recurse(fullStateBefore, fullStateAfter, '');
-  return result;
-}
 
-const onClickNodeKey = (args: { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], removed: string[], unchanged: string[], added: string[] }) => {
-  const { state, actionType, selectedStateAfter, changed, unchanged, removed, added } = args;
+const onClickNodeKey = (args: { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], unchanged: string[], removed: string[] }) => {
+  const { state, actionType, selectedStateAfter, changed, unchanged, removed } = args;
   return (key: string) => {
     state.set(s => ({
       items: s.items.map(itemOuter => {
@@ -349,7 +358,6 @@ const onClickNodeKey = (args: { state: State, actionType: string, selectedStateA
               unchanged,
               changed,
               removed,
-              added,
             };
             return {
               ...itemInner,

@@ -1,13 +1,6 @@
-import { ActionForDevtools, StateAction } from "olik"
 import { useLocalState } from "./inputs";
 import { ReactNode } from "react";
 
-export type Message = {
-  source: string,
-  action: ActionForDevtools,
-  stateActions: StateAction[],
-  trace: string,
-}
 
 export type ItemWrapper = {
   id: number,
@@ -25,7 +18,6 @@ export type Item = {
   state: Record<string, unknown>,
   changed: string[],
   removed: string[],
-  added: string[],
   location?: string,
   contractedKeys: string[],
   time: string,
