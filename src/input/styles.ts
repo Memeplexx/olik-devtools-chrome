@@ -2,7 +2,7 @@ import styled, { css } from "styled-components/macro";
 import { possible } from "../html";
 import { ValueType } from "./constants";
 
-type CommonProps = { $initialized: boolean, $valueType: ValueType, $animate: boolean, $isChanged: boolean, $isRemoved: boolean };
+type CommonProps = { $initialized: boolean, $valueType: ValueType, $animate: boolean, $isChanged: boolean };
 
 const commonInputProps = css<CommonProps & { readOnly?: boolean }>`
   :focus {
@@ -12,7 +12,6 @@ const commonInputProps = css<CommonProps & { readOnly?: boolean }>`
     background-color: rgba(255,255,255,0.1);
   }
   ${p => p.$isChanged ? css`background-color: rgba(255,255,255,0.2); color: white!important; border-radius: 2px;` : css``};
-  ${p => p.$isRemoved ? css`background-color: rgba(255,100,100,0.2); color: white!important; border-radius: 2px; text-decoration: line-through;` : css``};
   ${p => p.$animate ? css`transition: 0.4s opacity` : ''};
   ${p => p.$initialized ? css`opacity: 1` : css`opacity: 0`};
   ${p => p.readOnly && css`pointer-events: none;`}

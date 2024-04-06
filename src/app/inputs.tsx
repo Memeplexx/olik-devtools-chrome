@@ -1,5 +1,5 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
-import { DevtoolsAction, StateAction, assertIsRecord, createStore, getStore, libState, newRecord, readState, setNewStateAndNotifyListeners, is as olikis } from "olik";
+import { DevtoolsAction, StateAction, assertIsRecord, createStore, getStore, libState, newRecord, readState, setNewStateAndNotifyListeners } from "olik";
 import { useEffect, useRef } from "react";
 import { is, isoDateRegexPattern, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
@@ -18,7 +18,6 @@ export const useLocalState = () => useRecord({
   storeState: null as Record<string, unknown> | null,
   storeStateVersion: null as Record<string, unknown> | null,
   changed: new Array<string>(),
-  removed: new Array<string>(),
   added: new Array<string>(),
   selectedId: null as number | null,
   items: new Array<ItemWrapper>(),
@@ -125,16 +124,15 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
     const date = new Date();
     const time = getTimeDiff(date, mostRecentItem?.date ?? date);
     const unchanged = getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming });
-    const removed = getRemovedFromArrayPaths({ selectedStateBefore, incoming });
-    const changed = removed.length ? [] : getChangedKeys({ fullStateBefore, fullStateAfter });
+    const arrayElementsRemoved = func === '$delete';
+    const changed = arrayElementsRemoved ? [] : getChangedKeys({ fullStateBefore, fullStateAfter });
     const jsxProps = {
       state: applyPayloadPaths(incoming),
       unchanged,
-      removed,
       changed,
       actionType,
       contractedKeys: [],
-      onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged, removed }),
+      onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged }),
     };
     const newItem = {
       id: ++s.idRefInner.current,
@@ -146,17 +144,15 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
       time,
       date,
       changed,
-      removed,
     } satisfies Item;
     const currentEvent = getCleanStackTrace(incoming.trace!);
-    scrollToUpdatedNode([...changed, ...removed]);
+    scrollToUpdatedNode(changed);
     const lastItem = s.items.at(-1)! ?? { event: [] };
-    const storeState = removed.length ? fullStateBefore : fullStateAfter;
+    const storeState = fullStateAfter;
     if (currentEvent.toString() === lastItem.event.toString()) {
       return {
         storeState,
         changed,
-        removed,
         items: [
           ...s.items.slice(0, s.items.length - 1),
           {
@@ -170,7 +166,6 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
     return {
       storeState,
       changed,
-      removed,
       items: [
         ...s.items,
         {
@@ -268,79 +263,8 @@ const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: 
   return result;
 }
 
-const getRemovedFromArrayPaths = ({ selectedStateBefore, incoming }: { selectedStateBefore: unknown, incoming: DevtoolsAction }): string[] => {
-  const stateActions = incoming.stateActions;
-  if (stateActions.at(-1)?.name !== '$delete' || !stateActions.some(sa => sa.name === '$find' || sa.name === '$filter' || sa.name === '$at')) {
-    return [];
-  }
-  const rootPaths = new Array<string>();
-  let queryOpened = false;
-  stateActions.forEach((sa, i) => {
-    if (sa.name === '$at') {
-      rootPaths.push(`${sa.arg as number}`);
-      return;
-    }
-    if (sa.searchIndices?.length) {
-      rootPaths.push(sa.searchIndices.join(','));
-      queryOpened = true;
-    }
-    const nextName = stateActions[i + 1]?.name;
-    if (olikis.anyComparatorProp(sa.name) && ('$and' === nextName || '$or' === nextName)) {
-      queryOpened = false;
-      return;
-    }
-    if (!queryOpened && !olikis.anyUpdateFunction(sa.name)) {
-      rootPaths.push(sa.name);
-    }
-  })
-
-  const rootPathsForIndices = (() => {
-    if (!rootPaths.some(r => r.includes(','))) {
-      return [rootPaths.join('.')];
-    } else {
-      const newResult = new Array<string>();
-      rootPaths.forEach(r => {
-        const split = r.split(',');
-        const copy = newResult.slice();
-        newResult.length = 0;
-        split.forEach(s => {
-          if (copy.length === 0) {
-            newResult.push(s);
-          } else {
-            copy.forEach(r => newResult.push(`${r}.${s}`))
-          }
-        })
-      })
-      return newResult;
-    }
-  })();
-
-  const leafPaths = new Array<string>();
-  rootPathsForIndices.forEach(thing => {
-    const segs = thing.split('.');
-    const leaf = segs.reduce((prev, curr) => {
-      prev[curr];
-      return prev;
-    }, selectedStateBefore as Record<string, unknown>)
-    if (is.array(leaf)) {
-      leaf.forEach((_, i) => {
-        leafPaths.push(`${thing}.${i}`);
-      })
-    } else if (is.record(leaf)) {
-      Object.keys(leaf).forEach(k => {
-        leafPaths.push(`${thing}.${k}`);
-      })
-    } else {
-      leafPaths.push(thing);
-    }
-  });
-
-  return leafPaths.map(e => `.${e}`);
-}
-
-
-const onClickNodeKey = (args: { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], unchanged: string[], removed: string[] }) => {
-  const { state, actionType, selectedStateAfter, changed, unchanged, removed } = args;
+const onClickNodeKey = (args: { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], unchanged: string[] }) => {
+  const { state, actionType, selectedStateAfter, changed, unchanged } = args;
   return (key: string) => {
     state.set(s => ({
       items: s.items.map(itemOuter => {
@@ -357,7 +281,6 @@ const onClickNodeKey = (args: { state: State, actionType: string, selectedStateA
               onClickNodeKey: onClickNodeKey(args),
               unchanged,
               changed,
-              removed,
             };
             return {
               ...itemInner,

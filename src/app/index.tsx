@@ -39,7 +39,6 @@ export const App = () => {
                               ref={inputs.treeRef}
                               state={storeStateVersion ?? inputs.storeState!}
                               changed={inputs.changed}
-                              removed={inputs.removed}
                               query={inputs.query}
                               store={inputs.storeRef.current!}
                             />

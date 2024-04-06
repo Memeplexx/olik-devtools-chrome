@@ -37,13 +37,14 @@ export const useOutputs = <V extends InputValue>(
     props.onChange?.(valueOfNewType);
   },
   onKeyDown: (event: TypedKeyboardEvent<TextInputElement>) => {
-    if (event.key === 'Enter' && state.showTextArea && !event.shiftKey) {
+    if (event.key === 'Enter' && state.showTextArea && !event.shiftKey)
       event.preventDefault();
-    } else if (props.readOnly) {
+    if (props.readOnly)
       event.preventDefault();
-    } else if (is.date(props.value)) {
+    if (is.date(props.value))
       event.preventDefault();
-    }
+    if (props.valueType === 'number' && !/^-?\d*\.?\d*$/.test(event.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Shift'].includes(event.key))
+      event.preventDefault();
     state.animationEnabled.current = false;
   },
   onBlur: (event: FocusEvent<TextInputElement>) => {

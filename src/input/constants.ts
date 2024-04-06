@@ -25,7 +25,6 @@ export type Props<V extends InputValue>
     readOnly?: boolean,
     onChangeInputElement?: (isTextArea: boolean) => void,
     isChanged: boolean,
-    isRemoved: boolean,
   }
   & Omit<HTMLAttributes<TextInputElement>, 'onChange' | 'value'>;
 

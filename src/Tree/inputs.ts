@@ -79,9 +79,6 @@ const useDerivedState = (
   isChanged: useMemo(() => {
     return props.changed.includes(props.keyConcat);
   }, [props.changed, props.keyConcat]),
-  isRemoved: useMemo(() => {
-    return props.removed.includes(props.keyConcat);
-  }, [props.removed, props.keyConcat]),
 });
 
 const useValueUpdater = (

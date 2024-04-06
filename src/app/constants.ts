@@ -17,7 +17,6 @@ export type Item = {
   id: number,
   state: Record<string, unknown>,
   changed: string[],
-  removed: string[],
   location?: string,
   contractedKeys: string[],
   time: string,
