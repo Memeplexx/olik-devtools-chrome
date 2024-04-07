@@ -7,6 +7,7 @@ import { BsToggleOff, BsToggleOn } from 'react-icons/bs';
 import { possible } from "../html";
 import { DemoWrapper } from "../demo/demo-wrapper";
 import { IoMdMore } from "react-icons/io";
+import { Tree } from "../tree";
 
 
 export const MenuButton = styled.button`
@@ -84,7 +85,7 @@ export const ItemContent = styled.div<{ $isSelected?: boolean }>`
 	}
 `;
 
-export const ItemJsx = styled.div`
+export const ItemJsx = styled(Tree)`
 	white-space: nowrap;
 `;
 

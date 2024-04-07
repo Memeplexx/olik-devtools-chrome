@@ -10,7 +10,7 @@ export interface TreeProps {
   unchanged: string[],
   changed: string[],
   hideUnchanged?: boolean,
-  inline?: boolean,
+  displayInline?: boolean,
 }
 
 export type RenderNodeArgs

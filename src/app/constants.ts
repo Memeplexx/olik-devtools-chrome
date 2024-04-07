@@ -1,5 +1,4 @@
 import { useLocalState } from "./inputs";
-import { ReactNode } from "react";
 
 
 export type ItemWrapper = {
@@ -11,12 +10,12 @@ export type ItemWrapper = {
 }
 
 export type Item = {
-  jsx: ReactNode,
-  jsxPruned: ReactNode,
-  payload: unknown,
+  actionType: string,
+  actionPayload: unknown,
   id: number,
-  state: Record<string, unknown>,
+  fullState: Record<string, unknown>,
   changed: string[],
+  unchanged: string[],
   location?: string,
   contractedKeys: string[],
   time: string,

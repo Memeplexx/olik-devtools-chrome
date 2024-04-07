@@ -3,7 +3,6 @@ import { DevtoolsAction, StateAction, assertIsRecord, createStore, getStore, lib
 import { useEffect, useRef } from "react";
 import { is, isoDateRegexPattern, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
-import { Tree } from "../tree";
 import { Item, ItemWrapper, State } from "./constants";
 import { scrollToUpdatedNode } from './shared';
 
@@ -116,37 +115,24 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
       libState.disableDevtoolsDispatch = false;
     }
     const mostRecentItem = s.items.at(-1)?.items.at(-1);
-    const fullStateBefore = mostRecentItem?.state ?? {};
+    const fullStateBefore = mostRecentItem?.fullState ?? {};
     const fullStateAfter = s.storeRef.current!.$state;
     const selectedStateBefore = readSelectedState(fullStateBefore, incoming);
     const selectedStateAfter = readSelectedState(fullStateAfter, incoming);
     const segments = incoming.actionType.split('.');
     const func = segments.pop()!.slice(0, -2);
-    const actionType = [...segments, func].join('.');
     const date = new Date();
-    const time = getTimeDiff(date, mostRecentItem?.date ?? date);
-    const unchanged = getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming });
-    const arrayElementsRemoved = func === '$delete';
-    const changed = arrayElementsRemoved ? [] : getChangedKeys({ fullStateBefore, fullStateAfter });
-    const jsxProps = {
-      state: applyPayloadPaths(incoming),
-      unchanged,
-      changed,
-      actionType,
-      contractedKeys: [],
-      onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged }),
-      inline: s.displayInline,
-    };
+    const changed = func === '$delete' ? [] : getChangedKeys({ fullStateBefore, fullStateAfter });
     const newItem = {
       id: ++s.idRefInner.current,
-      jsx: Tree({ ...jsxProps, hideUnchanged: false }),
-      jsxPruned: Tree({ ...jsxProps, hideUnchanged: true }),
-      state: fullStateAfter,
-      payload: incoming.stateActions.at(-1)!.arg,
+      fullState: fullStateAfter,
       contractedKeys: [],
-      time,
+      time: getTimeDiff(date, mostRecentItem?.date ?? date),
       date,
       changed,
+      unchanged: getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming }),
+      actionType: [...segments, func].join('.'),
+      actionPayload: applyPayloadPaths(incoming),
     } satisfies Item;
     const currentEvent = getCleanStackTrace(incoming.trace!);
     scrollToUpdatedNode(changed);
@@ -259,37 +245,7 @@ const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: 
   return result;
 }
 
-const onClickNodeKey = (args: { state: State, actionType: string, selectedStateAfter: unknown, changed: string[], unchanged: string[] }) => {
-  const { state, actionType, selectedStateAfter, changed, unchanged } = args;
-  return (key: string) => {
-    state.set(s => ({
-      items: s.items.map(itemOuter => {
-        if (itemOuter.id !== s.idRefOuter.current) { return itemOuter; }
-        return {
-          ...itemOuter,
-          items: itemOuter.items.map(itemInner => {
-            if (itemInner.id !== s.idRefInner.current) { return itemInner; }
-            const contractedKeys = itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key];
-            const commonProps = {
-              actionType,
-              state: selectedStateAfter,
-              contractedKeys,
-              onClickNodeKey: onClickNodeKey(args),
-              unchanged,
-              changed,
-            };
-            return {
-              ...itemInner,
-              contractedKeys,
-              jsx: Tree({ ...commonProps, hideUnchanged: false }),
-              jsxPruned: Tree({ ...commonProps, hideUnchanged: true }),
-            } satisfies Item
-          })
-        }
-      })
-    }));
-  };
-}
+
 
 const getTimeDiff = (from: Date, to: Date) => {
   const milliseconds = differenceInMilliseconds(from, to);

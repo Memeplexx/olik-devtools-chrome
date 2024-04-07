@@ -73,7 +73,7 @@ export const RenderedNode = function RenderedNode(
       <ChildNode
         $wrappingTextArea={inputs.isShowingTextArea}
         $type={inputs.nodeType}
-        $inline={props.inline}
+        $inline={props.displayInline}
         showIf={!inputs.isContracted && !inputs.isEmpty && !inputs.isHidden}
         $unchanged={inputs.isUnchanged}
         onMouseOver={outputs.onMouseOverValueNode}
@@ -230,7 +230,7 @@ export const RenderedNode = function RenderedNode(
             children=','
             showIf={!props.isLast && !inputs.isHidden && !inputs.isShowingTextArea}
             $unchanged={inputs.isUnchanged}
-            $inline={props.inline}
+            $inline={props.displayInline}
           />
         </>
       }

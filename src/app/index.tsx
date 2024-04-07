@@ -123,7 +123,16 @@ export const App = () => {
                                             $isSelected={item.id === inputs.selectedId}
                                             children={
                                               <>
-                                                <ItemJsx children={inputs.hideUnchanged ? item.jsxPruned : item.jsx} />
+                                                <ItemJsx
+                                                  changed={item.changed}
+                                                  unchanged={item.unchanged}
+                                                  actionType={item.actionType}
+                                                  state={item.actionPayload}
+                                                  contractedKeys={item.contractedKeys}
+                                                  onClickNodeKey={outputs.onClickNodeKey}
+                                                  hideUnchanged={inputs.hideUnchanged}
+                                                  displayInline={inputs.displayInline}
+                                                />
                                                 <ItemTime children={item.time} />
                                               </>
                                             }

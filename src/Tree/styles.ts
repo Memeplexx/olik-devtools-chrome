@@ -82,7 +82,7 @@ export const ChildNode = styled(possible.span)<CommonAttrs & WrappingTextArea>`
   ${CommonStyles};
   position: relative;
   min-width: 0;
-  ${p => p.$wrappingTextArea ? css`flex: 1;` : ''}
+  ${p => p.$wrappingTextArea && css`flex: 1;`}
   ${p => (p.$type === 'array' || p.$type === 'object') && css`
     padding-left: 16px;
     display: block;
@@ -91,5 +91,5 @@ export const ChildNode = styled(possible.span)<CommonAttrs & WrappingTextArea>`
 `;
 
 export const Wrapper = styled(possible.span)<WrappingTextArea>`
-  ${p => p.$wrappingTextArea ? css`display: flex;` : ''}
+  ${p => p.$wrappingTextArea && css`display: flex;`}
 `;
