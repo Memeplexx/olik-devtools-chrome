@@ -6,7 +6,10 @@ import { scrollToUpdatedNode } from "./shared";
 
 export const useOutputs = (state: State) => ({
   onClickHideIneffectiveActions: () => {
-    state.set({ hideUnchanged: !state.hideUnchanged });
+    state.set(s => ({ hideUnchanged: !s.hideUnchanged}));
+  },
+  onClickDisplayInline: () => {
+    state.set(s => ({ displayInline: !s.displayInline })); ///////
   },
   onClickItem: (selectedId: number) => () => {
     const itemsFlattened = state.items.flatMap(i => i.items);

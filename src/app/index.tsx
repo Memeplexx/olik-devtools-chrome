@@ -73,6 +73,11 @@ export const App = () => {
                                               onClick: outputs.onClickHideIneffectiveActions,
                                             },
                                             {
+                                              icon: inputs.displayInline ? ToggleOnIcon : ToggleOffIcon,
+                                              text: 'Display inline',
+                                              onClick: outputs.onClickDisplayInline,
+                                            },
+                                            {
                                               icon: ClearIcon,
                                               text: 'Clear',
                                               onClick: outputs.onClickClear,

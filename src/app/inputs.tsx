@@ -23,6 +23,7 @@ export const useLocalState = () => useRecord({
   selectedId: null as number | null,
   items: new Array<ItemWrapper>(),
   hideUnchanged: false,
+  displayInline: false,
   query: '',
   showOptions: false,
   storeRef: useRef<BasicStore | null>(null),
@@ -134,6 +135,7 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
       actionType,
       contractedKeys: [],
       onClickNodeKey: onClickNodeKey({ state, actionType, selectedStateAfter, changed, unchanged }),
+      inline: s.displayInline,
     };
     const newItem = {
       id: ++s.idRefInner.current,

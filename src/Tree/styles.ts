@@ -4,6 +4,13 @@ import { NodeType } from "./constants";
 import { CompactInput } from "../input";
 
 
+type CommonAttrs = {
+  $type?: NodeType,
+  $unchanged?: boolean,
+  $inline?: boolean,
+}
+
+type WrappingTextArea = { $wrappingTextArea?: boolean };
 
 const typeMap = {
   array: 'red',
@@ -15,7 +22,7 @@ const typeMap = {
   null: 'magenta',
 } satisfies Record<NodeType, string>;
 
-export const CommonStyles = css<{ $type?: NodeType, $unchanged?: boolean }>`
+export const CommonStyles = css<CommonAttrs>`
   color: ${p => typeMap[p.$type!] ?? '#fff'};
   ${p => p.$unchanged && css`
     color: gray!important;
@@ -54,11 +61,11 @@ export const ActionType = styled(possible.span)`
   ${CommonStyles};
 `;
 
-export const CommaNode = styled(possible.span)`
+export const CommaNode = styled(possible.span)<CommonAttrs>`
   ${CommonStyles};
   &:after {
     content: ' ';
-    display: block;
+    ${p => p.$inline ? '' : css`display: block`};
   }
 `;
 
@@ -71,7 +78,7 @@ export const ParentNode = styled(possible.span)`
   }
 `;
 
-export const ChildNode = styled(possible.span)<{ $type?: NodeType, $unchanged?: boolean, $wrappingTextArea?: boolean }>`
+export const ChildNode = styled(possible.span)<CommonAttrs & WrappingTextArea>`
   ${CommonStyles};
   position: relative;
   min-width: 0;
@@ -80,8 +87,9 @@ export const ChildNode = styled(possible.span)<{ $type?: NodeType, $unchanged?: 
     padding-left: 16px;
     display: block;
   `}
+  ${p => p.$inline && css`display: inline`};
 `;
 
-export const Wrapper = styled(possible.span)<{ $wrappingTextArea?: boolean }>`
+export const Wrapper = styled(possible.span)<WrappingTextArea>`
   ${p => p.$wrappingTextArea ? css`display: flex;` : ''}
 `;
