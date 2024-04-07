@@ -5,6 +5,7 @@ import { is, isoDateRegexPattern, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
 import { Tree } from "../tree";
 import { Item, ItemWrapper, State } from "./constants";
+import { scrollToUpdatedNode } from './shared';
 
 export const useInputs = () => {
   const localState = useLocalState();
@@ -179,13 +180,6 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
     };
   });
 };
-
-const scrollToUpdatedNode = (selectors: string[]) => {
-  setTimeout(() => setTimeout(() => {
-    const element = selectors.find(e => document.querySelector(`[data-key-input="${e}"]`));
-    element && document.querySelector(`[data-key-input="${element}"]`)?.scrollIntoView({ behavior: 'smooth' });
-  }))
-}
 
 const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }: { selectedStateBefore: unknown, selectedStateAfter: unknown, incoming: DevtoolsAction }) => {
   const func = incoming.stateActions.at(-1)!.name;

@@ -58,15 +58,6 @@ export const App = () => {
                                       />
                                     }
                                   />
-                                  {/* <ShowUnchangedToggle
-                                    title="Hide ineffective updates"
-                                    onClick={outputs.onClickHideIneffectiveActions}
-                                    children={inputs.hideUnchanged ? <ToggleOnIcon /> : <ToggleOffIcon />}
-                                  />
-                                  <ClearButton
-                                    children={<ClearIcon />}
-                                    onClick={outputs.onClickClear}
-                                  /> */}
                                   <MenuButton
                                     onClick={outputs.onClickToggleMenu}
                                     children={
@@ -78,7 +69,7 @@ export const App = () => {
                                           children={[
                                             {
                                               icon: inputs.hideUnchanged ? ToggleOnIcon : ToggleOffIcon,
-                                              text: 'Hide ineffective updates',
+                                              text: 'Hide ineffective actions',
                                               onClick: outputs.onClickHideIneffectiveActions,
                                             },
                                             {
@@ -124,7 +115,7 @@ export const App = () => {
                                             id={item.id.toString()}
                                             key={item.id}
                                             onClick={outputs.onClickItem(item.id)}
-                                            isSelected={item.id === inputs.selectedId}
+                                            $isSelected={item.id === inputs.selectedId}
                                             children={
                                               <>
                                                 <ItemJsx children={inputs.hideUnchanged ? item.jsxPruned : item.jsx} />

@@ -1,4 +1,4 @@
-import styled from "styled-components/macro";
+import styled, { css } from "styled-components/macro";
 import { Editor } from "../editor";
 import { State } from "../state";
 import { Panel, PanelResizeHandle } from "react-resizable-panels";
@@ -8,19 +8,6 @@ import { possible } from "../html";
 import { DemoWrapper } from "../demo/demo-wrapper";
 import { IoMdMore } from "react-icons/io";
 
-export const ClearButton = styled.button`
-	position: absolute;
-	top: 0px;
-	right: 0px;
-	width: 20px;
-	height: 20px;
-	display: flex;
-	cursor: pointer;
-	border-radius: 50%;
-	:hover {
-		background-color: rgba(255,255,255,0.2);
-	}
-`;
 
 export const MenuButton = styled.button`
 	position: absolute;
@@ -45,14 +32,6 @@ export const ToggleOnIcon = styled(BsToggleOn)`
 	height: auto;
 `;
 
-export const ShowUnchangedToggle = styled.button`
-	cursor: pointer;
-	position: absolute;
-	height: 20px;
-  display: flex;
-	right: 40px;
-`;
-
 export const ClearIcon = styled(CiCircleRemove)`
   flex: 1;
   height: auto;
@@ -73,7 +52,6 @@ export const Items = styled.div`
 `;
 
 export const ItemWrapper = styled.div`
-  background-color: rgba(255,255,255,0.4);
   padding-left: 3px solid rgba(255,255,255,0.4);
   margin-bottom: 6px;
 `;
@@ -83,8 +61,8 @@ export const ItemHeading = styled.div<{ $headerExpanded: boolean, $eventCount: n
 	transition: all 0.2s;
 	max-height: ${p => p.$headerExpanded ? `${p.$eventCount * 15}px` : '15px'};
 	padding: 0 4px;
-	cursor: pointer;
 	overflow: hidden;
+	background-color: rgba(255,255,255,0.1);
 	:hover {
 		background-color: rgba(255,255,255,0.4);
 	}
@@ -94,9 +72,9 @@ export const ItemHead = styled.div`
   white-space: nowrap;
 `;
 
-export const ItemContent = styled.div<{ isSelected?: boolean }>`
-	background-color: ${p => p.isSelected ? 'white!important' : '#1C1C1C'};
-	color: ${p => p.isSelected ? 'black' : ''};
+export const ItemContent = styled.div<{ $isSelected?: boolean }>`
+	${p => p.$isSelected ? css`filter: invert(1)` : ''};
+	background-color: rgb(28, 28, 28);
 	cursor: pointer;
   margin-left: 4px;
 	position: relative;
@@ -120,6 +98,7 @@ export const ItemTime = styled.div`
 	width: 60px;
 	text-align: end;
 	border-bottom-left-radius: 8px;
+	background-color: rgba(255,255,255,0.1);
 `;
 
 export const EditorPanel = styled(Editor)`
