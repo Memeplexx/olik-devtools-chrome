@@ -9,7 +9,7 @@ export const useOutputs = (state: State) => ({
     state.set(s => ({ hideUnchanged: !s.hideUnchanged, showOptions: false}));
   },
   onClickDisplayInline: () => {
-    state.set(s => ({ displayInline: !s.displayInline, showOptions: false })); ///////
+    state.set(s => ({ displayInline: !s.displayInline, showOptions: false }));
   },
   onClickClear: () => {
     state.set(s => ({ items: s.items.map(i => ({ ...i, visible: false, showOptions: false })) }));
@@ -41,11 +41,11 @@ export const useOutputs = (state: State) => ({
   onClickNodeKey: (key: string) => {
     state.set(s => ({
       items: s.items.map(itemOuter => {
-        if (itemOuter.id !== s.idRefOuter.current) { return itemOuter; }
+        if (itemOuter.id !== s.idRefOuter.current) return itemOuter;
         return {
           ...itemOuter,
           items: itemOuter.items.map(itemInner => {
-            if (itemInner.id !== s.idRefInner.current) { return itemInner; }
+            if (itemInner.id !== s.idRefInner.current) return itemInner;
             return {
               ...itemInner,
               contractedKeys: itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key],
