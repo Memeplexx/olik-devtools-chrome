@@ -1,6 +1,6 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { DevtoolsAction, StateAction, assertIsRecord, createStore, getStore, libState, newRecord, readState, setNewStateAndNotifyListeners } from "olik";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { is, isoDateRegexPattern, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
 import { Item, ItemWrapper, State } from "./constants";
@@ -8,16 +8,17 @@ import { scrollToUpdatedNode } from './shared';
 
 export const useInputs = () => {
   const localState = useLocalState();
+  const derivedState = useDerivedState(localState);
   instantiateStore(localState);
   useMessageHandler(localState);
-  return localState;
+  return {
+    ...localState,
+    ...derivedState,
+  };
 }
 
 export const useLocalState = () => useRecord({
   error: '',
-  storeStateVersion: null as Record<string, unknown> | null,
-  changed: new Array<string>(),
-  added: new Array<string>(),
   selectedId: null as number | null,
   items: new Array<ItemWrapper>(),
   hideUnchanged: false,
@@ -29,6 +30,13 @@ export const useLocalState = () => useRecord({
   idRefOuter: useRef(0),
   idRefInner: useRef(0),
 });
+
+const useDerivedState = (state: State) => {
+  return useMemo(() => {
+    const items = state.items.flatMap(i => i.items);
+    return items.find(i => i.id === state.selectedId) ?? items.at(-1) ?? { changed: [], fullState: {} } as Partial<Item>;
+  }, [state.items, state.selectedId]);
+}
 
 const instantiateStore = (state: State) => {
   if (state.storeRef.current) { return; }

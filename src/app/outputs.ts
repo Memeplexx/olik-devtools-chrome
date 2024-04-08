@@ -21,7 +21,7 @@ export const useOutputs = (state: State) => ({
       silentlyUpdateAppStoreState(state, itemsFlattened[itemsFlattened.length - 1].fullState);
     } else {
       const item = itemsFlattened.find(i => i.id === selectedId)!;
-      state.set({ selectedId, storeStateVersion: item.fullState, changed: item.changed });
+      state.set({ selectedId/*, storeStateVersion: item.fullState, changed: item.changed*/ });
       silentlyUpdateAppStoreState(state, item.fullState);
       scrollToUpdatedNode(item.changed);
     }

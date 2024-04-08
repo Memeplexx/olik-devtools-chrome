@@ -25,7 +25,7 @@ export const App = () => {
               children={
                 <>
                   <EditorPanel
-                    state={inputs.storeStateVersion}
+                    state={inputs.fullState!}
                     onChange={outputs.onEditorChange}
                     onEnter={outputs.onEditorEnter}
                   />
@@ -38,8 +38,8 @@ export const App = () => {
                           children={
                             <StatePanel
                               ref={inputs.treeRef}
-                              state={inputs.storeStateVersion!}
-                              changed={inputs.changed}
+                              state={inputs.fullState!}
+                              changed={inputs.changed!}
                               query={inputs.query}
                               store={inputs.storeRef.current!}
                             />
