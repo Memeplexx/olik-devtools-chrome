@@ -11,7 +11,9 @@ export const App = () => {
   const storeStateVersion = inputs.storeStateVersion as Record<string, unknown>;
   return (
     <>
-      {!chrome.runtime && <DemoPanel />}
+      <DemoPanel
+        showIf={!chrome.runtime}
+      />
       <DevtoolsPanel
         children={
           <>
@@ -133,7 +135,9 @@ export const App = () => {
                                                   hideUnchanged={inputs.hideUnchanged}
                                                   displayInline={inputs.displayInline}
                                                 />
-                                                <ItemTime children={item.time} />
+                                                <ItemTime
+                                                  children={item.time}
+                                                />
                                               </>
                                             }
                                           />

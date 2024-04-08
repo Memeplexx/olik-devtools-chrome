@@ -171,6 +171,6 @@ export const ItemsWrapper = styled(Panel)`
 	flex-direction:column-reverse;
 `;
 
-export const DemoPanel = styled(DemoWrapper)`
+export const DemoPanel = styled(possible.element(DemoWrapper))`
 	max-width: 50vw;
 `;

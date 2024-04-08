@@ -81,25 +81,25 @@ const chromeMessageListener = (state: State, event: DevtoolsAction) => {
   processEvent(state, event);
 }
 
-const readSelectedState = (state: Record<string, unknown>, incoming: DevtoolsAction) => {
-  const payload = incoming.stateActions.at(-1)!.arg;
-  let stateActions = new Array<StateAction>();
-  const mergeMatchingIndex = incoming.stateActions.findIndex(s => s.name === '$mergeMatching');
+const readSelectedState = (state: Record<string, unknown>, { stateActions }: DevtoolsAction) => {
+  const payload = stateActions.at(-1)!.arg;
+  let stateActionsNew = new Array<StateAction>();
+  const mergeMatchingIndex = stateActions.findIndex(s => s.name === '$mergeMatching');
   if (mergeMatchingIndex !== -1) {
-    const withIndex = incoming.stateActions.findIndex(s => s.name === '$with');
-    const matcherPath = incoming.stateActions.slice(mergeMatchingIndex + 1, withIndex);
+    const withIndex = stateActions.findIndex(s => s.name === '$with');
+    const matcherPath = stateActions.slice(mergeMatchingIndex + 1, withIndex);
     if (is.array<Record<string, unknown>>(payload)) {
       const payloadSelection = payload.map(p => matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, p))
-      stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$filter' }, ...matcherPath, { name: '$in', arg: payloadSelection }];
+      stateActionsNew = [...stateActions.slice(0, mergeMatchingIndex), { name: '$filter' }, ...matcherPath, { name: '$in', arg: payloadSelection }];
     } else {
       const payloadSelection = matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, payload as Record<string, unknown>);
-      stateActions = [...incoming.stateActions.slice(0, mergeMatchingIndex), { name: '$find' }, ...matcherPath, { name: '$eq', arg: payloadSelection }];
+      stateActionsNew = [...stateActions.slice(0, mergeMatchingIndex), { name: '$find' }, ...matcherPath, { name: '$eq', arg: payloadSelection }];
     }
   } else {
-    stateActions = incoming.stateActions.slice(0, incoming.stateActions.length - 1);
+    stateActionsNew = stateActions.slice(0, stateActions.length - 1);
   }
-  stateActions.push({ name: '$state' });
-  return readState({ state, stateActions, cursor: { index: 0 } });
+  stateActionsNew.push({ name: '$state' });
+  return readState({ state, stateActions: stateActionsNew, cursor: { index: 0 } });
 }
 
 const processEvent = (state: State, incoming: DevtoolsAction) => {
