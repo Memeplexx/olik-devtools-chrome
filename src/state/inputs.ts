@@ -1,8 +1,8 @@
 import { StateAction, deserialize, is, readState } from "olik";
-import { ForwardedRef, ReactNode } from "react";
+import { ForwardedRef } from "react";
 import { silentlyApplyStateAction, useForwardedRef, useRecord } from "../shared/functions";
-import { Tree } from "../tree";
 import { Props, State } from "./constants";
+import { TreeProps } from "../tree/constants";
 
 
 export const useInputs = (
@@ -12,7 +12,7 @@ export const useInputs = (
   const localState = useLocalState(ref);
   return {
     ...localState,
-    data: tryReadState(props, localState),
+    treeProps: getTreeProps(props, localState),
   };
 }
 
@@ -21,7 +21,7 @@ export const useLocalState = (ref: ForwardedRef<HTMLDivElement>) => useRecord({
   containerRef: useForwardedRef<HTMLDivElement>(ref),
 });
 
-const tryReadState = (props: Props, state: State): ReactNode => {
+const getTreeProps = (props: Props, state: State): TreeProps => {
   const commonTreeProps = {
     unchanged: [],
     changed: props.changed,
@@ -37,13 +37,13 @@ const tryReadState = (props: Props, state: State): ReactNode => {
   try {
     const stateRead = doReadState(props.query, props.state || {});
     if (stateRead === undefined) { throw new Error(); }
-    return Tree({ ...commonTreeProps, state: stateRead });
+    return { ...commonTreeProps, state: stateRead };
   } catch (e) {
     const segments = props.query.split('.').filter(e => !!e).slice(0, -1);
     if (segments.length === 0) {
-      return Tree({ ...commonTreeProps, state: props.state });
+      return { ...commonTreeProps, state: props.state };
     }
-    return tryReadState({ ...props, query: segments.join('.') }, state);
+    return getTreeProps({ ...props, query: segments.join('.') }, state);
   }
 };
 

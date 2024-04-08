@@ -2,6 +2,7 @@ import { ForwardedRef, forwardRef } from "react";
 import { Props } from "./constants";
 import { useInputs } from "./inputs";
 import { JsonWrapper } from "./styles";
+import { Tree } from "../tree";
 
 
 export const State = forwardRef(function State(
@@ -13,7 +14,11 @@ export const State = forwardRef(function State(
     <JsonWrapper
       ref={inputs.containerRef}
       className={props.className}
-      children={inputs.data}
+      children={
+        <Tree
+          {...inputs.treeProps}
+        />
+      }
     />
   );
 });
