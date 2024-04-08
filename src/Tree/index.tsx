@@ -71,18 +71,15 @@ export const RenderedNode = function RenderedNode(
   const content = (
     <>
       <ChildNode
-        $wrappingTextArea={inputs.isShowingTextArea}
-        $type={inputs.nodeType}
-        $inline={props.displayInline}
+        {...inputs.styles}
         showIf={!inputs.isContracted && !inputs.isEmpty && !inputs.isHidden}
-        $unchanged={inputs.isUnchanged}
         onMouseOver={outputs.onMouseOverValueNode}
         onMouseOut={outputs.onMouseOutValueNode}
         data-key={props.keyConcat}
         children={
           is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.onChangeState ? inputs.nodeEl : (
             <ValueNode
-              $type={inputs.nodeType}
+              {...inputs.styles}
               data-key-input={props.keyConcat}
               value={inputs.value}
               onChange={outputs.onChangeValue}
@@ -112,49 +109,49 @@ export const RenderedNode = function RenderedNode(
         }
       />
       <BraceNode
-        $type={inputs.nodeType}
+        {...inputs.styles}
         children={is.array(props.item) ? ']' : '}'}
-        $unchanged={inputs.isUnchanged}
         showIf={!inputs.isHidden && !inputs.isPrimitive}
       />
       <ParenthesisNode
+        {...inputs.styles}
         children=')'
         showIf={inputs.showActionType}
-        $unchanged={inputs.isUnchanged}
       />
     </>
   );
   return (
     <Wrapper
-      $wrappingTextArea={inputs.isShowingTextArea}
+      {...inputs.styles}
       key={props.index}
       data-key={props.keyConcat}
       children={
         <>
           <ParentNode
+            {...inputs.styles}
             onClick={outputs.onClickParentNode(props.keyConcat)}
             onMouseOver={outputs.onMouseOverRootNode}
             onMouseOut={outputs.onMouseOutRootNode}
             children={
               <>
                 <ActionType
+                  {...inputs.styles}
                   children={props.actionType}
                   showIf={inputs.showActionType}
-                  $unchanged={inputs.isUnchanged}
                 />
                 <ParenthesisNode
+                  {...inputs.styles}
                   children='('
                   showIf={inputs.showActionType}
-                  $unchanged={inputs.isUnchanged}
                 />
                 <KeyNode
+                  {...inputs.styles}
                   showIf={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
                   data-key-input={props.keyConcat}
                   ref={inputs.keyNodeRef}
                   readOnly={!props.onChangeState || !inputs.isEditingObjectKey}
                   value={inputs.key}
                   isChanged={inputs.isChanged}
-                  $unchanged={inputs.isUnchanged}
                   onChange={outputs.onChangeKey}
                   onChangeCommit={outputs.onChangeCommitObjectKey}
                   onFocus={outputs.onFocusObjectKey}
@@ -164,21 +161,19 @@ export const RenderedNode = function RenderedNode(
                   valueType='string'
                 />
                 <Colon
+                  {...inputs.styles}
                   children=':'
-                  $unchanged={inputs.isUnchanged}
                   showIf={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
                 />
                 <BraceNode
-                  $type={inputs.nodeType}
+                  {...inputs.styles}
                   children={is.array(props.item) ? '[' : '{'}
-                  $unchanged={inputs.isUnchanged}
                   showIf={!inputs.isHidden && !inputs.isPrimitive}
                 />
                 <Ellipses
-                  $type={inputs.nodeType}
+                  {...inputs.styles}
                   children='...'
                   showIf={inputs.isContracted && !inputs.isHidden}
-                  $unchanged={inputs.isUnchanged}
                 />
                 {inputs.isContracted && content}
                 <PopupList
@@ -227,10 +222,9 @@ export const RenderedNode = function RenderedNode(
           />
           {!inputs.isContracted && content}
           <CommaNode
+            {...inputs.styles}
             children=','
             showIf={!props.isLast && !inputs.isHidden && !inputs.isShowingTextArea}
-            $unchanged={inputs.isUnchanged}
-            $inline={props.displayInline}
           />
         </>
       }

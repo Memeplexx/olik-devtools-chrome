@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { useLocalState } from "./inputs";
+import { useInputs } from "./inputs";
 
 export interface TreeProps {
   state: unknown,
@@ -31,14 +31,11 @@ export type RecurseArgs = {
   outerKey: string,
 }
 
-export type NodeType =
-  | 'array'
-  | 'object'
-  | 'number'
-  | 'string'
-  | 'date'
-  | 'boolean'
-  | 'null'
-  ;
+export type State = ReturnType<typeof useInputs>;
 
-export type State = ReturnType<typeof useLocalState>;
+export type StyleProps = {
+  $displayInline?: boolean,
+  $showTextArea?: boolean,
+  $color?: string,
+  $isArrayOrObject?: boolean,
+}

@@ -1,13 +1,13 @@
 import { ReactNode, useMemo, useRef } from "react";
 import { InputValue, ValueType } from "../input/constants";
 import { is, useRecord } from "../shared/functions";
-import { NodeType, RenderNodeArgs, State } from "./constants";
+import { RenderNodeArgs } from "./constants";
 
 export const useInputs = (
   props: RenderNodeArgs,
 ) => {
   const state = useLocalState(props);
-  const derived = useDerivedState(props);
+  const derived = useDerivedState(props, state);
   useValueUpdater(props, state);
   return {
     ...state,
@@ -38,6 +38,7 @@ export const useLocalState = (
 
 const useDerivedState = (
   props: RenderNodeArgs,
+  state: ReturnType<typeof useLocalState>,
 ) => ({
   isPrimitive: !is.array(props.item) && !is.record(props.item),
   hasObjectKey: props.objectKey !== undefined,
@@ -56,17 +57,6 @@ const useDerivedState = (
     if (is.record(props.item)) return !Object.keys(props.item).length;
     return false;
   }, [props.item]),
-  nodeType: useMemo(() => {
-    if (is.array(props.item)) return 'array';
-    if (is.record(props.item)) return 'object';
-    if (is.number(props.item)) return 'number';
-    if (is.string(props.item)) return 'string';
-    if (is.boolean(props.item)) return 'boolean';
-    if (is.date(props.item)) return 'date';
-    if (is.null(props.item)) return 'null';
-    if (is.undefined(props.item)) return 'undefined';
-    return 'unknown';
-  }, [props.item]) as NodeType,
   nodeEl: useMemo(() => {
     if (is.null(props.item)) return 'null';
     if (is.undefined(props.item)) return '';
@@ -79,11 +69,27 @@ const useDerivedState = (
   isChanged: useMemo(() => {
     return props.changed.includes(props.keyConcat);
   }, [props.changed, props.keyConcat]),
+  styles: useMemo(() => ({
+    $unchanged: props.unchanged.includes(props.keyConcat),
+    $displayInline: props.displayInline,
+    $showTextArea: state.isShowingTextArea,
+    $isArrayOrObject: is.array(props.item) || is.record(props.item),
+    $color: (() => {
+      if (props.unchanged.includes(props.keyConcat)) return 'gray';
+      if (is.array(props.item)) return 'red';
+      if (is.record(props.item)) return 'violet';
+      if (is.number(props.item)) return 'darkorange';
+      if (is.string(props.item)) return 'green';
+      if (is.date(props.item)) return 'deepskyblue';
+      if (is.null(props.item)) return 'lightblue';
+      if (is.undefined(props.item)) return 'magenta';
+    })(),
+  }), [props.displayInline, props.item, props.keyConcat, props.unchanged, state.isShowingTextArea])
 });
 
 const useValueUpdater = (
   props: RenderNodeArgs,
-  state: State,
+  state: ReturnType<typeof useLocalState>,
 ) => {
   useMemo(() => {
     state.set({ value: props.item as InputValue });
