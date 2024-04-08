@@ -245,8 +245,6 @@ const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: 
   return result;
 }
 
-
-
 const getTimeDiff = (from: Date, to: Date) => {
   const milliseconds = differenceInMilliseconds(from, to);
   if (milliseconds < 10 * 1000) return `${milliseconds} ms`;
