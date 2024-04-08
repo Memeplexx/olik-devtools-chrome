@@ -4,13 +4,13 @@ import { useEffect, useMemo, useRef } from "react";
 import { is, isoDateRegexPattern, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
 import { Item, ItemWrapper, State } from "./constants";
-import { scrollToUpdatedNode } from './shared';
 
 export const useInputs = () => {
   const localState = useLocalState();
   const derivedState = useDerivedState(localState);
   instantiateStore(localState);
   useMessageHandler(localState);
+  useAutoScroller(localState);
   return {
     ...localState,
     ...derivedState,
@@ -52,6 +52,15 @@ const instantiateStore = (state: State) => {
       .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: notifyAppOfInitialization }))
       .catch(console.error);
   }
+}
+
+const useAutoScroller = (state: State) => {
+  useMemo(() => {
+    const itemsFlattened = state.items.flatMap(i => i.items);
+    const selectors = itemsFlattened.find(i => i.id === state.selectedId)?.changed ?? itemsFlattened.at(-1)?.changed ?? [];
+    const element = selectors.find(e => document.querySelector(`[data-key-input="${e}"]`));
+    element && document.querySelector(`[data-key-input="${element}"]`)?.scrollIntoView({ behavior: 'smooth' });
+  }, [state.items, state.selectedId])
 }
 
 const useMessageHandler = (state: State) => {
@@ -142,27 +151,20 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
       actionPayload: applyPayloadPaths(incoming),
     } satisfies Item;
     const currentEvent = getCleanStackTrace(incoming.trace!);
-    scrollToUpdatedNode(changed);
+    // scrollToUpdatedNode(changed);
     const lastItem = s.items.at(-1)! ?? { event: [] };
     const storeStateVersion = fullStateAfter;
-    if (currentEvent.toString() === lastItem.event.toString()) {
-      return {
-        storeStateVersion,
-        changed,
-        items: [
-          ...s.items.slice(0, s.items.length - 1),
-          {
-            ...lastItem,
-            items: [...lastItem.items, newItem],
-            visible: true,
-          }
-        ],
-      };
-    }
     return {
       storeStateVersion,
       changed,
-      items: [
+      items: currentEvent.toString() === lastItem.event.toString() ? [
+        ...s.items.slice(0, s.items.length - 1),
+        {
+          ...lastItem,
+          items: [...lastItem.items, newItem],
+          visible: true,
+        }
+      ] : [
         ...s.items,
         {
           id: ++s.idRefOuter.current,
@@ -235,13 +237,13 @@ const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: 
   const recurse = (before: unknown, after: unknown, keyCollector: string) => {
     if (is.record(before) && is.record(after))
       Object.keys(before).forEach(key => {
-        if (before[key] !== after[key]) 
+        if (before[key] !== after[key])
           result.push(`${keyCollector}.${key}`);
         recurse(before[key], after[key], `${keyCollector}.${key}`);
       });
     if (is.array(before) && is.array(after))
       before.forEach((_, i) => {
-        if (before[i] !== after[i]) 
+        if (before[i] !== after[i])
           result.push(`${keyCollector}.${i}`);
         recurse(before[i], after[i], `${keyCollector}.${i}`);
       });
