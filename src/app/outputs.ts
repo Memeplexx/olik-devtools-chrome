@@ -1,7 +1,6 @@
 import { libState } from "olik";
 import { silentlyApplyStateAction } from "../shared/functions";
 import { Item, State } from "./constants";
-import { scrollToUpdatedNode } from "./shared";
 
 
 export const useOutputs = (state: State) => ({
@@ -23,7 +22,6 @@ export const useOutputs = (state: State) => ({
       const item = itemsFlattened.find(i => i.id === selectedId)!;
       state.set({ selectedId });
       silentlyUpdateAppStoreState(state, item.fullState);
-      // scrollToUpdatedNode(item.changed);
     }
   },
   onEditorChange: (query: string) => {

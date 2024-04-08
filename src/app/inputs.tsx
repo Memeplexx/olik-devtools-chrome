@@ -151,7 +151,6 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
       actionPayload: applyPayloadPaths(incoming),
     } satisfies Item;
     const currentEvent = getCleanStackTrace(incoming.trace!);
-    // scrollToUpdatedNode(changed);
     const lastItem = s.items.at(-1)! ?? { event: [] };
     const storeStateVersion = fullStateAfter;
     return {
