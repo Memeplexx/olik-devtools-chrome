@@ -15,7 +15,6 @@ export const useInputs = () => {
 
 export const useLocalState = () => useRecord({
   error: '',
-  storeState: null as Record<string, unknown> | null,
   storeStateVersion: null as Record<string, unknown> | null,
   changed: new Array<string>(),
   added: new Array<string>(),
@@ -137,10 +136,10 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
     const currentEvent = getCleanStackTrace(incoming.trace!);
     scrollToUpdatedNode(changed);
     const lastItem = s.items.at(-1)! ?? { event: [] };
-    const storeState = fullStateAfter;
+    const storeStateVersion = fullStateAfter;
     if (currentEvent.toString() === lastItem.event.toString()) {
       return {
-        storeState,
+        storeStateVersion,
         changed,
         items: [
           ...s.items.slice(0, s.items.length - 1),
@@ -153,7 +152,7 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
       };
     }
     return {
-      storeState,
+      storeStateVersion,
       changed,
       items: [
         ...s.items,

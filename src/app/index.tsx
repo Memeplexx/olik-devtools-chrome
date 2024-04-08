@@ -8,7 +8,6 @@ import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, ItemContent, I
 export const App = () => {
   const inputs = useInputs();
   const outputs = useOutputs(inputs);
-  const storeStateVersion = inputs.storeStateVersion as Record<string, unknown>;
   return (
     <>
       <DemoPanel
@@ -26,7 +25,7 @@ export const App = () => {
               children={
                 <>
                   <EditorPanel
-                    state={inputs.storeState}
+                    state={inputs.storeStateVersion}
                     onChange={outputs.onEditorChange}
                     onEnter={outputs.onEditorEnter}
                   />
@@ -39,7 +38,7 @@ export const App = () => {
                           children={
                             <StatePanel
                               ref={inputs.treeRef}
-                              state={storeStateVersion ?? inputs.storeState!}
+                              state={inputs.storeStateVersion!}
                               changed={inputs.changed}
                               query={inputs.query}
                               store={inputs.storeRef.current!}
