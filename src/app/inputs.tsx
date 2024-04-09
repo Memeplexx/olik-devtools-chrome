@@ -10,6 +10,7 @@ export const useInputs = () => {
   const derivedState = useDerivedState(localState);
   useMessageHandler(localState);
   useAutoScroller(localState);
+  useDetectPageRefresh(localState);
   return {
     ...localState,
     ...derivedState,
@@ -50,8 +51,21 @@ const useAutoScroller = (state: State) => {
   }, [state.items, state.selectedId])
 }
 
+const useDetectPageRefresh = (state: State) => {
+  useEffect(() => {
+    const eventHandler: Parameters<typeof chrome.webNavigation.onCommitted.addListener>[0] = (details) => {
+      if (details.transitionType === 'reload') {
+        state.set(() => ({ items: [], error: 'Page refreshed. Clearing state.' }));
+      }
+    };
+    chrome.webNavigation.onCommitted.addListener(eventHandler);
+    return () => chrome.webNavigation.onCommitted.removeListener(eventHandler);
+  })
+}
+
 const useMessageHandler = (state: State) => {
   useEffect(() => {
+    state.set(() => ({ error: 'Waiting for store. Try refreshing the page.' }));
     if (chrome.runtime) {
       const chromeListener = (event: DevtoolsAction) => chromeMessageListener(state, event);
       chrome.runtime.onMessage.addListener(chromeListener);
@@ -65,6 +79,7 @@ const useMessageHandler = (state: State) => {
 }
 
 const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction>) => {
+  console.log('demo')
   if (event.origin !== window.location.origin) return;
   if (event.data.source !== 'olik-devtools-extension') return;
   if (event.data.actionType === '$load()') {
@@ -76,6 +91,7 @@ const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction
 }
 
 const chromeMessageListener = (state: State, event: DevtoolsAction) => {
+  console.log('chrome')
   if (event.actionType === '$load()') {
     state.storeRef.current = createStore<Record<string, unknown>>({});
     const notifyAppOfInitialization = () => document.getElementById('olik-init')!.innerHTML = 'done';
@@ -132,6 +148,7 @@ const processEvent = (state: State, event: DevtoolsAction) => {
     const date = new Date();
     const currentEvent = getCleanStackTrace(event.trace!);
     return {
+      error: '',
       items: [
         ...s.items,
         {
