@@ -139,13 +139,30 @@ export const silentlyApplyStateAction = (store: BasicStore, queryString: string)
 	}
 }
 
+// export const useRecord = <R extends Record<string, unknown>>(record: R) => {
+// 	const [, setCount] = useState(0);
+// 	const stateRef = useRef({
+// 		...record,
+// 		set: (arg: Partial<R> | ((r: R) => Partial<R>)) => {
+// 			const newState = is.function<[R], Partial<R>>(arg) ? arg(stateRef) : arg;
+// 			const unChanged = Object.keys(newState)
+// 				.every(key => is.function(newState[key]) || stateRef[key] === newState[key]);
+// 			if (unChanged) return;
+// 			Object.assign(stateRef, newState);
+// 			setCount(c => c + 1);
+// 		}
+// 	}).current;
+// 	return stateRef;
+// }
+
 export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 	const [, setCount] = useState(0);
 	const stateRef = useRef({
 		...record,
-		set: (arg: Partial<R> | ((r: R) => Partial<R>)) => {
+		set: (arg: Partial<R> | ((r: R) => (Partial<R> | void) )) => {
 			const newState = is.function<[R], Partial<R>>(arg) ? arg(stateRef) : arg;
-			const unChanged = Object.keys(newState)
+			if (newState === undefined) return;
+			const unChanged = (Object.keys(newState) as Array<keyof typeof newState>)
 				.every(key => is.function(newState[key]) || stateRef[key] === newState[key]);
 			if (unChanged) return;
 			Object.assign(stateRef, newState);
@@ -154,7 +171,6 @@ export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 	}).current;
 	return stateRef;
 }
-
 
 export const useEventHandlerForDocument = <Type extends 'click' | 'keyup' | 'keydown'>(
 	type: Type,

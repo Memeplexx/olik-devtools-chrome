@@ -31,25 +31,26 @@ export const useLocalState = () => useRecord({
   idRef: useRef(0),
 });
 
-const useDerivedState = (state: State) => {
-  return {
-    itemsGrouped: useMemo(() => {
-      return state.items
-        .filter(i => i.visible)
-        .groupBy(i => i.eventString)
-        .map(items => ({ id: items[0].id, event: items[0].event, items }));
-    }, [state.items]),
-    ...useMemo(() => {
-      return state.items.find(i => i.id === state.selectedId) ?? state.items.at(-1) ?? { changed: [], fullState: {} } as Partial<Item>;
-    }, [state.items, state.selectedId]),
-  };
-}
+const useDerivedState = (state: State) => ({
+  itemsGrouped: useMemo(() => {
+    return state.items
+      .filter(i => i.visible)
+      .groupBy(i => i.eventString)
+      .map(items => ({ id: items[0].id, event: items[0].event, items }));
+  }, [state.items]),
+  ...useMemo(() => {
+    return state.items.find(i => i.id === state.selectedId) ?? state.items.at(-1) ?? { changed: [], fullState: {} } as Partial<Item>;
+  }, [state.items, state.selectedId]),
+})
 
 const instantiateStore = (state: State) => {
-  if (state.storeRef.current) { return; }
+  if (state.storeRef.current)
+    return;
   if (!chrome.runtime) {
-    state.storeRef.current = getStore<Record<string, unknown>>(); // get store from demo app
-    setTimeout(() => document.getElementById('olik-init')!.innerHTML = 'done');
+    setTimeout(() => setTimeout(() => { // wait for store from demo app
+      state.storeRef.current = getStore<Record<string, unknown>>(); 
+      setTimeout(() => document.getElementById('olik-init')!.innerHTML = 'done');
+    }))
   } else {
     libState.initialState = undefined;
     state.storeRef.current = createStore<Record<string, unknown>>({});
@@ -85,21 +86,30 @@ const useMessageHandler = (state: State) => {
 const messageListener = (state: State, event: MessageEvent<DevtoolsAction>) => {
   if (event.origin !== window.location.origin) return;
   if (event.data.source !== 'olik-devtools-extension') return;
+  if (!event.data.actionType) return; // not sure why this happens
+  if (!state.storeRef.current) return;
   processEvent(state, event.data);
 }
 
 const chromeMessageListener = (state: State, event: DevtoolsAction) => {
   const recurse = (val: unknown): unknown => {
-    if (is.record(val)) {
+    if (is.record(val))
       Object.keys(val).forEach(key => val[key] = recurse(val[key]))
-    } else if (is.array(val)) {
+    if (is.array(val))
       return val.map(recurse);
-    } else if (is.string(val) && isoDateRegexPattern.test(val)) {
+    if (is.string(val) && isoDateRegexPattern.test(val))
       return new Date(val);
-    }
     return val;
   }
   event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: recurse(sa.arg) }));
+  if (event.actionType === '$load()') {
+    state.storeRef.current = null;
+    return;
+  } else {
+    libState.disableDevtoolsDispatch = true;
+    setNewStateAndNotifyListeners(event);
+    libState.disableDevtoolsDispatch = false;
+  }
   processEvent(state, event);
 }
 
@@ -126,16 +136,6 @@ const readSelectedState = (state: Record<string, unknown>, { stateActions }: Dev
 
 const processEvent = (state: State, incoming: DevtoolsAction) => {
   state.set(s => {
-    if (!incoming.actionType) { return s; }
-    if (incoming.actionType === '$load()') {
-      s.storeRef.current = null;
-      return { items: [] };
-    }
-    if (chrome.runtime) {
-      libState.disableDevtoolsDispatch = true;
-      setNewStateAndNotifyListeners(incoming);
-      libState.disableDevtoolsDispatch = false;
-    }
     const previousItem = s.items.at(-1);
     const fullStateBefore = previousItem?.fullState ?? {};
     const fullStateAfter = s.storeRef.current!.$state;
