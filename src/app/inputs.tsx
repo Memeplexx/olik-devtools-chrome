@@ -79,7 +79,6 @@ const useMessageHandler = (state: State) => {
 }
 
 const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction>) => {
-  console.log('demo')
   if (event.origin !== window.location.origin) return;
   if (event.data.source !== 'olik-devtools-extension') return;
   if (event.data.actionType === '$load()') {
@@ -91,7 +90,6 @@ const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction
 }
 
 const chromeMessageListener = (state: State, event: DevtoolsAction) => {
-  console.log('chrome')
   if (event.actionType === '$load()') {
     state.storeRef.current = createStore<Record<string, unknown>>({});
     const notifyAppOfInitialization = () => document.getElementById('olik-init')!.innerHTML = 'done';
