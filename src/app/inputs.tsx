@@ -136,13 +136,11 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
       setNewStateAndNotifyListeners(incoming);
       libState.disableDevtoolsDispatch = false;
     }
-    const mostRecentItem = s.items.at(-1);
-    const fullStateBefore = mostRecentItem?.fullState ?? {};
+    const previousItem = s.items.at(-1);
+    const fullStateBefore = previousItem?.fullState ?? {};
     const fullStateAfter = s.storeRef.current!.$state;
     const selectedStateBefore = readSelectedState(fullStateBefore, incoming);
     const selectedStateAfter = readSelectedState(fullStateAfter, incoming);
-    const segments = incoming.actionType.split('.');
-    const func = segments.pop()!.slice(0, -2);
     const date = new Date();
     const currentEvent = getCleanStackTrace(incoming.trace!);
     return {
@@ -155,11 +153,11 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
           fullState: fullStateAfter,
           visible: true,
           contractedKeys: [],
-          time: getTimeDiff(date, mostRecentItem?.date ?? date),
+          time: getTimeDiff(date, previousItem?.date ?? date),
           date,
-          changed: func === '$delete' ? [] : getChangedKeys({ fullStateBefore, fullStateAfter }),
+          changed: incoming.stateActions.at(-1)!.name === '$delete' ? [] : getChangedKeys({ fullStateBefore, fullStateAfter }),
           unchanged: getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming }),
-          actionType: [...segments, func].join('.'),
+          actionType: incoming.stateActions.map(sa => sa.name).join('.'),
           actionPayload: applyPayloadPaths(incoming),
         }
       ],

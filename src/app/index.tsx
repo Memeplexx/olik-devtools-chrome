@@ -100,23 +100,23 @@ export const App = () => {
                             <Items
                               tabIndex={0}
                               children={
-                                inputs.itemsGrouped.map(itemWrapper => (
+                                inputs.itemsGrouped.map(itemGroup => (
                                   <ItemWrapper
-                                    key={itemWrapper.id}
+                                    key={itemGroup.id}
                                     children={
                                       <>
                                         <ItemHeading
-                                          $headerExpanded={!inputs.contractedHeaders.includes(itemWrapper.id)}
-                                          $eventCount={itemWrapper.event.length}
-                                          onClick={outputs.onClickHeader(itemWrapper.id)}
-                                          children={itemWrapper.event.map((e, i) => (
+                                          $headerExpanded={!inputs.contractedHeaders.includes(itemGroup.id)}
+                                          $eventCount={itemGroup.event.length}
+                                          onClick={outputs.onClickHeader(itemGroup.id)}
+                                          children={itemGroup.event.map((e, i) => (
                                             <ItemHead
                                               key={i}
                                               children={e}
                                             />
                                           ))}
                                         />
-                                        {itemWrapper.items.map(item => (
+                                        {itemGroup.items.map(item => (
                                           <ItemContent
                                             id={item.id.toString()}
                                             key={item.id}
