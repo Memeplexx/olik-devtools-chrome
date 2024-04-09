@@ -8,7 +8,6 @@ import { Item, State } from "./constants";
 export const useInputs = () => {
   const localState = useLocalState();
   const derivedState = useDerivedState(localState);
-  instantiateStore(localState);
   useMessageHandler(localState);
   useAutoScroller(localState);
   return {
@@ -43,25 +42,6 @@ const useDerivedState = (state: State) => ({
   }, [state.items, state.selectedId]),
 })
 
-const instantiateStore = (state: State) => {
-  if (state.storeRef.current)
-    return;
-  if (!chrome.runtime) {
-    setTimeout(() => setTimeout(() => { // wait for store from demo app
-      state.storeRef.current = getStore<Record<string, unknown>>(); 
-      setTimeout(() => document.getElementById('olik-init')!.innerHTML = 'done');
-    }))
-  } else {
-    libState.initialState = undefined;
-    state.storeRef.current = createStore<Record<string, unknown>>({});
-    const notifyAppOfInitialization = () => document.getElementById('olik-init')!.innerHTML = 'done';
-    chrome.tabs
-      .query({ active: true })
-      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: notifyAppOfInitialization }))
-      .catch(console.error);
-  }
-}
-
 const useAutoScroller = (state: State) => {
   useMemo(() => {
     const selectors = state.items.find(i => i.id === state.selectedId)?.changed ?? state.items.at(-1)?.changed ?? [];
@@ -72,45 +52,52 @@ const useAutoScroller = (state: State) => {
 
 const useMessageHandler = (state: State) => {
   useEffect(() => {
-    const msgListener = (event: MessageEvent<DevtoolsAction>) => messageListener(state, event);
+    const demoAppListener = (event: MessageEvent<DevtoolsAction>) => demoAppMessageListener(state, event);
     const chromeListener = (event: DevtoolsAction) => chromeMessageListener(state, event);
-    window.addEventListener('message', msgListener);
+    window.addEventListener('message', demoAppListener);
     chrome.runtime?.onMessage.addListener(chromeListener);
     return () => {
-      window.removeEventListener('message', msgListener);
+      window.removeEventListener('message', demoAppListener);
       chrome.runtime?.onMessage.removeListener(chromeListener);
     }
   }, [state])
 }
 
-const messageListener = (state: State, event: MessageEvent<DevtoolsAction>) => {
+const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction>) => {
   if (event.origin !== window.location.origin) return;
   if (event.data.source !== 'olik-devtools-extension') return;
-  if (!event.data.actionType) return; // not sure why this happens
-  if (!state.storeRef.current) return;
-  processEvent(state, event.data);
+  if (event.data.actionType === '$load()') {
+    state.storeRef.current = getStore<Record<string, unknown>>();
+    document.getElementById('olik-init')!.innerHTML = 'done';
+  } else {
+    processEvent(state, event.data);
+  }
 }
 
 const chromeMessageListener = (state: State, event: DevtoolsAction) => {
-  const recurse = (val: unknown): unknown => {
-    if (is.record(val))
-      Object.keys(val).forEach(key => val[key] = recurse(val[key]))
-    if (is.array(val))
-      return val.map(recurse);
-    if (is.string(val) && isoDateRegexPattern.test(val))
-      return new Date(val);
-    return val;
-  }
-  event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: recurse(sa.arg) }));
   if (event.actionType === '$load()') {
-    state.storeRef.current = null;
-    return;
+    state.storeRef.current = createStore<Record<string, unknown>>({});
+    const notifyAppOfInitialization = () => document.getElementById('olik-init')!.innerHTML = 'done';
+    chrome.tabs
+      .query({ active: true })
+      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: notifyAppOfInitialization }))
+      .catch(console.error);
   } else {
+    const convertAnyDateStringsToDates = (val: unknown): unknown => {
+      if (is.record(val))
+        Object.keys(val).forEach(key => val[key] = convertAnyDateStringsToDates(val[key]))
+      if (is.array(val))
+        return val.map(convertAnyDateStringsToDates);
+      if (is.string(val) && isoDateRegexPattern.test(val))
+        return new Date(val);
+      return val;
+    }
+    event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: convertAnyDateStringsToDates(sa.arg) }));
     libState.disableDevtoolsDispatch = true;
     setNewStateAndNotifyListeners(event);
     libState.disableDevtoolsDispatch = false;
+    processEvent(state, event);
   }
-  processEvent(state, event);
 }
 
 const readSelectedState = (state: Record<string, unknown>, { stateActions }: DevtoolsAction) => {
@@ -134,15 +121,15 @@ const readSelectedState = (state: Record<string, unknown>, { stateActions }: Dev
   return readState({ state, stateActions: stateActionsNew, cursor: { index: 0 } });
 }
 
-const processEvent = (state: State, incoming: DevtoolsAction) => {
+const processEvent = (state: State, event: DevtoolsAction) => {
   state.set(s => {
     const previousItem = s.items.at(-1);
     const fullStateBefore = previousItem?.fullState ?? {};
     const fullStateAfter = s.storeRef.current!.$state;
-    const selectedStateBefore = readSelectedState(fullStateBefore, incoming);
-    const selectedStateAfter = readSelectedState(fullStateAfter, incoming);
+    const selectedStateBefore = readSelectedState(fullStateBefore, event);
+    const selectedStateAfter = readSelectedState(fullStateAfter, event);
     const date = new Date();
-    const currentEvent = getCleanStackTrace(incoming.trace!);
+    const currentEvent = getCleanStackTrace(event.trace!);
     return {
       items: [
         ...s.items,
@@ -155,10 +142,10 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
           contractedKeys: [],
           time: getTimeDiff(date, previousItem?.date ?? date),
           date,
-          changed: incoming.stateActions.at(-1)!.name === '$delete' ? [] : getChangedKeys({ fullStateBefore, fullStateAfter }),
-          unchanged: getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming }),
-          actionType: incoming.stateActions.map(sa => sa.name).join('.'),
-          actionPayload: applyPayloadPaths(incoming),
+          changed: event.stateActions.at(-1)!.name === '$delete' ? [] : getChangedKeys({ fullStateBefore, fullStateAfter }),
+          unchanged: getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming: event }),
+          actionType: event.stateActions.map(sa => sa.name).join('.'),
+          actionPayload: applyPayloadPaths(event),
         }
       ],
     };
