@@ -4,7 +4,7 @@ import {App} from './app';
 import './index.css'
 import './shared/polyfills';
 import { augmentOlikForReact } from 'olik-react';
-import "@fontsource/roboto";
+import '@fontsource/roboto';
 import React from 'react';
 
 augmentOlikForReact()

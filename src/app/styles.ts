@@ -119,6 +119,10 @@ export const DevtoolsPanel = styled.div`
 export const Error = styled(possible.div)`
 	color: red;
 	font-size: 14px;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 `;
 
 export const StatePanel = styled(State)`

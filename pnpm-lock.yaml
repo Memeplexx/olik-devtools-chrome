@@ -5,8 +5,14 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@fontsource-variable/red-hat-mono':
+    specifier: ^5.0.18
+    version: 5.0.18
+  '@fontsource-variable/source-code-pro':
+    specifier: ^5.0.18
+    version: 5.0.18
   '@fontsource/roboto':
-    specifier: ^5.0.5
+    specifier: ^5.0.8
     version: 5.0.8
   date-fns:
     specifier: ^3.4.0
@@ -588,6 +594,14 @@ packages:
     resolution: {integrity: sha512-ut5V+D+fOoWPgGGNj83GGjnntO39xDy6DWxO0wb7Jp3DcMX0TfIqdzHF85VTQkerdyGmuuMD9AKAo5KiNlf/AQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
+
+  /@fontsource-variable/red-hat-mono@5.0.18:
+    resolution: {integrity: sha512-qzbs2bMMnwRBWi1zVrQtatlw8nVeqYijlbd3ZFqiYNOybbXOedLIYU8PRhBGH1TCoZNJ62YqMpX/+RSd8peYAw==}
+    dev: false
+
+  /@fontsource-variable/source-code-pro@5.0.18:
+    resolution: {integrity: sha512-Dg+nFJZWvL6XVJuRqpGsaYnlPnj6ti3ApXH6htGOm80F4TUj036iaU7noRp2dh9BLHkLhnX4S+GA+6kSgbtLng==}
+    dev: false
 
   /@fontsource/roboto@5.0.8:
     resolution: {integrity: sha512-XxPltXs5R31D6UZeLIV1td3wTXU3jzd3f2DLsXI8tytMGBkIsGcc9sIyiupRtA8y73HAhuSCeweOoBqf6DbWCA==}

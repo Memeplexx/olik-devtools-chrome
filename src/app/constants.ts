@@ -14,7 +14,7 @@ export type Item = {
   time: string,
   date: Date,
   event: string[],
-  eventString: string,
+  index: number,
   visible: boolean,
 }
 

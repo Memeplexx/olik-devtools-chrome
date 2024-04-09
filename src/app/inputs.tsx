@@ -35,7 +35,7 @@ const useDerivedState = (state: State) => ({
   itemsGrouped: useMemo(() => {
     return state.items
       .filter(i => i.visible)
-      .groupBy(i => i.eventString)
+      .groupBy(i => i.index)
       .map(items => ({ id: items[0].id, event: items[0].event, items }));
   }, [state.items]),
   ...useMemo(() => {
@@ -53,6 +53,7 @@ const useAutoScroller = (state: State) => {
 
 const useDetectPageRefresh = (state: State) => {
   useEffect(() => {
+    if (!chrome.runtime) return;
     const eventHandler: Parameters<typeof chrome.webNavigation.onCommitted.addListener>[0] = (details) => {
       if (details.transitionType === 'reload') {
         state.set(() => ({ items: [], error: 'Page refreshed. Clearing state.' }));
@@ -138,12 +139,12 @@ const readSelectedState = (state: Record<string, unknown>, { stateActions }: Dev
 
 const processEvent = (state: State, event: DevtoolsAction) => {
   state.set(s => {
-    const previousItem = s.items.at(-1);
+    const date = new Date();
+    const previousItem = s.items.at(-1) ?? { fullState: {}, event: [], index: 0, date };
     const fullStateBefore = previousItem?.fullState ?? {};
     const fullStateAfter = s.storeRef.current!.$state;
     const selectedStateBefore = readSelectedState(fullStateBefore, event);
     const selectedStateAfter = readSelectedState(fullStateAfter, event);
-    const date = new Date();
     const currentEvent = getCleanStackTrace(event.trace!);
     return {
       error: '',
@@ -152,7 +153,7 @@ const processEvent = (state: State, event: DevtoolsAction) => {
         {
           id: ++s.idRef.current,
           event: currentEvent,
-          eventString: currentEvent.join('\n'),
+          index: currentEvent.join('\n') === previousItem.event.join('\n') ? previousItem.index : previousItem.index + 1,
           fullState: fullStateAfter,
           visible: true,
           contractedKeys: [],

@@ -4,7 +4,7 @@ import { possible } from "../html";
 
 export const JsonWrapper = styled(possible.div)`
   overflow: auto;
-  font-family: 'Source Code Pro', monospace;
+  font-family: '@fontsource-variable/red-hat-mono', monospace;
   padding-bottom: 50px;
   overflow-x: hidden;
 `;
