@@ -1,13 +1,6 @@
 import { useLocalState } from "./inputs";
 
 
-export type ItemWrapper = {
-  id: number,
-  event: string[],
-  items: Item[],
-  visible: boolean,
-  headerExpanded: boolean,
-}
 
 export type Item = {
   actionType: string,
@@ -20,6 +13,9 @@ export type Item = {
   contractedKeys: string[],
   time: string,
   date: Date,
+  event: string[],
+  eventString: string,
+  visible: boolean,
 }
 
 export type State = ReturnType<typeof useLocalState>;

@@ -64,6 +64,7 @@ export const ItemHeading = styled.div<{ $headerExpanded: boolean, $eventCount: n
 	padding: 0 4px;
 	overflow: hidden;
 	background-color: rgba(255,255,255,0.1);
+	cursor: pointer;
 	:hover {
 		background-color: rgba(255,255,255,0.4);
 	}

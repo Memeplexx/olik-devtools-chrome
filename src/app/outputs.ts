@@ -5,7 +5,7 @@ import { Item, State } from "./constants";
 
 export const useOutputs = (state: State) => ({
   onClickHideIneffectiveActions: () => {
-    state.set(s => ({ hideUnchanged: !s.hideUnchanged, showOptions: false}));
+    state.set(s => ({ hideUnchanged: !s.hideUnchanged, showOptions: false }));
   },
   onClickDisplayInline: () => {
     state.set(s => ({ displayInline: !s.displayInline, showOptions: false }));
@@ -14,14 +14,12 @@ export const useOutputs = (state: State) => ({
     state.set(s => ({ items: s.items.map(i => ({ ...i, visible: false, showOptions: false })) }));
   },
   onClickItem: (selectedId: number) => () => {
-    const itemsFlattened = state.items.flatMap(i => i.items);
     if (state.selectedId === selectedId) {
       state.set({ selectedId: null });
-      silentlyUpdateAppStoreState(state, itemsFlattened[itemsFlattened.length - 1].fullState);
+      silentlyUpdateAppStoreState(state, state.items.at(-1)!.fullState);
     } else {
-      const item = itemsFlattened.find(i => i.id === selectedId)!;
       state.set({ selectedId });
-      silentlyUpdateAppStoreState(state, item.fullState);
+      silentlyUpdateAppStoreState(state, state.items.find(i => i.id === selectedId)!.fullState);
     }
   },
   onEditorChange: (query: string) => {
@@ -31,27 +29,21 @@ export const useOutputs = (state: State) => ({
     silentlyApplyStateAction(state.storeRef.current!, query);
   },
   onClickHeader: (selectedId: number) => () => {
-    state.set({ items: state.items.map(i => ({ ...i, headerExpanded: i.id === selectedId ? !i.headerExpanded : i.headerExpanded })) });
+    state.set(s => ({ contractedHeaders: s.contractedHeaders.includes(selectedId) ? s.contractedHeaders.filter(id => id !== selectedId) : [...s.contractedHeaders, selectedId] }));
   },
   onClickToggleMenu: () => {
     state.set(s => ({ showOptions: !s.showOptions }));
   },
   onClickNodeKey: (key: string) => {
     state.set(s => ({
-      items: s.items.map(itemOuter => {
-        if (itemOuter.id !== s.idRefOuter.current) return itemOuter;
+      items: s.items.map(item => {
+        if (item.id !== s.idRef.current) return item;
         return {
-          ...itemOuter,
-          items: itemOuter.items.map(itemInner => {
-            if (itemInner.id !== s.idRefInner.current) return itemInner;
-            return {
-              ...itemInner,
-              contractedKeys: itemInner.contractedKeys.includes(key) ? itemInner.contractedKeys.filter(k => k !== key) : [...itemInner.contractedKeys, key],
-            } satisfies Item
-          })
-        }
-      })
-    }));
+          ...item,
+          contractedKeys: item.contractedKeys.includes(key) ? item.contractedKeys.filter(k => k !== key) : [...item.contractedKeys, key],
+        } as Item;
+      }),
+    }))
   },
 });
 

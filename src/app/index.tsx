@@ -100,13 +100,13 @@ export const App = () => {
                             <Items
                               tabIndex={0}
                               children={
-                                inputs.items.filter(i => i.visible).map(itemWrapper => (
+                                inputs.itemsGrouped.map(itemWrapper => (
                                   <ItemWrapper
                                     key={itemWrapper.id}
                                     children={
                                       <>
                                         <ItemHeading
-                                          $headerExpanded={itemWrapper.headerExpanded}
+                                          $headerExpanded={!inputs.contractedHeaders.includes(itemWrapper.id)}
                                           $eventCount={itemWrapper.event.length}
                                           onClick={outputs.onClickHeader(itemWrapper.id)}
                                           children={itemWrapper.event.map((e, i) => (

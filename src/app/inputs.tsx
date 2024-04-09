@@ -3,7 +3,7 @@ import { DevtoolsAction, StateAction, assertIsRecord, createStore, getStore, lib
 import { useEffect, useMemo, useRef } from "react";
 import { is, isoDateRegexPattern, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
-import { Item, ItemWrapper, State } from "./constants";
+import { Item, State } from "./constants";
 
 export const useInputs = () => {
   const localState = useLocalState();
@@ -20,22 +20,29 @@ export const useInputs = () => {
 export const useLocalState = () => useRecord({
   error: '',
   selectedId: null as number | null,
-  items: new Array<ItemWrapper>(),
+  items: new Array<Item>(),
+  contractedHeaders: new Array<number>(),
   hideUnchanged: false,
   displayInline: false,
   query: '',
   showOptions: false,
   storeRef: useRef<BasicStore | null>(null),
   treeRef: useRef<HTMLDivElement | null>(null),
-  idRefOuter: useRef(0),
-  idRefInner: useRef(0),
+  idRef: useRef(0),
 });
 
 const useDerivedState = (state: State) => {
-  return useMemo(() => {
-    const items = state.items.flatMap(i => i.items);
-    return items.find(i => i.id === state.selectedId) ?? items.at(-1) ?? { changed: [], fullState: {} } as Partial<Item>;
-  }, [state.items, state.selectedId]);
+  return {
+    itemsGrouped: useMemo(() => {
+      return state.items
+        .filter(i => i.visible)
+        .groupBy(i => i.eventString)
+        .map(items => ({ id: items[0].id, event: items[0].event, items }));
+    }, [state.items]),
+    ...useMemo(() => {
+      return state.items.find(i => i.id === state.selectedId) ?? state.items.at(-1) ?? { changed: [], fullState: {} } as Partial<Item>;
+    }, [state.items, state.selectedId]),
+  };
 }
 
 const instantiateStore = (state: State) => {
@@ -56,8 +63,7 @@ const instantiateStore = (state: State) => {
 
 const useAutoScroller = (state: State) => {
   useMemo(() => {
-    const itemsFlattened = state.items.flatMap(i => i.items);
-    const selectors = itemsFlattened.find(i => i.id === state.selectedId)?.changed ?? itemsFlattened.at(-1)?.changed ?? [];
+    const selectors = state.items.find(i => i.id === state.selectedId)?.changed ?? state.items.at(-1)?.changed ?? [];
     const element = selectors.find(e => document.querySelector(`[data-key-input="${e}"]`));
     element && document.querySelector(`[data-key-input="${element}"]`)?.scrollIntoView({ behavior: 'smooth' });
   }, [state.items, state.selectedId])
@@ -123,14 +129,14 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
     if (!incoming.actionType) { return s; }
     if (incoming.actionType === '$load()') {
       s.storeRef.current = null;
-      return { storeFullyInitialized: false, items: [] };
+      return { items: [] };
     }
     if (chrome.runtime) {
       libState.disableDevtoolsDispatch = true;
       setNewStateAndNotifyListeners(incoming);
       libState.disableDevtoolsDispatch = false;
     }
-    const mostRecentItem = s.items.at(-1)?.items.at(-1);
+    const mostRecentItem = s.items.at(-1);
     const fullStateBefore = mostRecentItem?.fullState ?? {};
     const fullStateAfter = s.storeRef.current!.$state;
     const selectedStateBefore = readSelectedState(fullStateBefore, incoming);
@@ -138,39 +144,23 @@ const processEvent = (state: State, incoming: DevtoolsAction) => {
     const segments = incoming.actionType.split('.');
     const func = segments.pop()!.slice(0, -2);
     const date = new Date();
-    const changed = func === '$delete' ? [] : getChangedKeys({ fullStateBefore, fullStateAfter });
-    const newItem = {
-      id: ++s.idRefInner.current,
-      fullState: fullStateAfter,
-      contractedKeys: [],
-      time: getTimeDiff(date, mostRecentItem?.date ?? date),
-      date,
-      changed,
-      unchanged: getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming }),
-      actionType: [...segments, func].join('.'),
-      actionPayload: applyPayloadPaths(incoming),
-    } satisfies Item;
     const currentEvent = getCleanStackTrace(incoming.trace!);
-    const lastItem = s.items.at(-1)! ?? { event: [] };
-    const storeStateVersion = fullStateAfter;
     return {
-      storeStateVersion,
-      changed,
-      items: currentEvent.toString() === lastItem.event.toString() ? [
-        ...s.items.slice(0, s.items.length - 1),
-        {
-          ...lastItem,
-          items: [...lastItem.items, newItem],
-          visible: true,
-        }
-      ] : [
+      items: [
         ...s.items,
         {
-          id: ++s.idRefOuter.current,
+          id: ++s.idRef.current,
           event: currentEvent,
-          items: [newItem],
+          eventString: currentEvent.join('\n'),
+          fullState: fullStateAfter,
           visible: true,
-          headerExpanded: false,
+          contractedKeys: [],
+          time: getTimeDiff(date, mostRecentItem?.date ?? date),
+          date,
+          changed: func === '$delete' ? [] : getChangedKeys({ fullStateBefore, fullStateAfter }),
+          unchanged: getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming }),
+          actionType: [...segments, func].join('.'),
+          actionPayload: applyPayloadPaths(incoming),
         }
       ],
     };
