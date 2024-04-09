@@ -52,13 +52,14 @@ const useAutoScroller = (state: State) => {
 
 const useMessageHandler = (state: State) => {
   useEffect(() => {
-    const demoAppListener = (event: MessageEvent<DevtoolsAction>) => demoAppMessageListener(state, event);
-    const chromeListener = (event: DevtoolsAction) => chromeMessageListener(state, event);
-    window.addEventListener('message', demoAppListener);
-    chrome.runtime?.onMessage.addListener(chromeListener);
-    return () => {
-      window.removeEventListener('message', demoAppListener);
-      chrome.runtime?.onMessage.removeListener(chromeListener);
+    if (chrome.runtime) {
+      const chromeListener = (event: DevtoolsAction) => chromeMessageListener(state, event);
+      chrome.runtime.onMessage.addListener(chromeListener);
+      return () => chrome.runtime.onMessage.removeListener(chromeListener);
+    } else {
+      const demoAppListener = (event: MessageEvent<DevtoolsAction>) => demoAppMessageListener(state, event);
+      window.addEventListener('message', demoAppListener);
+      return () => window.removeEventListener('message', demoAppListener);
     }
   }, [state])
 }
