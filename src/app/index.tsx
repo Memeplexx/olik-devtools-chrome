@@ -83,7 +83,7 @@ const Resizer = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) =>(
                     children={[
                       {
                         icon: inputs.hideUnchanged ? ToggleOnIcon : ToggleOffIcon,
-                        text: 'Hide ineffective actions',
+                        text: 'Hide ineffective updates',
                         onClick: outputs.onClickHideIneffectiveActions,
                       },
                       {
@@ -116,7 +116,6 @@ const Resizer = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) =>(
 const ListItems = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) => (
   <ItemsWrapper
     minSize={0}
-    id="itemsWrapper"
     children={
       <Items
         tabIndex={0}

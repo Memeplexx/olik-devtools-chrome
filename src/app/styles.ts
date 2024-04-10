@@ -67,7 +67,6 @@ export const Items = styled.div`
 
 export const ItemWrapper = styled.div`
   padding-left: 3px solid rgba(255,255,255,0.4);
-  margin-bottom: 6px;
 `;
 
 export const ItemHeading = styled(possible.div)<{ $headerExpanded: boolean, $eventCount: number }>`
@@ -85,6 +84,7 @@ export const ItemHeading = styled(possible.div)<{ $headerExpanded: boolean, $eve
 
 export const ItemHead = styled.div`
   white-space: nowrap;
+	text-align: end;
 `;
 
 export const ItemContent = styled.div<{ $isSelected?: boolean }>`
