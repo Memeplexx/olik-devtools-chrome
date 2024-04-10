@@ -152,7 +152,7 @@ const ListItems = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) =>
                             actionType={item.actionType}
                             state={item.actionPayload}
                             contractedKeys={item.contractedKeys}
-                            onClickNodeKey={outputs.onClickNodeKey}
+                            onClickNodeKey={outputs.onClickNodeKey(item.id)}
                             hideUnchanged={inputs.hideUnchanged}
                             displayInline={inputs.displayInline}
                           />

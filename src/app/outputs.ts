@@ -36,16 +36,16 @@ export const useOutputs = (state: State) => ({
   onHideMenu: () => {
     state.set({ showOptions: false });
   },
-  onClickNodeKey: (key: string) => {
+  onClickNodeKey: (idToUpdate: number) => (key: string) => {
     state.set(s => ({
       items: s.items.map(item => {
-        if (item.id !== s.idRef.current) return item;
+        if (item.id !== idToUpdate) return item;
         return {
           ...item,
           contractedKeys: item.contractedKeys.includes(key) ? item.contractedKeys.filter(k => k !== key) : [...item.contractedKeys, key],
         } as Item;
-      }),
-    }))
+      })
+    }));
   },
 });
 
