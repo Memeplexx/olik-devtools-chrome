@@ -6,7 +6,7 @@ import { StyleProps } from "./constants";
 
 
 export const KeyNode = styled(possible.element(CompactInput))<StyleProps>`
-  color: #cfcfcf;
+  color: ${p => p.$nonValueColor};
 `;
 
 export const ValueNode = styled(possible.element(CompactInput))<StyleProps>`
@@ -19,7 +19,7 @@ export const Colon = styled(possible.span)<StyleProps>`
 `;
 
 export const BraceNode = styled(possible.span)<StyleProps>`
-  color: #7a7a7a;
+  color: ${p => p.$color};
 `;
 
 export const Ellipses = styled(possible.span)<StyleProps>`
@@ -27,11 +27,11 @@ export const Ellipses = styled(possible.span)<StyleProps>`
 `;
 
 export const ParenthesisNode = styled(possible.span)<StyleProps>`
-  color: #7a7a7a;
+  color: ${p => p.$nonValueColor};
 `;
 
 export const ActionType = styled(possible.span) <StyleProps>`
-  color: #7a7a7a;
+  color: ${p => p.$nonValueColor};
 `;
 
 export const CommaNode = styled(possible.span) <StyleProps>`

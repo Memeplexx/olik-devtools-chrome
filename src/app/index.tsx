@@ -11,7 +11,7 @@ export const App = () => {
   return (
     <>
       <DemoPanel
-        showIf={/*!chrome.runtime*/ true}
+        showIf={!chrome.runtime}
       />
       <DevtoolsPanel
         children={

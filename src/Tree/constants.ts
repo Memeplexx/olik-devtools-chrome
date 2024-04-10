@@ -37,5 +37,6 @@ export type StyleProps = {
   $displayInline?: boolean,
   $showTextArea?: boolean,
   $color?: string,
+  $nonValueColor?: string,
   $isArrayOrObject?: boolean,
 }

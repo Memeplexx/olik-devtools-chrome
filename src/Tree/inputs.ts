@@ -82,7 +82,12 @@ const useDerivedState = (
       if (is.string(props.item)) return 'green';
       if (is.date(props.item)) return 'deepskyblue';
       if (is.null(props.item)) return 'lightblue';
+      if (is.boolean(props.item)) return '#00ff3c';
       if (is.undefined(props.item)) return 'magenta';
+    })(),
+    $nonValueColor: (() => {
+      if (props.unchanged.includes(props.keyConcat)) return 'gray';
+      return '#e4e4e4';
     })(),
   }), [props.displayInline, props.item, props.keyConcat, props.unchanged, state.isShowingTextArea])
 });

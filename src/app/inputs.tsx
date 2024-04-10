@@ -18,7 +18,7 @@ export const useInputs = () => {
 }
 
 export const useLocalState = () => useRecord({
-  error: '',
+  error: 'Waiting for store. Try refreshing the page.',
   selectedId: null as number | null,
   items: new Array<Item>(),
   contractedHeaders: new Array<number>(),
@@ -35,7 +35,7 @@ const useDerivedState = (state: State) => ({
   itemsGrouped: useMemo(() => {
     return state.items
       .filter(i => i.visible)
-      .groupBy(i => i.index)
+      .groupBy(i => i.groupIndex)
       .map(items => ({ id: items[0].id, event: items[0].event, items }));
   }, [state.items]),
   ...useMemo(() => {
@@ -66,7 +66,6 @@ const useDetectPageRefresh = (state: State) => {
 
 const useMessageHandler = (state: State) => {
   useEffect(() => {
-    state.set(() => ({ error: 'Waiting for store. Try refreshing the page.' }));
     if (chrome.runtime) {
       const chromeListener = (event: DevtoolsAction) => chromeMessageListener(state, event);
       chrome.runtime.onMessage.addListener(chromeListener);
@@ -140,7 +139,7 @@ const readSelectedState = (state: Record<string, unknown>, { stateActions }: Dev
 const processEvent = (state: State, event: DevtoolsAction) => {
   state.set(s => {
     const date = new Date();
-    const previousItem = s.items.at(-1) ?? { fullState: {}, event: [], index: 0, date };
+    const previousItem = s.items.at(-1) ?? { fullState: {}, event: [], groupIndex: 0, date };
     const fullStateBefore = previousItem?.fullState ?? {};
     const fullStateAfter = s.storeRef.current!.$state;
     const selectedStateBefore = readSelectedState(fullStateBefore, event);
@@ -153,7 +152,7 @@ const processEvent = (state: State, event: DevtoolsAction) => {
         {
           id: ++s.idRef.current,
           event: currentEvent,
-          index: currentEvent.join('\n') === previousItem.event.join('\n') ? previousItem.index : previousItem.index + 1,
+          groupIndex: currentEvent.join() === previousItem.event.join() ? previousItem.groupIndex : previousItem.groupIndex + 1,
           fullState: fullStateAfter,
           visible: true,
           contractedKeys: [],
@@ -161,7 +160,7 @@ const processEvent = (state: State, event: DevtoolsAction) => {
           date,
           changed: event.stateActions.at(-1)!.name === '$delete' ? [] : getChangedKeys({ fullStateBefore, fullStateAfter }),
           unchanged: getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming: event }),
-          actionType: event.stateActions.map(sa => sa.name).join('.'),
+          actionType: event.actionType.substring(0, event.actionType.length - 2),
           actionPayload: applyPayloadPaths(event),
         }
       ],
