@@ -8,6 +8,8 @@ import { possible } from "../html";
 import { DemoWrapper } from "../demo/demo-wrapper";
 import { IoMdMore } from "react-icons/io";
 import { Tree } from "../tree";
+import { LiaArrowsAltVSolid } from "react-icons/lia";
+
 
 
 export const MenuButton = styled.button`
@@ -152,15 +154,12 @@ export const ResizeHandleInner = styled.div`
 	display: flex;
 `;
 
-export const ResizeIcon = styled.svg`
+export const ResizeIcon = styled(LiaArrowsAltVSolid)`
 	height: 15px;
 	position: absolute;
 	left: 50%;
 	top: 50%;
 	transform: translate(-50%, -50%);
-`;
-
-export const ResizeIconPath = styled.path`
 `;
 
 export const ResizablePanel = styled(Panel)`

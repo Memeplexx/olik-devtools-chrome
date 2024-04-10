@@ -18,7 +18,7 @@ export const useInputs = () => {
 }
 
 export const useLocalState = () => useRecord({
-  error: 'Waiting for store. Try refreshing the page.',
+  error: !chrome.runtime ? '' : 'Waiting for store. Try refreshing the page.',
   selectedId: null as number | null,
   items: new Array<Item>(),
   contractedHeaders: new Array<number>(),
@@ -84,6 +84,7 @@ const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction
   if (event.data.actionType === '$load()') {
     state.storeRef.current = getStore<Record<string, unknown>>();
     document.getElementById('olik-init')!.innerHTML = 'done';
+    state.set({ error: '' });
   } else {
     processEvent(state, event.data);
   }
@@ -97,6 +98,7 @@ const chromeMessageListener = (state: State, event: DevtoolsAction) => {
       .query({ active: true })
       .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: notifyAppOfInitialization }))
       .catch(console.error);
+    state.set({ error: '' });
   } else {
     const convertAnyDateStringsToDates = (val: unknown): unknown => {
       if (is.record(val))
@@ -146,7 +148,6 @@ const processEvent = (state: State, event: DevtoolsAction) => {
     const selectedStateAfter = readSelectedState(fullStateAfter, event);
     const currentEvent = getCleanStackTrace(event.trace!);
     return {
-      error: '',
       items: [
         ...s.items,
         {

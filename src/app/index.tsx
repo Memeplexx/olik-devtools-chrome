@@ -3,7 +3,7 @@ import { Frag } from '../html/frag';
 import { PopupList } from '../popup-list';
 import { useInputs } from './inputs';
 import { useOutputs } from './outputs';
-import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, ResizeIconPath, StatePanel, ToggleOffIcon, ToggleOnIcon } from './styles';
+import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, ToggleOffIcon, ToggleOnIcon } from './styles';
 
 export const App = () => {
   const inputs = useInputs();
@@ -50,15 +50,7 @@ export const App = () => {
                             <ResizeHandleInner
                               children={
                                 <>
-                                  <ResizeIcon
-                                    viewBox="0 0 24 24"
-                                    children={
-                                      <ResizeIconPath
-                                        fill="currentColor"
-                                        d="M8,18H11V15H2V13H22V15H13V18H16L12,22L8,18M12,2L8,6H11V9H2V11H22V9H13V6H16L12,2Z"
-                                      />
-                                    }
-                                  />
+                                  <ResizeIcon />
                                   <MenuButton
                                     onClick={outputs.onClickToggleMenu}
                                     children={
