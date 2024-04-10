@@ -3,7 +3,7 @@ import { Frag } from '../html/frag';
 import { PopupList } from '../popup-list';
 import { useInputs } from './inputs';
 import { useOutputs } from './outputs';
-import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, HeaderDown, HeaderUp, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, ToggleOffIcon, ToggleOnIcon } from './styles';
+import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, HeaderDown, HeaderUp, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, TimeIcon, ToggleOffIcon, ToggleOnIcon } from './styles';
 import { Inputs, Outputs } from './constants';
 
 export const App = () => {
@@ -127,9 +127,6 @@ const ListItems = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) =>
                 <>
                   <ItemHeading
                     showIf={!inputs.hideHeaders}
-                    $headerExpanded={!inputs.contractedHeaders.includes(itemGroup.id)}
-                    $eventCount={itemGroup.event.length}
-                    onClick={outputs.onClickHeader(itemGroup.id)}
                     children={itemGroup.event.map((e, i) => (
                       <ItemHead
                         key={i}
@@ -156,7 +153,12 @@ const ListItems = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) =>
                             displayInline={inputs.displayInline}
                           />
                           <ItemTime
-                            children={item.time}
+                            children={
+                              <>
+                                <TimeIcon />
+                                {item.time}
+                              </>
+                            }
                           />
                         </>
                       }

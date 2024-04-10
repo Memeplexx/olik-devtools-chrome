@@ -11,6 +11,7 @@ import { Tree } from "../tree";
 import { LiaArrowsAltVSolid } from "react-icons/lia";
 import { LuArrowUpToLine } from "react-icons/lu";
 import { LuArrowDownToLine } from "react-icons/lu";
+import { TbClock } from "react-icons/tb";
 
 
 export const MenuButton = styled.button`
@@ -69,11 +70,12 @@ export const ItemWrapper = styled.div`
   padding-left: 3px solid rgba(255,255,255,0.4);
 `;
 
-export const ItemHeading = styled(possible.div)<{ $headerExpanded: boolean, $eventCount: number }>`
+export const TimeIcon = styled(TbClock)``;
+
+export const ItemHeading = styled(possible.div)`
 	color: white;
 	transition: all 0.2s;
-	max-height: ${p => p.$headerExpanded ? `${p.$eventCount * 15}px` : '15px'};
-	padding: 0 4px;
+	padding: 4px;
 	overflow: hidden;
 	background-color: rgba(255,255,255,0.1);
 	cursor: pointer;
@@ -110,10 +112,11 @@ export const ItemTime = styled.div`
 	top: 0;
 	padding: 2px;
 	background: #9d9d9d;
-	width: 60px;
+	width: 70px;
 	text-align: end;
-	border-bottom-left-radius: 8px;
-	background-color: rgba(255,255,255,0.1);
+	display: flex;
+	justify-content: space-between;
+	background-color: transparent;
 `;
 
 export const EditorPanel = styled(Editor)`

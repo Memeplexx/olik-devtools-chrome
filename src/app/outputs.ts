@@ -27,9 +27,6 @@ export const useOutputs = (state: State) => ({
   onEditorEnter: (query: string) => {
     silentlyApplyStateAction(state.storeRef.current!, query);
   },
-  onClickHeader: (selectedId: number) => () => {
-    state.set(s => ({ contractedHeaders: s.contractedHeaders.includes(selectedId) ? s.contractedHeaders.filter(id => id !== selectedId) : [...s.contractedHeaders, selectedId] }));
-  },
   onClickToggleMenu: () => {
     state.set(s => ({ showOptions: !s.showOptions }));
   },
