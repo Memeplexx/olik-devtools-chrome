@@ -18,7 +18,8 @@ export const useOutputs = <V extends InputValue>(
   onKeyUp: (event: TypedKeyboardEvent<TextInputElement>) => {
     if (event.key === 'Enter' && !(state.showTextArea && event.shiftKey)) {
       state.inputRef.current!.blur();
-    } else if (event.key === 'Escape' && !state.showPopup) {
+    }
+    if (event.key === 'Escape' && !state.showPopup) {
       state.onEscapePressed.current = true;
       state.inputRef.current!.blur();
       state.onEscapePressed.current = false;
@@ -28,11 +29,16 @@ export const useOutputs = <V extends InputValue>(
   onChange: (event: ChangeEvent<TextInputElement>) => {
     const inputVal = event.target.value;
     const valueOfNewType = (() => {
-      if (props.valueType === 'string') return inputVal;
-      if (props.valueType === 'number') return inputVal.trim() === '' ? '' : inputVal.trim() === '-' ? '-' : parseFloat(inputVal);
-      if (props.valueType === 'boolean') return inputVal === 'true';
-      if (props.valueType === 'date') return new Date(isoDateRegexPattern.test(inputVal) ? inputVal : 0);
-      if (props.valueType === 'null') return null;
+      if (props.valueType === 'string') 
+        return inputVal;
+      if (props.valueType === 'number') 
+        return inputVal.trim() === '' ? '' : inputVal.trim() === '-' ? '-' : parseFloat(inputVal);
+      if (props.valueType === 'boolean') 
+        return inputVal === 'true';
+      if (props.valueType === 'date') 
+        return new Date(isoDateRegexPattern.test(inputVal) ? inputVal : 0);
+      if (props.valueType === 'null') 
+        return null;
     })() as V;
     props.onChange?.(valueOfNewType);
   },
@@ -49,10 +55,14 @@ export const useOutputs = <V extends InputValue>(
   },
   onBlur: (event: FocusEvent<TextInputElement>) => {
     props.onBlur?.(event);
-    if (state.calendarOpened.current) return;
-    if (state.onEscapePressed.current) return;
-    if (state.inputRef.current!.value === state.valueBefore.current) return;
-    if (props.valueType === 'boolean') return;
+    if (state.calendarOpened.current) 
+      return;
+    if (state.onEscapePressed.current) 
+      return;
+    if (state.inputRef.current!.value === state.valueBefore.current) 
+      return;
+    if (props.valueType === 'boolean') 
+      return;
     props.onChangeCommit(props.value);
   },
   onFocus: (event: FocusEvent<TextInputElement>) => {
@@ -69,11 +79,16 @@ export const useOutputs = <V extends InputValue>(
     props.onChangeValueType?.(type);
     const { value } = state.inputRef.current!;
     const valueOfNewType = (() => {
-      if (type === 'string') return value;
-      if (type === 'number') return (/^-?\d*\.?\d+$/.test(value) ? +value : 0);
-      if (type === 'boolean') return (value === 'true');
-      if (type === 'date') return new Date(isoDateRegexPattern.test(value) ? value : 0);
-      if (type === 'null') return null;
+      if (type === 'string') 
+        return value;
+      if (type === 'number') 
+        return (/^-?\d*\.?\d+$/.test(value) ? +value : 0);
+      if (type === 'boolean') 
+        return (value === 'true');
+      if (type === 'date') 
+        return new Date(isoDateRegexPattern.test(value) ? value : 0);
+      if (type === 'null') 
+        return null;
     })() as V;
     props.onChangeCommit(valueOfNewType);
   },

@@ -36,7 +36,7 @@ const getTreeProps = (props: Props, state: State): TreeProps => {
   }
   try {
     const stateRead = doReadState(props.query, props.state || {});
-    if (stateRead === undefined) { throw new Error(); }
+    if (stateRead === undefined) throw new Error();
     return { ...commonTreeProps, state: stateRead };
   } catch (e) {
     const segments = props.query.split('.').filter(e => !!e).slice(0, -1);
