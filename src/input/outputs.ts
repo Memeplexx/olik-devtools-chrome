@@ -1,5 +1,5 @@
 import { ChangeEvent, FocusEvent, MouseEvent } from "react";
-import { is, isoDateRegexPattern, useEventHandlerForDocument } from "../shared/functions";
+import { is, isoDateRegexPattern, tupleIncludes, useEventHandlerForDocument } from "../shared/functions";
 import { Props, InputValue, State, TextInputElement, ValueType, Inputs } from "./constants";
 import { TypedKeyboardEvent } from "../shared/types";
 
@@ -43,7 +43,7 @@ export const useOutputs = <V extends InputValue>(
       event.preventDefault();
     if (is.date(props.value))
       event.preventDefault();
-    if (props.valueType === 'number' && !/^-?\d*\.?\d*$/.test(event.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Shift'].includes(event.key))
+    if (props.valueType === 'number' && !/^-?\d*\.?\d*$/.test(event.key) && !tupleIncludes(event.key, ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Shift']))
       event.preventDefault();
     state.animationEnabled.current = false;
   },

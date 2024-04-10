@@ -25,6 +25,7 @@ export type Props<V extends InputValue>
     readOnly?: boolean,
     onChangeInputElement?: (isTextArea: boolean) => void,
     isChanged: boolean,
+    onHidePopup: () => void,
   }
   & Omit<HTMLAttributes<TextInputElement>, 'onChange' | 'value'>;
 

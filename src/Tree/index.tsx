@@ -92,6 +92,7 @@ export const RenderedNode = function RenderedNode(
               onChangeCommit={outputs.onChangeCommitValue}
               onChangeInputElement={outputs.onChangeInputElement}
               isChanged={inputs.isChanged}
+              onHidePopup={outputs.onHideOptions}
               additionalOptions={(!props.isArrayElement || !inputs.showArrayOptions) ? [] : [
                 {
                   onClick: outputs.onClickCopy,
@@ -158,6 +159,7 @@ export const RenderedNode = function RenderedNode(
                   onBlur={outputs.onBlurObjectKey}
                   allowTypeSelectorPopup={false}
                   allowQuotesToBeShown={false}
+                  onHidePopup={outputs.onHideOptions}
                   valueType='string'
                 />
                 <Colon

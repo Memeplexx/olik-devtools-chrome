@@ -1,5 +1,5 @@
 import { PopupListProps } from "./consts";
-import { OptionText, PopupOption, PopupOptions } from "./styles";
+import { IconWrapper, OptionText, PopupOption, PopupOptions } from "./styles";
 
 export const PopupList = (
   props: PopupListProps
@@ -20,7 +20,10 @@ export const PopupList = (
             }}
             children={
               <>
-                {prop.icon && <prop.icon style={{width: '12px', height: '12px'}} />}
+                <IconWrapper
+                  showIf={!!prop.icon}
+                  children={prop.icon && <prop.icon />}
+                />
                 <OptionText
                   children={prop.text}
                 />

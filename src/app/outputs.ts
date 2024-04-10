@@ -30,6 +30,9 @@ export const useOutputs = (state: State) => ({
   onClickToggleMenu: () => {
     state.set(s => ({ showOptions: !s.showOptions }));
   },
+  onHideMenu: () => {
+    state.set({ showOptions: false });
+  },
   onClickNodeKey: (key: string) => {
     state.set(s => ({
       items: s.items.map(item => {

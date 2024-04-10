@@ -38,5 +38,13 @@ export const PopupOption = styled(possible.span)<{ $selected?: boolean }>`
   `}
 `;
 
+export const IconWrapper = styled(possible.span)`
+  > {
+    width: 12px;
+    height: 12px;
+  }
+`;
+
 export const OptionText = styled(possible.span)`
+  flex: 1;
 `;
