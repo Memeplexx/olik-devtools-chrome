@@ -4,7 +4,7 @@ import { Props, InputValue, TextInputElement, types } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
 import { Input, TextMeasurerWrapper, Quote, TextArea, TextAreaWrapper, TextMeasurer, Wrapper } from "./styles";
-import { PopupList } from '../popup-list';
+import { IconOption, PopupList } from '../popup-list';
 import { IoIosSwap } from 'react-icons/io';
 
 
@@ -82,15 +82,20 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
           <PopupList
             showIf={inputs.showPopup}
             position={inputs.showTextArea ? 'below' : 'right'}
-            children={[
-              ...(props.additionalOptions || []),
-              ...types.map(type => ({
-                text: type,
-                icon: IoIosSwap,
-                onClick: outputs.onClickChangeType(type),
-                showIf: type !== props.valueType,
-              })),
-            ]}
+            children={
+              <>
+                {props.additionalOptions ?? null}
+                {types.map(type => (
+                  <IconOption
+                    key={type}
+                    text={type}
+                    icon={IoIosSwap}
+                    onClick={outputs.onClickChangeType(type)}
+                    showIf={type !== props.valueType}
+                  />
+                ))}
+              </>
+            }
           />
         </>
       }

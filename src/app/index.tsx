@@ -1,6 +1,6 @@
 import { PanelGroup } from 'react-resizable-panels';
 import { Frag } from '../html/frag';
-import { PopupList } from '../popup-list';
+import { IconOption, PopupList } from '../popup-list';
 import { useInputs } from './inputs';
 import { useOutputs } from './outputs';
 import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, HeaderDown, HeaderUp, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, TimeIcon, ToggleOffIcon, ToggleOnIcon } from './styles';
@@ -65,7 +65,7 @@ const CurrentState = ({ inputs }: { inputs: Inputs }) => (
   />
 );
 
-const Resizer = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) =>(
+const Resizer = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) => (
   <ResizeHandle
     children={
       <ResizeHandleInner
@@ -80,28 +80,30 @@ const Resizer = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) =>(
                   <PopupList
                     position='left'
                     showIf={inputs.showOptions}
-                    children={[
-                      {
-                        icon: inputs.hideUnchanged ? ToggleOnIcon : ToggleOffIcon,
-                        text: 'Hide ineffective updates',
-                        onClick: outputs.onClickHideIneffectiveActions,
-                      },
-                      {
-                        icon: inputs.displayInline ? ToggleOnIcon : ToggleOffIcon,
-                        text: 'Display inline',
-                        onClick: outputs.onClickDisplayInline,
-                      },
-                      {
-                        icon: ClearIcon,
-                        text: 'Clear',
-                        onClick: outputs.onClickClear,
-                      },
-                      {
-                        icon: inputs.hideHeaders ? HeaderDown : HeaderUp,
-                        text: 'Hide trace headers',
-                        onClick: outputs.onClickHideHeaders,
-                      },
-                    ]}
+                    children={
+                      <>
+                        <IconOption
+                          icon={inputs.hideUnchanged ? ToggleOnIcon : ToggleOffIcon}
+                          text='Hide ineffective updates'
+                          onClick={outputs.onClickHideIneffectiveActions}
+                        />
+                        <IconOption
+                          icon={inputs.displayInline ? ToggleOnIcon : ToggleOffIcon}
+                          text='Display inline'
+                          onClick={outputs.onClickDisplayInline}
+                        />
+                        <IconOption
+                          icon={ClearIcon}
+                          text='Clear'
+                          onClick={outputs.onClickClear}
+                        />
+                        <IconOption
+                          icon={inputs.hideHeaders ? HeaderDown : HeaderUp}
+                          text='Hide trace headers'
+                          onClick={outputs.onClickHideHeaders}
+                        />
+                      </>
+                    }
                   />
                 </>
               }

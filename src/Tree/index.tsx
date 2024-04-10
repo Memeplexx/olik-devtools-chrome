@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
-import { PopupList } from "../popup-list";
+import { IconOption, PopupList } from "../popup-list";
 import { is } from "../shared/functions";
 import { RecurseArgs, RenderNodeArgs, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
@@ -92,18 +92,20 @@ export const RenderedNode = function RenderedNode(
               onChangeInputElement={outputs.onChangeInputElement}
               isChanged={inputs.isChanged}
               onHidePopup={outputs.onHideOptions}
-              additionalOptions={(!props.isArrayElement || !inputs.showArrayOptions) ? [] : [
-                {
-                  onClick: outputs.onClickCopy,
-                  icon: FaCopy,
-                  text: 'copy node'
-                },
-                {
-                  onClick: outputs.onClickRemoveFromArray,
-                  icon: FaTrash,
-                  text: 'remove array element'
-                },
-              ]}
+              additionalOptions={!props.isArrayElement ? null : (
+                <>
+                  <IconOption
+                    onClick={outputs.onClickCopy}
+                    icon={FaCopy}
+                    text='copy node'
+                  />
+                  <IconOption
+                    onClick={outputs.onClickRemoveFromArray}
+                    icon={FaTrash}
+                    text='remove array element'
+                  />
+                </>
+              )}
             />
           )
         }
@@ -180,43 +182,45 @@ export const RenderedNode = function RenderedNode(
                 <PopupList
                   showIf={inputs.showOptions}
                   position='right'
-                  children={[
-                    {
-                      onClick: outputs.onClickEditKey,
-                      icon: FaEdit,
-                      text: 'edit object key',
-                      showIf: inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden
-                    },
-                    {
-                      onClick: outputs.onClickCopy,
-                      icon: FaCopy,
-                      text: 'copy node'
-                    },
-                    {
-                      onClick: outputs.onClickDelete,
-                      icon: FaTrash,
-                      text: 'delete node',
-                      showIf: !props.isTopLevel && !props.isArrayElement
-                    },
-                    {
-                      onClick: outputs.onClickAddToArray,
-                      icon: IoMdAdd,
-                      text: 'add array element',
-                      showIf: is.array(props.item)
-                    },
-                    {
-                      onClick: outputs.onClickRemoveFromArray,
-                      icon: FaTrash,
-                      text: 'remove array element',
-                      showIf: !props.isTopLevel && !!props.isArrayElement
-                    },
-                    {
-                      onClick: outputs.onClickAddToObject,
-                      icon: IoMdAdd,
-                      text: 'add to object',
-                      showIf: is.record(props.item)
-                    }
-                  ]}
+                  children={
+                    <>
+                      <IconOption
+                        onClick={outputs.onClickEditKey}
+                        icon={FaEdit}
+                        text='edit object key'
+                        showIf={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
+                      />
+                      <IconOption
+                        onClick={outputs.onClickCopy}
+                        icon={FaCopy}
+                        text='copy node'
+                      />
+                      <IconOption
+                        onClick={outputs.onClickDelete}
+                        icon={FaTrash}
+                        text='delete node'
+                        showIf={!props.isTopLevel && !props.isArrayElement}
+                      />
+                      <IconOption
+                        onClick={outputs.onClickAddToArray}
+                        icon={IoMdAdd}
+                        text='add array element'
+                        showIf={is.array(props.item)}
+                      />
+                      <IconOption
+                        onClick={outputs.onClickRemoveFromArray}
+                        icon={FaTrash}
+                        text='remove array element'
+                        showIf={!props.isTopLevel && !!props.isArrayElement}
+                      />
+                      <IconOption
+                        onClick={outputs.onClickAddToObject}
+                        icon={IoMdAdd}
+                        text='add to object'
+                        showIf={is.record(props.item)}
+                      />
+                    </>
+                  }
                 />
               </>
             }
