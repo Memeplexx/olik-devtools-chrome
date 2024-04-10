@@ -1,4 +1,5 @@
-import { useLocalState } from "./inputs";
+import { useInputs, useLocalState } from "./inputs";
+import { useOutputs } from "./outputs";
 
 
 
@@ -19,4 +20,8 @@ export type Item = {
 }
 
 export type State = ReturnType<typeof useLocalState>;
+
+export type Inputs = ReturnType<typeof useInputs>;
+
+export type Outputs = ReturnType<typeof useOutputs>;
 
