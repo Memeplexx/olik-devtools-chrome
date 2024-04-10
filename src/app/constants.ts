@@ -19,6 +19,18 @@ export type Item = {
   visible: boolean,
 }
 
+export const initialState = {
+  error: !chrome.runtime ? '' : 'Waiting for store. Try refreshing the page.',
+  selectedId: null as number | null,
+  items: new Array<Item>(),
+  contractedHeaders: new Array<number>(),
+  hideUnchanged: false,
+  displayInline: false,
+  hideHeaders: false,
+  query: '',
+  showOptions: false,
+}
+
 export type State = ReturnType<typeof useLocalState>;
 
 export type Inputs = ReturnType<typeof useInputs>;

@@ -3,14 +3,14 @@ import { DevtoolsAction, StateAction, assertIsRecord, assertIsUpdateFunction, cr
 import { useEffect, useMemo, useRef } from "react";
 import { is, isoDateRegexPattern, tupleIncludes, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
-import { Item, State } from "./constants";
+import { Item, State, initialState } from "./constants";
 
 export const useInputs = () => {
   const localState = useLocalState();
   const derivedState = useDerivedState(localState);
   useMessageHandler(localState);
   useAutoScroller(localState);
-  useDetectPageRefresh(localState);
+  useRefreshOnPageRefresh(localState);
   return {
     ...localState,
     ...derivedState,
@@ -18,15 +18,7 @@ export const useInputs = () => {
 }
 
 export const useLocalState = () => useRecord({
-  error: !chrome.runtime ? '' : 'Waiting for store. Try refreshing the page.',
-  selectedId: null as number | null,
-  items: new Array<Item>(),
-  contractedHeaders: new Array<number>(),
-  hideUnchanged: false,
-  displayInline: false,
-  hideHeaders: false,
-  query: '',
-  showOptions: false,
+  ...initialState,
   storeRef: useRef<BasicStore | null>(null),
   treeRef: useRef<HTMLDivElement | null>(null),
   idRef: useRef(0),
@@ -52,12 +44,12 @@ const useAutoScroller = (state: State) => {
   }, [state.items, state.selectedId])
 }
 
-const useDetectPageRefresh = (state: State) => {
+const useRefreshOnPageRefresh = (state: State) => {
   useEffect(() => {
     if (!chrome.runtime) return;
     const eventHandler: Parameters<typeof chrome.webNavigation.onCommitted.addListener>[0] = (details) => {
       if (details.transitionType === 'reload') {
-        state.set(() => ({ items: [], error: 'Page refreshed. Clearing state.' }));
+        state.set(() => ({ ...initialState }));
       }
     };
     chrome.webNavigation.onCommitted.addListener(eventHandler);
