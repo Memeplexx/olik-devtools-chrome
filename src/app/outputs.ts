@@ -7,6 +7,9 @@ export const useOutputs = (state: State) => ({
   onClickHideIneffectiveActions: () => {
     state.set(s => ({ showOptions: false, hideUnchanged: !s.hideUnchanged }));
   },
+  onClickHideHeaders: () => {
+    state.set(s => ({ showOptions: false, hideHeaders: !s.hideHeaders }));
+  },
   onClickDisplayInline: () => {
     state.set(s => ({ showOptions: false, displayInline: !s.displayInline }));
   },

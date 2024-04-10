@@ -3,7 +3,7 @@ import { Frag } from '../html/frag';
 import { PopupList } from '../popup-list';
 import { useInputs } from './inputs';
 import { useOutputs } from './outputs';
-import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, ToggleOffIcon, ToggleOnIcon } from './styles';
+import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, HeaderDown, HeaderUp, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, ToggleOffIcon, ToggleOnIcon } from './styles';
 
 export const App = () => {
   const inputs = useInputs();
@@ -75,6 +75,11 @@ export const App = () => {
                                               text: 'Clear',
                                               onClick: outputs.onClickClear,
                                             },
+                                            {
+                                              icon: inputs.hideHeaders ? HeaderDown : HeaderUp,
+                                              text: 'Hide trace headers',
+                                              onClick: outputs.onClickHideHeaders,
+                                            },
                                           ]}
                                         />
                                       </>
@@ -98,6 +103,7 @@ export const App = () => {
                                     children={
                                       <>
                                         <ItemHeading
+                                          showIf={!inputs.hideHeaders}
                                           $headerExpanded={!inputs.contractedHeaders.includes(itemGroup.id)}
                                           $eventCount={itemGroup.event.length}
                                           onClick={outputs.onClickHeader(itemGroup.id)}

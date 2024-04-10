@@ -9,7 +9,8 @@ import { DemoWrapper } from "../demo/demo-wrapper";
 import { IoMdMore } from "react-icons/io";
 import { Tree } from "../tree";
 import { LiaArrowsAltVSolid } from "react-icons/lia";
-
+import { LuArrowUpToLine } from "react-icons/lu";
+import { LuArrowDownToLine } from "react-icons/lu";
 
 
 export const MenuButton = styled.button`
@@ -40,6 +41,16 @@ export const ClearIcon = styled(CiCircleRemove)`
   height: auto;
 `;
 
+export const HeaderUp = styled(LuArrowUpToLine)`
+  flex: 1;
+  height: auto;
+`;
+
+export const HeaderDown = styled(LuArrowDownToLine)`
+  flex: 1;
+  height: auto;
+`;
+
 export const MenuIcon = styled(IoMdMore)`
   flex: 1;
   height: auto;
@@ -59,7 +70,7 @@ export const ItemWrapper = styled.div`
   margin-bottom: 6px;
 `;
 
-export const ItemHeading = styled.div<{ $headerExpanded: boolean, $eventCount: number }>`
+export const ItemHeading = styled(possible.div)<{ $headerExpanded: boolean, $eventCount: number }>`
 	color: white;
 	transition: all 0.2s;
 	max-height: ${p => p.$headerExpanded ? `${p.$eventCount * 15}px` : '15px'};

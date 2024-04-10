@@ -24,6 +24,7 @@ export const useLocalState = () => useRecord({
   contractedHeaders: new Array<number>(),
   hideUnchanged: false,
   displayInline: false,
+  hideHeaders: false,
   query: '',
   showOptions: false,
   storeRef: useRef<BasicStore | null>(null),
