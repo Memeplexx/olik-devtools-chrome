@@ -1,7 +1,7 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
-import { DevtoolsAction, StateAction, assertIsRecord, createStore, getStore, libState, newRecord, readState, setNewStateAndNotifyListeners } from "olik";
+import { DevtoolsAction, StateAction, assertIsRecord, assertIsUpdateFunction, createStore, getStore, libState, newRecord, readState, setNewStateAndNotifyListeners } from "olik";
 import { useEffect, useMemo, useRef } from "react";
-import { is, isoDateRegexPattern, useRecord } from "../shared/functions";
+import { is, isoDateRegexPattern, tupleIncludes, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
 import { Item, State } from "./constants";
 
@@ -171,6 +171,7 @@ const processEvent = (state: State, event: DevtoolsAction) => {
 
 const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }: { selectedStateBefore: unknown, selectedStateAfter: unknown, incoming: DevtoolsAction }) => {
   const func = incoming.stateActions.at(-1)!.name;
+  assertIsUpdateFunction(func);
   const unchanged = new Array<string>();
   const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
@@ -190,9 +191,9 @@ const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }:
     }
     recurse(stateBefore, stateAfter, '');
   }
-  if (['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge', '$toggle', '$add', '$subtract', '$push'].includes(func)) {
+  if (tupleIncludes(func, ['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge', '$toggle', '$add', '$subtract', '$push'])) {
     updateUnchanged(selectedStateBefore, selectedStateAfter);
-  } else if (['$clear'].includes(func) && is.array(selectedStateBefore) && !selectedStateBefore.length) {
+  } else if (tupleIncludes(func, ['$clear']) && is.array(selectedStateBefore) && !selectedStateBefore.length) {
     unchanged.push('');
   }
   return unchanged;

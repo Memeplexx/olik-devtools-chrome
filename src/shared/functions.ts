@@ -53,6 +53,8 @@ export const useForwardedRef = <T>(forwardedRef: React.ForwardedRef<T>) => {
 	return targetRef
 }
 
+export const tupleIncludes = <Element extends string, Array extends readonly [...Element[]]>(element: Element, tuple: Array) => tuple.some(f => element.includes(f));
+
 export const isoDateRegexPattern = new RegExp(/\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/);
 
 export const is = {
