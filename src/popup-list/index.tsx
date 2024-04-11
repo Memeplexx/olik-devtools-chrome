@@ -18,8 +18,8 @@ export const IconOption = (
 ) => {
   return (
     <PopupOption
-      key={prop.text}
       if={prop.if}
+      key={prop.text}
       $selected={prop.selected}
       onClick={e => {
         e.stopPropagation();
