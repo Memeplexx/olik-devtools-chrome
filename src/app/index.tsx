@@ -12,17 +12,17 @@ export const App = () => {
   return (
     <>
       <DemoPanel
-        showIf={!chrome.runtime}
+        if={!chrome.runtime}
       />
       <DevtoolsPanel
         children={
           <>
             <Error
-              showIf={!!inputs.error}
+              if={!!inputs.error}
               children={inputs.error}
             />
             <Frag
-              showIf={!inputs.error}
+              if={!inputs.error}
               children={
                 <>
                   <EditorPanel
@@ -78,8 +78,8 @@ const Resizer = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) => (
                 <>
                   <MenuIcon />
                   <PopupList
+                    if={inputs.showOptions}
                     position='left'
-                    showIf={inputs.showOptions}
                     children={
                       <>
                         <IconOption
@@ -128,7 +128,7 @@ const ListItems = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) =>
               children={
                 <>
                   <ItemHeading
-                    showIf={!inputs.hideHeaders}
+                    if={!inputs.hideHeaders}
                     children={itemGroup.event.map((e, i) => (
                       <ItemHead
                         key={i}

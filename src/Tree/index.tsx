@@ -70,11 +70,11 @@ export const RenderedNode = function RenderedNode(
   const content = (
     <>
       <ChildNode
-        {...inputs.styles}
-        showIf={!inputs.isContracted && !inputs.isEmpty && !inputs.isHidden}
+        if={!inputs.isContracted && !inputs.isEmpty && !inputs.isHidden}
         onMouseOver={outputs.onMouseOverValueNode}
         onMouseOut={outputs.onMouseOutValueNode}
         data-key={props.keyConcat}
+        {...inputs.styles}
         children={
           is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.onChangeState ? inputs.nodeEl : (
             <ValueNode
@@ -111,14 +111,15 @@ export const RenderedNode = function RenderedNode(
         }
       />
       <BraceNode
-        {...inputs.styles}
+        if={!inputs.isHidden && !inputs.isPrimitive}
         children={is.array(props.item) ? ']' : '}'}
-        showIf={!inputs.isHidden && !inputs.isPrimitive}
+        {...inputs.styles}
+        
       />
       <ParenthesisNode
-        {...inputs.styles}
+        if={inputs.showActionType}
         children=')'
-        showIf={inputs.showActionType}
+        {...inputs.styles}
       />
     </>
   );
@@ -137,18 +138,18 @@ export const RenderedNode = function RenderedNode(
             children={
               <>
                 <ActionType
+                  if={inputs.showActionType}
                   {...inputs.styles}
                   children={props.actionType}
-                  showIf={inputs.showActionType}
                 />
                 <ParenthesisNode
+                  if={inputs.showActionType}
                   {...inputs.styles}
                   children='('
-                  showIf={inputs.showActionType}
                 />
                 <KeyNode
                   {...inputs.styles}
-                  showIf={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
+                  if={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
                   data-key-input={props.keyConcat}
                   ref={inputs.keyNodeRef}
                   readOnly={!props.onChangeState || !inputs.isEditingObjectKey}
@@ -164,31 +165,31 @@ export const RenderedNode = function RenderedNode(
                   valueType='string'
                 />
                 <Colon
-                  {...inputs.styles}
+                  if={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
                   children=':'
-                  showIf={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
+                  {...inputs.styles}
                 />
                 <BraceNode
-                  {...inputs.styles}
+                  if={!inputs.isHidden && !inputs.isPrimitive}
                   children={is.array(props.item) ? '[' : '{'}
-                  showIf={!inputs.isHidden && !inputs.isPrimitive}
+                  {...inputs.styles}
                 />
                 <Ellipses
-                  {...inputs.styles}
+                  if={inputs.isContracted && !inputs.isHidden}
                   children='...'
-                  showIf={inputs.isContracted && !inputs.isHidden}
+                  {...inputs.styles}
                 />
                 {inputs.isContracted && content}
                 <PopupList
-                  showIf={inputs.showOptions}
+                  if={inputs.showOptions}
                   position='right'
                   children={
                     <>
                       <IconOption
+                        if={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
                         onClick={outputs.onClickEditKey}
                         icon={FaEdit}
                         text='edit object key'
-                        showIf={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
                       />
                       <IconOption
                         onClick={outputs.onClickCopy}
@@ -196,28 +197,28 @@ export const RenderedNode = function RenderedNode(
                         text='copy node'
                       />
                       <IconOption
+                        if={!props.isTopLevel && !props.isArrayElement}
                         onClick={outputs.onClickDelete}
                         icon={FaTrash}
                         text='delete node'
-                        showIf={!props.isTopLevel && !props.isArrayElement}
                       />
                       <IconOption
+                        if={is.array(props.item)}
                         onClick={outputs.onClickAddToArray}
                         icon={IoMdAdd}
                         text='add array element'
-                        showIf={is.array(props.item)}
                       />
                       <IconOption
+                        if={!props.isTopLevel && !!props.isArrayElement}
                         onClick={outputs.onClickRemoveFromArray}
                         icon={FaTrash}
                         text='remove array element'
-                        showIf={!props.isTopLevel && !!props.isArrayElement}
                       />
                       <IconOption
+                        if={is.record(props.item)}
                         onClick={outputs.onClickAddToObject}
                         icon={IoMdAdd}
                         text='add to object'
-                        showIf={is.record(props.item)}
                       />
                     </>
                   }
@@ -227,9 +228,9 @@ export const RenderedNode = function RenderedNode(
           />
           {!inputs.isContracted && content}
           <CommaNode
-            {...inputs.styles}
+            if={!props.isLast && !inputs.isHidden && !inputs.isShowingTextArea}
             children=','
-            showIf={!props.isLast && !inputs.isHidden && !inputs.isShowingTextArea}
+            {...inputs.styles}
           />
         </>
       }

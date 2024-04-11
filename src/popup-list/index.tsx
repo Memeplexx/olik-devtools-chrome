@@ -6,7 +6,7 @@ export const PopupList = (
 ) => {
   return (
     <PopupOptions
-      showIf={props.showIf}
+      if={props.if}
       $position={props.position ?? 'right'}
       children={props.children}
     />
@@ -19,7 +19,7 @@ export const IconOption = (
   return (
     <PopupOption
       key={prop.text}
-      showIf={prop.showIf}
+      if={prop.if}
       $selected={prop.selected}
       onClick={e => {
         e.stopPropagation();
@@ -28,7 +28,7 @@ export const IconOption = (
       children={
         <>
           <IconWrapper
-            showIf={!!prop.icon}
+            if={!!prop.icon}
             children={prop.icon && <prop.icon />}
           />
           <OptionText

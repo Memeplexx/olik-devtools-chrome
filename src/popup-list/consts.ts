@@ -8,12 +8,12 @@ export type PopupOptionProps = {
   onClick: () => unknown,
   icon?: IconType,
   text: string,
-  showIf?: boolean,
+  if?: boolean,
   selected?: boolean,
 }
 
 export type PopupListProps = {
   children: ReactNode,
-  showIf?: boolean
+  if?: boolean
   position: Position,
 }

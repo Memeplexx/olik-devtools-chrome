@@ -35,21 +35,21 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
       children={
         <>
           <Quote
-            showIf={inputs.showQuote}
+            if={inputs.showQuote}
             $type='start'
             children='"'
           />
           <Input
+            if={!inputs.showTextArea}
             {...inputs.inputsProps}
             {...commonInputProps}
-            showIf={!inputs.showTextArea}
             min='0'
             max={inputs.max}
             size={inputs.inputSize}
             ref={inputs.inputRef as MutableRefObject<HTMLInputElement>}
           />
           <TextAreaWrapper
-            showIf={inputs.showTextArea}
+            if={inputs.showTextArea}
             children={
               <>
                 <TextArea
@@ -69,7 +69,7 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
                         children={inputs.value}
                       />
                       <Quote
-                        showIf={inputs.showQuote}
+                        if={inputs.showQuote}
                         $type='end'
                         children='"'
                       />
@@ -80,18 +80,18 @@ export const CompactInput = forwardRef(function CompactInput<V extends InputValu
             }
           />
           <PopupList
-            showIf={inputs.showPopup}
+            if={inputs.showPopup}
             position={inputs.showTextArea ? 'below' : 'right'}
             children={
               <>
                 {props.additionalOptions ?? null}
                 {types.map(type => (
                   <IconOption
+                    if={type !== props.valueType}
                     key={type}
                     text={type}
                     icon={IoIosSwap}
                     onClick={outputs.onClickChangeType(type)}
-                    showIf={type !== props.valueType}
                   />
                 ))}
               </>

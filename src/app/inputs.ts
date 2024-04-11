@@ -49,7 +49,7 @@ const useRefreshOnPageRefresh = (state: State) => {
     if (!chrome.runtime) return;
     const eventHandler: Parameters<typeof chrome.webNavigation.onCommitted.addListener>[0] = (details) => {
       if (details.transitionType === 'reload') {
-        state.set(() => ({ ...initialState }));
+        state.set(initialState);
       }
     };
     chrome.webNavigation.onCommitted.addListener(eventHandler);

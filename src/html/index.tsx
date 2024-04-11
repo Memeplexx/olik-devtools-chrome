@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, ComponentType, ForwardedRef, HTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes, forwardRef,  } from "react";
+import { ButtonHTMLAttributes, ComponentType, ForwardedRef, HTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes, forwardRef,  } from "react";
 import { TypedKeyboardEvent } from "../shared/types";
 
 
@@ -8,7 +8,7 @@ type ReplaceKeyboardEvents<E extends HTMLElement, A extends HTMLAttributes<E>> =
     : A[key]
 };
 
-export type ShowIfProps = { showIf?: boolean };
+export type IfProps = { if?: boolean };
 
 export type ButtonProps = ReplaceKeyboardEvents<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElement>>;
 
@@ -22,43 +22,48 @@ export type SpanProps = ReplaceKeyboardEvents<HTMLSpanElement, HTMLAttributes<HT
 
 export type ElementProps = ReplaceKeyboardEvents<HTMLElement, HTMLAttributes<HTMLElement>>;
 
+const stripUnKnownProps = function <P extends { children?: ReactNode } & IfProps>(props: P) {
+  return (Object.keys(props) as Array<keyof P>)
+    .reduce((acc, key) => { if (key !== 'if' && key !== 'children') { acc[key] = props[key]; } return acc; }, {} as P);
+}
+
 export const possible = {
   div: forwardRef(function Div(
-    { children, showIf, ...props }: DivProps & ShowIfProps,
+    props: DivProps & IfProps,
     ref?: ForwardedRef<HTMLDivElement>,
   ) {
-    return showIf === false ? null : <div ref={ref} {...props}>{children}</div>;
+    return props.if === false ? null : <div ref={ref} {...stripUnKnownProps(props)}>{props.children}</div>;
   }),
   span: forwardRef(function Span(
-    { children, showIf, ...props }: SpanProps & ShowIfProps,
+    props: SpanProps & IfProps,
     ref?: ForwardedRef<HTMLSpanElement>,
   ) {
-    return showIf === false ? null : <span ref={ref} {...props}>{children}</span>;
+    return props.if === false ? null : <span ref={ref} {...stripUnKnownProps(props)}>{props.children}</span>;
   }),
   input: forwardRef(function Input(
-    { children, showIf, ...props }: InputProps & ShowIfProps,
+    props: InputProps & IfProps,
     ref?: ForwardedRef<HTMLInputElement>
   ) {
-    return showIf === false ? null : <input ref={ref} {...props}>{children}</input>;
+    return props.if === false ? null : <input ref={ref} {...stripUnKnownProps(props)}>{props.children}</input>;
   }),
   textarea: forwardRef(function Input(
-    { children, showIf, ...props }: TextAreaProps & ShowIfProps,
+    props: TextAreaProps & IfProps,
     ref?: ForwardedRef<HTMLTextAreaElement>
   ) {
-    return showIf === false ? null : <textarea ref={ref} {...props}>{children}</textarea>;
+    return props.if === false ? null : <textarea ref={ref} {...stripUnKnownProps(props)}>{props.children}</textarea>;
   }),
   button: forwardRef(function Button(
-    { children, showIf, ...props }: ButtonProps & ShowIfProps,
+    props: ButtonProps & IfProps,
     ref?: ForwardedRef<HTMLButtonElement>
   ) {
-    return showIf === false ? null : <button ref={ref} {...props}>{children}</button>;
+    return props.if === false ? null : <button ref={ref} {...stripUnKnownProps(props)}>{props.children}</button>;
   }),
   element: function Element<P>(ComponentType: ComponentType<P>) {
     return forwardRef(function Element(
-      { children, showIf, ...props }: P & { children?: React.ReactNode } & ShowIfProps,
+      props: P & { children?: React.ReactNode } & IfProps,
       ref?: ForwardedRef<HTMLElement>
     ) {
-      return showIf === false ? null : <ComponentType ref={ref} {...props as P}>{children}</ComponentType>;
+      return props.if === false ? null : <ComponentType ref={ref} {...props as P}>{props.children}</ComponentType>;
     });
   },
 }
