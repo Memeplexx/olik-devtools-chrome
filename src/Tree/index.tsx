@@ -13,51 +13,45 @@ export const Tree = (
   props: TreeProps
 ): ReactNode => {
   const recurse = ({ outerKey, val }: RecurseArgs): ReactNode => {
-    if (is.array(val)) {
-      return val.map((item, index) => (
-        <RenderedNode
-          key={index.toString()}
-          {...props}
-          recurse={recurse}
-          keyConcat={`${outerKey}.${index}`}
-          index={index}
-          item={item}
-          isLast={index === val.length - 1}
-          isTopLevel={false}
-          isArrayElement={true}
-        />
-      ));
-    }
-    if (is.record(val)) {
-      return Object.keys(val).map((key, index, arr) => (
-        <RenderedNode
-          {...props}
-          key={key}
-          recurse={recurse}
-          keyConcat={key === '' ? key.toString() : `${outerKey}.${key}`}
-          index={index}
-          item={val[key]}
-          isLast={index === arr.length - 1}
-          isTopLevel={key === ''}
-          objectKey={key}
-          isArrayElement={false}
-        />
-      ));
-    }
-    if (is.scalar(val)) {
-      return (
-        <RenderedNode
-          {...props}
-          recurse={recurse}
-          keyConcat={outerKey}
-          index={0}
-          item={val}
-          isLast={true}
-          isTopLevel={true}
-          isArrayElement={false}
-        />
-      );
-    }
+    if (is.array(val)) return val.map((item, index) => (
+      <RenderedNode
+        key={index.toString()}
+        {...props}
+        recurse={recurse}
+        keyConcat={`${outerKey}.${index}`}
+        index={index}
+        item={item}
+        isLast={index === val.length - 1}
+        isTopLevel={false}
+        isArrayElement={true}
+      />
+    ));
+    if (is.record(val)) return Object.keys(val).map((key, index, arr) => (
+      <RenderedNode
+        {...props}
+        key={key}
+        recurse={recurse}
+        keyConcat={key === '' ? key.toString() : `${outerKey}.${key}`}
+        index={index}
+        item={val[key]}
+        isLast={index === arr.length - 1}
+        isTopLevel={key === ''}
+        objectKey={key}
+        isArrayElement={false}
+      />
+    ));
+    if (is.scalar(val)) return (
+      <RenderedNode
+        {...props}
+        recurse={recurse}
+        keyConcat={outerKey}
+        index={0}
+        item={val}
+        isLast={true}
+        isTopLevel={true}
+        isArrayElement={false}
+      />
+    );
   };
   return recurse({ val: is.recordOrArray(props.state) ? { '': props.state } : props.state, outerKey: '' });
 }
@@ -75,46 +69,43 @@ export const RenderedNode = function RenderedNode(
         onMouseOut={outputs.onMouseOutValueNode}
         data-key={props.keyConcat}
         {...inputs.styles}
-        children={
-          is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.onChangeState ? inputs.nodeEl : (
-            <ValueNode
-              {...inputs.styles}
-              data-key-input={props.keyConcat}
-              value={inputs.value}
-              onChange={outputs.onChangeValue}
-              allowQuotesToBeShown={true}
-              allowTypeSelectorPopup={true}
-              allowTextArea={true}
-              valueType={inputs.type}
-              onClick={outputs.onClickValueNode}
-              onChangeValueType={outputs.onChangeValueType}
-              onChangeCommit={outputs.onChangeCommitValue}
-              onChangeInputElement={outputs.onChangeInputElement}
-              isChanged={inputs.isChanged}
-              onHidePopup={outputs.onHideOptions}
-              additionalOptions={!props.isArrayElement ? null : (
-                <>
-                  <IconOption
-                    onClick={outputs.onClickCopy}
-                    icon={FaCopy}
-                    text='copy node'
-                  />
-                  <IconOption
-                    onClick={outputs.onClickRemoveFromArray}
-                    icon={FaTrash}
-                    text='remove array element'
-                  />
-                </>
-              )}
-            />
-          )
-        }
+        children={is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.onChangeState ? inputs.nodeEl : (
+          <ValueNode
+            {...inputs.styles}
+            data-key-input={props.keyConcat}
+            value={inputs.value}
+            onChange={outputs.onChangeValue}
+            allowQuotesToBeShown={true}
+            allowTypeSelectorPopup={true}
+            allowTextArea={true}
+            valueType={inputs.type}
+            onClick={outputs.onClickValueNode}
+            onChangeValueType={outputs.onChangeValueType}
+            onChangeCommit={outputs.onChangeCommitValue}
+            onChangeInputElement={outputs.onChangeInputElement}
+            isChanged={inputs.isChanged}
+            onHidePopup={outputs.onHideOptions}
+            additionalOptions={!props.isArrayElement ? null : (
+              <>
+                <IconOption
+                  onClick={outputs.onClickCopy}
+                  icon={FaCopy}
+                  text='copy node'
+                />
+                <IconOption
+                  onClick={outputs.onClickRemoveFromArray}
+                  icon={FaTrash}
+                  text='remove array element'
+                />
+              </>
+            )}
+          />
+        )}
       />
       <BraceNode
         if={!inputs.isHidden && !inputs.isPrimitive}
         children={is.array(props.item) ? ']' : '}'}
         {...inputs.styles}
-        
       />
       <ParenthesisNode
         if={inputs.showActionType}
