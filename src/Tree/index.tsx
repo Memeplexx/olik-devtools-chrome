@@ -148,8 +148,8 @@ export const RenderedNode = function RenderedNode(
                   children='('
                 />
                 <KeyNode
-                  {...inputs.styles}
                   if={inputs.hasObjectKey && !props.isTopLevel && !inputs.isHidden}
+                  {...inputs.styles}
                   data-key-input={props.keyConcat}
                   ref={inputs.keyNodeRef}
                   readOnly={!props.onChangeState || !inputs.isEditingObjectKey}

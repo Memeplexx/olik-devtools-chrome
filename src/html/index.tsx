@@ -28,42 +28,48 @@ const stripUnKnownProps = function <P extends { children?: ReactNode } & IfProps
 }
 
 export const possible = {
-  div: forwardRef(function Div(
+  div: forwardRef(function(
     props: DivProps & IfProps,
     ref?: ForwardedRef<HTMLDivElement>,
   ) {
-    return props.if === false ? null : <div ref={ref} {...stripUnKnownProps(props)}>{props.children}</div>;
+    if (props.if === false) return null;
+    return <div ref={ref} {...stripUnKnownProps(props)}>{props.children}</div>;
   }),
-  span: forwardRef(function Span(
+  span: forwardRef(function(
     props: SpanProps & IfProps,
     ref?: ForwardedRef<HTMLSpanElement>,
   ) {
-    return props.if === false ? null : <span ref={ref} {...stripUnKnownProps(props)}>{props.children}</span>;
+    if (props.if === false) return null;
+    return <span ref={ref} {...stripUnKnownProps(props)}>{props.children}</span>;
   }),
-  input: forwardRef(function Input(
+  input: forwardRef(function(
     props: InputProps & IfProps,
     ref?: ForwardedRef<HTMLInputElement>
   ) {
-    return props.if === false ? null : <input ref={ref} {...stripUnKnownProps(props)}>{props.children}</input>;
+    if (props.if === false) return null;
+    return <input ref={ref} {...stripUnKnownProps(props)}>{props.children}</input>;
   }),
-  textarea: forwardRef(function Input(
+  textarea: forwardRef(function(
     props: TextAreaProps & IfProps,
     ref?: ForwardedRef<HTMLTextAreaElement>
   ) {
-    return props.if === false ? null : <textarea ref={ref} {...stripUnKnownProps(props)}>{props.children}</textarea>;
+    if (props.if === false) return null;
+    return <textarea ref={ref} {...stripUnKnownProps(props)}>{props.children}</textarea>;
   }),
-  button: forwardRef(function Button(
+  button: forwardRef(function(
     props: ButtonProps & IfProps,
     ref?: ForwardedRef<HTMLButtonElement>
   ) {
-    return props.if === false ? null : <button ref={ref} {...stripUnKnownProps(props)}>{props.children}</button>;
+    if (props.if === false) return null;
+    return <button ref={ref} {...stripUnKnownProps(props)}>{props.children}</button>;
   }),
   element: function Element<P>(ComponentType: ComponentType<P>) {
-    return forwardRef(function Element(
+    return forwardRef(function(
       props: P & { children?: React.ReactNode } & IfProps,
       ref?: ForwardedRef<HTMLElement>
     ) {
-      return props.if === false ? null : <ComponentType ref={ref} {...props as P}>{props.children}</ComponentType>;
+      if (props.if === false) return null;
+      return <ComponentType ref={ref} {...stripUnKnownProps(props)}>{props.children}</ComponentType>;
     });
   },
 }
