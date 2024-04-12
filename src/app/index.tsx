@@ -1,14 +1,15 @@
 import { PanelGroup } from 'react-resizable-panels';
 import { Frag } from '../html/frag';
 import { IconOption, PopupList } from '../popup-list';
+import { FragmentProps } from './constants';
 import { useInputs } from './inputs';
 import { useOutputs } from './outputs';
 import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, HeaderDown, HeaderUp, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, TimeIcon, ToggleOffIcon, ToggleOnIcon } from './styles';
-import { Inputs, Outputs } from './constants';
 
 export const App = () => {
   const inputs = useInputs();
   const outputs = useOutputs(inputs);
+  const fragmentProps = { inputs, outputs };
   return (
     <>
       <DemoPanel
@@ -34,9 +35,15 @@ export const App = () => {
                     direction="vertical"
                     children={
                       <>
-                        <CurrentState inputs={inputs} />
-                        <Resizer inputs={inputs} outputs={outputs} />
-                        <ListItems inputs={inputs} outputs={outputs} />
+                        <CurrentStateFragment
+                          {...fragmentProps}
+                        />
+                        <ResizerFragment
+                          {...fragmentProps}
+                        />
+                        <ListItemsFragment
+                          {...fragmentProps}
+                        />
                       </>
                     }
                   />
@@ -50,7 +57,7 @@ export const App = () => {
   );
 };
 
-const CurrentState = ({ inputs }: { inputs: Inputs }) => (
+const CurrentStateFragment = ({ inputs }: FragmentProps) => (
   <ResizablePanel
     minSize={0}
     children={
@@ -65,7 +72,7 @@ const CurrentState = ({ inputs }: { inputs: Inputs }) => (
   />
 );
 
-const Resizer = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) => (
+const ResizerFragment = ({ inputs, outputs }: FragmentProps) => (
   <ResizeHandle
     children={
       <ResizeHandleInner
@@ -115,7 +122,7 @@ const Resizer = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) => (
   />
 );
 
-const ListItems = ({ inputs, outputs }: { inputs: Inputs, outputs: Outputs }) => (
+const ListItemsFragment = ({ inputs, outputs }: FragmentProps) => (
   <ItemsWrapper
     minSize={0}
     children={
