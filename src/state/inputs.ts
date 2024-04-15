@@ -23,6 +23,7 @@ export const useLocalState = (ref: ForwardedRef<HTMLDivElement>) => useRecord({
 
 const getTreeProps = (props: Props, state: State): TreeProps => {
   const commonTreeProps = {
+    query: props.query,
     unchanged: [],
     changed: props.changed,
     contractedKeys: state.contractedKeys,

@@ -2,6 +2,7 @@ import { MouseEvent } from "react";
 import { InputValue, ValueType } from "../input/constants";
 import { is, useEventHandlerForDocument } from "../shared/functions";
 import { RenderNodeArgs, State } from "./constants";
+import { assertIsArray, assertIsRecord } from "olik";
 
 export const useOutputs = (props: RenderNodeArgs, state: State) => ({
   onClickCopy: async () => {
@@ -13,13 +14,13 @@ export const useOutputs = (props: RenderNodeArgs, state: State) => ({
     state.set({ showOptions: false });
   },
   onClickAddToArray: () => {
-    if (!is.array(props.item)) throw new Error();
+    assertIsArray(props.item);
     const el = JSON.stringify(getSimplifiedObjectPayload(props.item[0]));
     props.onChangeState!(`${props.keyConcat}.$push(${el})`);
     tryFocusInput(`[data-key-input="${props.keyConcat}.${props.item.length}"]`);
   },
   onClickAddToObject: () => {
-    if (!is.record(props.item)) throw new Error();
+    assertIsRecord(props.item);
     const keys = Object.keys(props.item);
     const recurse = (tryKey: string, count: number): string => !keys.includes(tryKey) ? tryKey : recurse(`<key-${count++}>`, count);
     const key = recurse('<key>', 0);
@@ -71,7 +72,7 @@ export const useOutputs = (props: RenderNodeArgs, state: State) => ({
       if (is.string(value)) return `"${value.toString()}"`;
       return value;
     })()
-    props.onChangeState!(`${props.keyConcat}.$set(${argAsString})`);
+    props.onChangeState!(`${props.query ? props.query + '.' : ''}${props.keyConcat}.$set(${argAsString})`);
   },
   onChangeInputElement: (isShowingTextArea: boolean) => {
     state.set({ isShowingTextArea });

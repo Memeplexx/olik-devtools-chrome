@@ -11,6 +11,7 @@ export interface TreeProps {
   changed: string[],
   hideUnchanged?: boolean,
   displayInline?: boolean,
+  query?: string,
 }
 
 export type RenderNodeArgs
