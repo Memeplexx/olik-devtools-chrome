@@ -1,7 +1,7 @@
 import styled from "styled-components/macro";
-import { possible } from "../html";
+import { div } from "../html";
 
-export const Container = styled(possible.div)`
+export const Container = styled(div)`
 `;
 
 export const EditorPane = styled.div`

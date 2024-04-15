@@ -128,56 +128,54 @@ const ListItemsFragment = ({ inputs, outputs }: FragmentProps) => (
     children={
       <Items
         tabIndex={0}
-        children={
-          inputs.itemsGrouped.map(itemGroup => (
-            <ItemWrapper
-              key={itemGroup.id}
-              children={
-                <>
-                  <ItemHeading
-                    if={!inputs.hideHeaders}
-                    children={itemGroup.event.map((e, i) => (
-                      <ItemHead
-                        key={i}
-                        children={e}
-                      />
-                    ))}
-                  />
-                  {itemGroup.items.map(item => (
-                    <ItemContent
-                      id={item.id.toString()}
-                      key={item.id}
-                      onClick={outputs.onClickItem(item.id)}
-                      $isSelected={item.id === inputs.selectedId}
-                      children={
-                        <>
-                          <ItemJsx
-                            changed={item.changed}
-                            unchanged={item.unchanged}
-                            actionType={item.actionType}
-                            state={item.actionPayload}
-                            contractedKeys={item.contractedKeys}
-                            onClickNodeKey={outputs.onClickNodeKey(item.id)}
-                            hideUnchanged={inputs.hideUnchanged}
-                            displayInline={inputs.displayInline}
-                          />
-                          <ItemTime
-                            children={
-                              <>
-                                <TimeIcon />
-                                {item.time}
-                              </>
-                            }
-                          />
-                        </>
-                      }
+        children={inputs.itemsGrouped.map(itemGroup => (
+          <ItemWrapper
+            key={itemGroup.id}
+            children={
+              <>
+                <ItemHeading
+                  if={!inputs.hideHeaders}
+                  children={itemGroup.event.map((e, i) => (
+                    <ItemHead
+                      key={i}
+                      children={e}
                     />
                   ))}
-                </>
-              }
-            />
-          ))
-        }
+                />
+                {itemGroup.items.map(item => (
+                  <ItemContent
+                    id={item.id.toString()}
+                    key={item.id}
+                    onClick={outputs.onClickItem(item.id)}
+                    $isSelected={item.id === inputs.selectedId}
+                    children={
+                      <>
+                        <ItemJsx
+                          changed={item.changed}
+                          unchanged={item.unchanged}
+                          actionType={item.actionType}
+                          state={item.actionPayload}
+                          contractedKeys={item.contractedKeys}
+                          onClickNodeKey={outputs.onClickNodeKey(item.id)}
+                          hideUnchanged={inputs.hideUnchanged}
+                          displayInline={inputs.displayInline}
+                        />
+                        <ItemTime
+                          children={
+                            <>
+                              <TimeIcon />
+                              {item.time}
+                            </>
+                          }
+                        />
+                      </>
+                    }
+                  />
+                ))}
+              </>
+            }
+          />
+        ))}
       />
     }
   />

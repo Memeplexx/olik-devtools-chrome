@@ -1,7 +1,7 @@
 import styled from "styled-components/macro";
-import { possible } from "../html";
+import { button, div } from "../html";
 
-export const Container = styled(possible.div)`
+export const Container = styled(div)`
   display: flex;
   align-content: start;
   flex-wrap: wrap;
@@ -11,7 +11,7 @@ export const Container = styled(possible.div)`
 	min-width: 300px;
 `;
 
-export const SimpleButton = styled(possible.button)`
+export const SimpleButton = styled(button)`
   padding: 4px;
   border: 1px solid grey;
 `;

@@ -1,6 +1,6 @@
 import styled, { css } from "styled-components/macro";
-import { possible } from "../html";
 import { ValueType } from "./constants";
+import { input, span, textarea } from "../html";
 
 type CommonProps = { $initialized: boolean, $valueType: ValueType, $animate: boolean, $isChanged: boolean };
 
@@ -18,12 +18,12 @@ const commonInputProps = css<CommonProps & { readOnly?: boolean }>`
   ${p => p.readOnly ? css`cursor: not-allowed` : p.$valueType === 'boolean' || p.$valueType === 'date' ? css`cursor: pointer` : css`cursor: text`};
 `;
 
-export const Input = styled(possible.input)<CommonProps>`
+export const Input = styled(input)<CommonProps>`
   ${commonInputProps};
   text-align: center;
 `;
 
-export const TextArea = styled(possible.textarea)<CommonProps & { $height: number, $width: number }>`
+export const TextArea = styled(textarea)<CommonProps & { $height: number, $width: number }>`
   ${commonInputProps};
   overflow: hidden;
   resize: none;
@@ -31,15 +31,15 @@ export const TextArea = styled(possible.textarea)<CommonProps & { $height: numbe
   ${p => css`width: calc(${p.$width}px - 6px)`};
 `;
 
-export const Quote = styled(possible.span)<{ $type: 'start' | 'end' }>`
+export const Quote = styled(span)<{ $type: 'start' | 'end' }>`
 `;
 
-export const Wrapper = styled(possible.span)<{ $isTextArea: boolean }>`
+export const Wrapper = styled(span)<{ $isTextArea: boolean }>`
   position: relative;
   ${p => p.$isTextArea ? css`display: flex;` : ''};
 `;
 
-export const TextMeasurerWrapper = styled(possible.span)`
+export const TextMeasurerWrapper = styled(span)`
   position: absolute;
   border: 1px solid transparent;
   background-color: transparent;
@@ -49,11 +49,11 @@ export const TextMeasurerWrapper = styled(possible.span)`
   white-space: pre-wrap;
 `;
 
-export const TextMeasurer = styled(possible.span)`
+export const TextMeasurer = styled(span)`
   visibility: hidden;
 `;
 
-export const TextAreaWrapper = styled(possible.span)`
+export const TextAreaWrapper = styled(span)`
   position: relative;
   flex: 1;
   display: flex;

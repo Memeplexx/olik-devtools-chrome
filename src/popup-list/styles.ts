@@ -1,8 +1,8 @@
 import styled, { css } from "styled-components/macro";
-import { possible } from "../html";
 import { Position } from "./consts";
+import { span } from "../html";
 
-export const PopupOptions = styled(possible.span)<{ $position: Position }>`
+export const PopupOptions = styled(span)<{ $position: Position }>`
   position: absolute;
   top: 0;
   background-color: #FFF;
@@ -19,7 +19,7 @@ export const PopupOptions = styled(possible.span)<{ $position: Position }>`
     if (pos === 'below') return css`top: 100%; left: 0;`;
   })(p.$position)};
 `;
-export const PopupOption = styled(possible.span)<{ $selected?: boolean }>`
+export const PopupOption = styled(span)<{ $selected?: boolean }>`
   cursor: pointer;
   padding: 4px 8px;
   display: flex;
@@ -38,13 +38,13 @@ export const PopupOption = styled(possible.span)<{ $selected?: boolean }>`
   `}
 `;
 
-export const IconWrapper = styled(possible.span)`
+export const IconWrapper = styled(span)`
   > {
     width: 12px;
     height: 12px;
   }
 `;
 
-export const OptionText = styled(possible.span)`
+export const OptionText = styled(span)`
   flex: 1;
 `;

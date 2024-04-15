@@ -4,7 +4,6 @@ import { State } from "../state";
 import { Panel, PanelResizeHandle } from "react-resizable-panels";
 import { CiCircleRemove } from 'react-icons/ci';
 import { BsToggleOff, BsToggleOn } from 'react-icons/bs';
-import { possible } from "../html";
 import { DemoWrapper } from "../demo/demo-wrapper";
 import { IoMdMore } from "react-icons/io";
 import { Tree } from "../tree";
@@ -12,6 +11,7 @@ import { LiaArrowsAltVSolid } from "react-icons/lia";
 import { LuArrowUpToLine } from "react-icons/lu";
 import { LuArrowDownToLine } from "react-icons/lu";
 import { TbClock } from "react-icons/tb";
+import { div, element } from "../html";
 
 
 export const MenuButton = styled.button`
@@ -72,7 +72,7 @@ export const ItemWrapper = styled.div`
 
 export const TimeIcon = styled(TbClock)``;
 
-export const ItemHeading = styled(possible.div)`
+export const ItemHeading = styled(div)`
 	color: white;
 	transition: all 0.2s;
 	padding: 4px;
@@ -132,7 +132,7 @@ export const DevtoolsPanel = styled.div`
 	min-width: 300px;
 `;
 
-export const Error = styled(possible.div)`
+export const Error = styled(div)`
 	color: red;
 	font-size: 14px;
 	flex: 1;
@@ -189,6 +189,6 @@ export const ItemsWrapper = styled(Panel)`
 	flex-direction:column-reverse;
 `;
 
-export const DemoPanel = styled(possible.element(DemoWrapper))`
+export const DemoPanel = styled(element(DemoWrapper))`
 	max-width: 50vw;
 `;
