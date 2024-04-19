@@ -72,8 +72,10 @@ const useMessageHandler = (state: State) => {
 }
 
 const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction>) => {
-  if (event.origin !== window.location.origin) return;
-  if (event.data.source !== 'olik-devtools-extension') return;
+  if (event.origin !== window.location.origin) 
+    return;
+  if (event.data.source !== 'olik-devtools-extension') 
+    return;
   if (event.data.actionType === '$load()') {
     state.storeRef.current = getStore<Record<string, unknown>>();
     document.getElementById('olik-init')!.innerHTML = 'done';
