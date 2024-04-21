@@ -46,11 +46,11 @@ const useAutoScroller = (state: State) => {
 
 const useRefreshOnPageRefresh = (state: State) => {
   useEffect(() => {
-    if (!chrome.runtime) return;
+    if (!chrome.runtime) 
+      return;
     const eventHandler: Parameters<typeof chrome.webNavigation.onCommitted.addListener>[0] = (details) => {
-      if (details.transitionType === 'reload') {
+      if (details.transitionType === 'reload')
         state.set(initialState);
-      }
     };
     chrome.webNavigation.onCommitted.addListener(eventHandler);
     return () => chrome.webNavigation.onCommitted.removeListener(eventHandler);
@@ -97,7 +97,7 @@ const chromeMessageListener = (state: State, event: DevtoolsAction) => {
   } else {
     const convertAnyDateStringsToDates = (val: unknown): unknown => {
       if (is.record(val))
-        Object.keys(val).forEach(key => val[key] = convertAnyDateStringsToDates(val[key]))
+        return Object.keys(val).forEach(key => val[key] = convertAnyDateStringsToDates(val[key]))
       if (is.array(val))
         return val.map(convertAnyDateStringsToDates);
       if (is.string(val) && isoDateRegexPattern.test(val))
@@ -204,14 +204,10 @@ const applyPayloadPaths = (incoming: DevtoolsAction) => {
     const segments = path.split('.');
     const recurse = (value: unknown, depth: number): unknown => {
       if (is.record(value))
-        return Object.keys(value).reduce((prev, curr) => {
-          prev[curr] = curr === segments[depth] ? recurse(value[curr], depth + 1) : value[curr];
-          return prev;
-        }, newRecord());
+        return Object.keys(value)
+          .reduce((prev, curr) => Object.assign(prev, { [curr]: curr === segments[depth] ? recurse(value[curr], depth + 1) : value[curr] }), newRecord());
       if (is.array(value))
-        return value.map((e, i) => {
-          return i.toString() === segments[depth] ? recurse(value[i], depth + 1) : e;
-        });
+        return value.map((e, i) => i.toString() === segments[depth] ? recurse(value[i], depth + 1) : e);
       return payloadPaths[path] as unknown;
     }
     payloadCopy = recurse(payloadCopy, 0);
