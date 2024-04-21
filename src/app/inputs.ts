@@ -48,7 +48,7 @@ const useRefreshOnPageRefresh = (state: State) => {
   useEffect(() => {
     if (!chrome.runtime) 
       return;
-    const eventHandler: Parameters<typeof chrome.webNavigation.onCommitted.addListener>[0] = (details) => {
+    const eventHandler: Parameters<typeof chrome.webNavigation.onCommitted.addListener>[0] = details => {
       if (details.transitionType === 'reload')
         state.set(initialState);
     };
@@ -239,10 +239,14 @@ const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: 
 
 const getTimeDiff = (from: Date, to: Date) => {
   const milliseconds = differenceInMilliseconds(from, to);
-  if (milliseconds < 10 * 1000) return `${milliseconds} ms`;
-  if (milliseconds < 60 * 1000) return `${differenceInSeconds(from, to)} s`;
-  if (milliseconds < 60 * 60 * 1000) return `${differenceInMinutes(from, to)} m`;
-  if (milliseconds < 24 * 60 * 60 * 1000) return `${differenceInHours(from, to)} h`;
+  if (milliseconds < 10 * 1000) 
+    return `${milliseconds} ms`;
+  if (milliseconds < 60 * 1000) 
+    return `${differenceInSeconds(from, to)} s`;
+  if (milliseconds < 60 * 60 * 1000) 
+    return `${differenceInMinutes(from, to)} m`;
+  if (milliseconds < 24 * 60 * 60 * 1000) 
+    return `${differenceInHours(from, to)} h`;
   return to.toLocaleDateString();
 }
 

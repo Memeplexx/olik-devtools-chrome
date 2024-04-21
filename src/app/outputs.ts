@@ -36,7 +36,8 @@ export const useOutputs = (state: State) => ({
   onClickNodeKey: (idToUpdate: number) => (key: string) => {
     state.set(s => ({
       items: s.items.map(item => {
-        if (item.id !== idToUpdate) return item;
+        if (item.id !== idToUpdate) 
+          return item;
         return {
           ...item,
           contractedKeys: item.contractedKeys.includes(key) ? item.contractedKeys.filter(k => k !== key) : [...item.contractedKeys, key],
