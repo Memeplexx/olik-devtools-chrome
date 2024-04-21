@@ -29,7 +29,6 @@ const getTreeProps = (props: Props, state: State): TreeProps => {
     contractedKeys: state.contractedKeys,
     onChangeState: (actionType: string) => silentlyApplyStateAction(props.store, actionType),
     onClickNodeKey: (key: string) => state.set(s => ({
-      ...s,
       contractedKeys: s.contractedKeys.includes(key)
         ? s.contractedKeys.filter(k => k !== key)
         : [...s.contractedKeys, key]

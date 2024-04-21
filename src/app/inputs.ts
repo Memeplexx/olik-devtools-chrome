@@ -96,7 +96,7 @@ const chromeMessageListener = (state: State, event: DevtoolsAction) => {
     state.set({ error: '' });
   } else {
     const convertAnyDateStringsToDates = (val: unknown): unknown => {
-      if (is.record(val))
+      if (is.record<unknown>(val))
         return Object.keys(val).forEach(key => val[key] = convertAnyDateStringsToDates(val[key]))
       if (is.array(val))
         return val.map(convertAnyDateStringsToDates);

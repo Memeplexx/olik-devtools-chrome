@@ -109,11 +109,11 @@ const useInputElementChanger = <V extends InputValue>(
   state: State,
   derived: Derived,
 ) => {
-  if (!state.initialized) {
+  if (!state.initialized)
     setTimeout(() => props.onChangeInputElement?.(derived.showTextArea));
-  }
   const wasTextArea = useRef(derived.showTextArea);
-  if (wasTextArea.current == derived.showTextArea) { return; }
+  if (wasTextArea.current == derived.showTextArea)
+    return;
   wasTextArea.current = derived.showTextArea;
   setTimeout(() => props.onChangeInputElement?.(derived.showTextArea));
 }

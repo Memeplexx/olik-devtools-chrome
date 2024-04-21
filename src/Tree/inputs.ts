@@ -25,12 +25,18 @@ export const useLocalState = (
   key: '',
   value: props.item as InputValue,
   type: (() => {
-    if (is.number(props.item)) return 'number';
-    if (is.string(props.item)) return 'string';
-    if (is.boolean(props.item)) return 'boolean';
-    if (is.date(props.item)) return 'date';
-    if (is.null(props.item)) return 'null';
-    if (is.undefined(props.item)) return 'undefined';
+    if (is.number(props.item)) 
+      return 'number';
+    if (is.string(props.item)) 
+      return 'string';
+    if (is.boolean(props.item)) 
+      return 'boolean';
+    if (is.date(props.item)) 
+      return 'date';
+    if (is.null(props.item)) 
+      return 'null';
+    if (is.undefined(props.item)) 
+      return 'undefined';
     return 'string';
   })() as ValueType,
   keyNodeRef: useRef<HTMLInputElement>(null),
@@ -53,17 +59,25 @@ const useDerivedState = (
     return props.unchanged.includes(props.keyConcat) && props.hideUnchanged;
   }, [props.hideUnchanged, props.keyConcat, props.unchanged]),
   isEmpty: useMemo(() => {
-    if (is.array(props.item)) return !props.item.length;
-    if (is.record(props.item)) return !Object.keys(props.item).length;
+    if (is.array(props.item)) 
+      return !props.item.length;
+    if (is.record(props.item)) 
+      return !Object.keys(props.item).length;
     return false;
   }, [props.item]),
   nodeEl: useMemo(() => {
-    if (is.null(props.item)) return 'null';
-    if (is.undefined(props.item)) return '';
-    if (is.boolean(props.item)) return props.item.toString();
-    if (is.number(props.item)) return props.item.toString();
-    if (is.string(props.item)) return `"${props.item}"`;
-    if (is.date(props.item)) return props.item.toISOString();
+    if (is.null(props.item)) 
+      return 'null';
+    if (is.undefined(props.item)) 
+      return '';
+    if (is.boolean(props.item)) 
+      return props.item.toString();
+    if (is.number(props.item)) 
+      return props.item.toString();
+    if (is.string(props.item)) 
+      return `"${props.item}"`;
+    if (is.date(props.item)) 
+      return props.item.toISOString();
     return props.item;
   }, [props.item]) as ReactNode,
   isChanged: useMemo(() => {
@@ -75,18 +89,28 @@ const useDerivedState = (
     $showTextArea: state.isShowingTextArea,
     $isArrayOrObject: is.array(props.item) || is.record(props.item),
     $color: (() => {
-      if (props.unchanged.includes(props.keyConcat)) return 'gray';
-      if (is.array(props.item)) return 'red';
-      if (is.record(props.item)) return 'violet';
-      if (is.number(props.item)) return 'darkorange';
-      if (is.string(props.item)) return 'green';
-      if (is.date(props.item)) return 'deepskyblue';
-      if (is.null(props.item)) return 'lightblue';
-      if (is.boolean(props.item)) return '#00ff3c';
-      if (is.undefined(props.item)) return 'magenta';
+      if (props.unchanged.includes(props.keyConcat)) 
+        return 'gray';
+      if (is.array(props.item)) 
+        return 'red';
+      if (is.record(props.item)) 
+        return 'violet';
+      if (is.number(props.item)) 
+        return 'darkorange';
+      if (is.string(props.item)) 
+        return 'green';
+      if (is.date(props.item)) 
+        return 'deepskyblue';
+      if (is.null(props.item)) 
+        return 'lightblue';
+      if (is.boolean(props.item)) 
+        return '#00ff3c';
+      if (is.undefined(props.item)) 
+        return 'magenta';
     })(),
     $nonValueColor: (() => {
-      if (props.unchanged.includes(props.keyConcat)) return 'gray';
+      if (props.unchanged.includes(props.keyConcat)) 
+        return 'gray';
       return '#e4e4e4';
     })(),
   }), [props.displayInline, props.item, props.keyConcat, props.unchanged, state.isShowingTextArea])

@@ -1,4 +1,4 @@
-import { deserialize } from "olik";
+import { deserialize, is as olikIs } from "olik";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BasicStore, EventMap } from "./types";
 
@@ -58,44 +58,12 @@ export const tupleIncludes = <Element extends string, Array extends readonly [..
 export const isoDateRegexPattern = new RegExp(/\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/);
 
 export const is = {
-	recordOrArray: (val: unknown): val is object => {
-		return typeof (val) === 'object' && val !== null && !(val instanceof Date);
-	},
-	number: (val: unknown): val is number => {
-		return typeof (val) === 'number';
-	},
-	boolean: (val: unknown): val is boolean => {
-		return typeof (val) === 'boolean';
-	},
-	string: (val: unknown): val is string => {
-		return typeof (val) === 'string';
-	},
-	primitive: (val: unknown): val is string | number | boolean => {
-		return typeof (val) === 'string' || typeof (val) === 'number' || typeof (val) === 'boolean';
-	},
-	undefined: (val: unknown): val is undefined => {
-		return val === undefined;
-	},
-	null: (val: unknown): val is null => {
-		return val === null;
-	},
-	date: (val: unknown): val is Date => {
-		return val instanceof Date;
-	},
-	record: (val: unknown): val is Record<string, unknown> => {
-		return typeof (val) === 'object' && val !== null && !Array.isArray(val) && !(val instanceof Date);
-	},
-	array: <T>(val: unknown): val is Array<T> => {
-		return Array.isArray(val);
-	},
+	...olikIs,
 	function: <A extends Array<unknown>, R>(val: unknown): val is (...a: A) => R => {
 		return typeof (val) === 'function';
 	},
-	nullOrUndefined: (val: unknown): val is null | undefined => {
-		return val === null || val === undefined;
-	},
 	scalar: (val: unknown): val is 'number' | 'string' | 'boolean' | 'date' | 'null' | 'undefined' => {
-		return typeof (val) === 'string' || typeof (val) === 'number' || typeof (val) === 'boolean' || val === null || val === undefined || val instanceof Date;
+		return is.string(val) || is.number(val) || is.boolean(val) || is.null(val) || is.undefined(val) || is.date(val);
 	},
 	htmlElement: (val: unknown): val is HTMLElement => {
 		return val instanceof HTMLElement;
@@ -110,10 +78,14 @@ export const silentlyApplyStateAction = (store: BasicStore, queryString: string)
 		const segments = new Array<string>();
 		let parenOpened = false;
 		str.split('').forEach(char => {
-			if (char === '.' && !parenOpened) { segments.push(''); return; }
-			if (char === '(') { parenOpened = true; }
-			if (char === ')') { parenOpened = false; }
-			if (!segments.length) { segments.push(''); }
+			if (char === '.' && !parenOpened) 
+				return segments.push('');
+			if (char === '(') 
+				parenOpened = true;
+			if (char === ')')
+				parenOpened = false;
+			if (!segments.length) 
+				segments.push('');
 			segments[segments.length - 1] += char;
 		});
 		return segments;
@@ -147,10 +119,12 @@ export const useRecord = <R extends Record<string, unknown>>(record: R) => {
 		...record,
 		set: (arg: Partial<R> | ((r: R) => (Partial<R> | void) )) => {
 			const newState = is.function<[R], Partial<R>>(arg) ? arg(stateRef) : arg;
-			if (newState === undefined) return;
+			if (newState === undefined)
+				return;
 			const unChanged = (Object.keys(newState) as Array<keyof typeof newState>)
 				.every(key => is.function(newState[key]) || stateRef[key] === newState[key]);
-			if (unChanged) return;
+			if (unChanged)
+				return;
 			Object.assign(stateRef, newState);
 			setCount(c => c + 1);
 		}
@@ -168,9 +142,8 @@ export const useEventHandlerForDocument = <Type extends 'click' | 'keyup' | 'key
 	ref.current = handler;
 	useEffect(() => {
 		const listener = ((event: EventMap<Type>) => {
-			if (ref.current) {
+			if (ref.current)
 				ref.current(event);
-			}
 		}) as unknown as EventListener;
 		Object.defineProperty(listener, 'name', { value: listenerName });
 		document.addEventListener(type, listener);

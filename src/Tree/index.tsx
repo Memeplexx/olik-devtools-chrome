@@ -53,7 +53,7 @@ export const Tree = (
       />
     );
   };
-  return recurse({ val: is.recordOrArray(props.state) ? { '': props.state } : props.state, outerKey: '' });
+  return recurse({ val: (is.record(props.state) || is.array(props.state)) ? { '': props.state } : props.state, outerKey: '' });
 }
 
 export const RenderedNode = function RenderedNode(
@@ -69,21 +69,21 @@ export const RenderedNode = function RenderedNode(
         onMouseOut={outputs.onMouseOutValueNode}
         data-key={props.keyConcat}
         {...inputs.styles}
-        children={is.recordOrArray(props.item) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.onChangeState ? inputs.nodeEl : (
+        children={(is.record(props.item) || is.array(props.item)) ? props.recurse({ val: props.item, outerKey: props.keyConcat }) : !props.onChangeState ? inputs.nodeEl : (
           <ValueNode
             {...inputs.styles}
             data-key-input={props.keyConcat}
             value={inputs.value}
-            onChange={outputs.onChangeValue}
-            allowQuotesToBeShown={true}
-            allowTypeSelectorPopup={true}
             allowTextArea={true}
             valueType={inputs.type}
+            isChanged={inputs.isChanged}
+            allowQuotesToBeShown={true}
+            allowTypeSelectorPopup={true}
+            onChange={outputs.onChangeValue}
             onClick={outputs.onClickValueNode}
             onChangeValueType={outputs.onChangeValueType}
             onChangeCommit={outputs.onChangeCommitValue}
             onChangeInputElement={outputs.onChangeInputElement}
-            isChanged={inputs.isChanged}
             onHidePopup={outputs.onHideOptions}
             additionalOptions={!props.isArrayElement ? null : (
               <>
@@ -143,15 +143,15 @@ export const RenderedNode = function RenderedNode(
                   {...inputs.styles}
                   data-key-input={props.keyConcat}
                   ref={inputs.keyNodeRef}
-                  readOnly={!props.onChangeState || !inputs.isEditingObjectKey}
                   value={inputs.key}
                   isChanged={inputs.isChanged}
+                  allowTypeSelectorPopup={false}
+                  allowQuotesToBeShown={false}
+                  readOnly={!props.onChangeState || !inputs.isEditingObjectKey}
                   onChange={outputs.onChangeKey}
                   onChangeCommit={outputs.onChangeCommitObjectKey}
                   onFocus={outputs.onFocusObjectKey}
                   onBlur={outputs.onBlurObjectKey}
-                  allowTypeSelectorPopup={false}
-                  allowQuotesToBeShown={false}
                   onHidePopup={outputs.onHideOptions}
                   valueType='string'
                 />
