@@ -1,4 +1,4 @@
-import { Store, createStore } from 'olik';
+import { StoreDef, createStore } from 'olik';
 import { augmentOlikForReact, createUseStoreHook } from 'olik-react';
 import { connectOlikDevtoolsToStore } from 'olik/devtools';
 import { createContext, useMemo } from "react";
@@ -6,7 +6,7 @@ import { AppState, initialState } from './constants';
 
 
 
-export const StoreContext = createContext<Store<AppState> | undefined>(undefined);
+export const StoreContext = createContext<StoreDef<AppState> | undefined>(undefined);
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useStore = createUseStoreHook(StoreContext);

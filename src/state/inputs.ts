@@ -48,7 +48,8 @@ const getTreeProps = (props: Props, state: State): TreeProps => {
 };
 
 const doReadState = (type: string, state: unknown) => {
-  if (type === undefined) { return state; }
+  if (type === undefined)
+    return state;
   const segments = type.split('.').filter(s => s !== '');
   const stateActions: StateAction[] = segments
     .map(seg => {
@@ -63,6 +64,6 @@ const doReadState = (type: string, state: unknown) => {
       }
     });
   stateActions.push({ name: '$state' });
-  return readState({ state, stateActions, cursor: { index: 0 } });
+  return readState(state, stateActions);
 }
 

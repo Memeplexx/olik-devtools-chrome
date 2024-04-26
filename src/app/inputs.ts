@@ -1,5 +1,5 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
-import { DevtoolsAction, StateAction, assertIsRecord, assertIsUpdateFunction, createStore, getStore, libState, newRecord, readState, setNewStateAndNotifyListeners } from "olik";
+import { DevtoolsAction, StateAction, ValidJsonObject, assertIsRecord, assertIsUpdateFunction, createStore, getStore, libState, newRecord, readState, setNewStateAndNotifyListeners } from "olik";
 import { useEffect, useMemo, useRef } from "react";
 import { is, isoDateRegexPattern, tupleIncludes, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
@@ -87,7 +87,7 @@ const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction
 
 const chromeMessageListener = (state: State, event: DevtoolsAction) => {
   if (event.actionType === '$load()') {
-    state.storeRef.current = createStore<Record<string, unknown>>({});
+    state.storeRef.current = createStore<ValidJsonObject>({});
     const notifyAppOfInitialization = () => document.getElementById('olik-init')!.innerHTML = 'done';
     chrome.tabs
       .query({ active: true })
@@ -97,7 +97,7 @@ const chromeMessageListener = (state: State, event: DevtoolsAction) => {
   } else {
     const convertAnyDateStringsToDates = (val: unknown): unknown => {
       if (is.record<unknown>(val))
-        return Object.keys(val).forEach(key => val[key] = convertAnyDateStringsToDates(val[key]))
+        Object.keys(val).forEach(key => val[key] = convertAnyDateStringsToDates(val[key]))
       if (is.array(val))
         return val.map(convertAnyDateStringsToDates);
       if (is.string(val) && isoDateRegexPattern.test(val))
@@ -106,7 +106,7 @@ const chromeMessageListener = (state: State, event: DevtoolsAction) => {
     }
     event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: convertAnyDateStringsToDates(sa.arg) }));
     libState.disableDevtoolsDispatch = true;
-    setNewStateAndNotifyListeners(event);
+    setNewStateAndNotifyListeners(event.stateActions);
     libState.disableDevtoolsDispatch = false;
     processEvent(state, event);
   }
@@ -130,7 +130,7 @@ const readSelectedState = (state: Record<string, unknown>, { stateActions }: Dev
     stateActionsNew = stateActions.slice(0, stateActions.length - 1);
   }
   stateActionsNew.push({ name: '$state' });
-  return readState({ state, stateActions: stateActionsNew, cursor: { index: 0 } });
+  return readState(state, stateActionsNew);
 }
 
 const processEvent = (state: State, event: DevtoolsAction) => {
