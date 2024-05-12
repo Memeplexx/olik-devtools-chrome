@@ -2,8 +2,9 @@ import { IDisposable, editor } from 'monaco-editor';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import { useRef } from "react";
 import * as olikTypeDefsText from '../../node_modules/olik/dist/type.d.ts?raw';
-import { is, useRecord } from "../shared/functions";
+import { useRecord } from "../shared/functions";
 import { Props, State, editorRefOptions, editorTheme } from "./constants";
+import { is } from '../shared/type-check';
 
 const olikTypeDefsAsString = olikTypeDefsText.default.replace(/\n|\r/g, "");
 

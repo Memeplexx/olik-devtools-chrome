@@ -1,6 +1,7 @@
-import { deserialize, is as olikIs } from "olik";
+import { BasicRecord, deserialize } from "olik";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BasicStore, EventMap } from "./types";
+import { is } from "./type-check";
 
 export const useKnownPropsOnly = <T extends HTMLElement>(
 	element: T,
@@ -57,22 +58,6 @@ export const tupleIncludes = <Element extends string, Array extends readonly [..
 
 export const isoDateRegexPattern = new RegExp(/\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/);
 
-export const is = {
-	...olikIs,
-	function: <A extends Array<unknown>, R>(val: unknown): val is (...a: A) => R => {
-		return typeof (val) === 'function';
-	},
-	scalar: (val: unknown): val is 'number' | 'string' | 'boolean' | 'date' | 'null' | 'undefined' => {
-		return is.string(val) || is.number(val) || is.boolean(val) || is.null(val) || is.undefined(val) || is.date(val);
-	},
-	htmlElement: (val: unknown): val is HTMLElement => {
-		return val instanceof HTMLElement;
-	},
-	ref: <T>(val: unknown): val is React.RefObject<T> => {
-		return is.record(val) && 'current' in val;
-	}
-}
-
 export const silentlyApplyStateAction = (store: BasicStore, queryString: string) => {
 	const splitString = (str: string) => {
 		const segments = new Array<string>();
@@ -113,7 +98,7 @@ export const silentlyApplyStateAction = (store: BasicStore, queryString: string)
 	}
 }
 
-export const useRecord = <R extends Record<string, unknown>>(record: R) => {
+export const useRecord = <R extends BasicRecord>(record: R) => {
 	const [, setCount] = useState(0);
 	const stateRef = useRef({
 		...record,

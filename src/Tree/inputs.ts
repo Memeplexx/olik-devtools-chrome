@@ -1,7 +1,8 @@
 import { ReactNode, useMemo, useRef } from "react";
 import { InputValue, ValueType } from "../input/constants";
-import { is, useRecord } from "../shared/functions";
+import { useRecord } from "../shared/functions";
 import { RenderNodeArgs } from "./constants";
+import { is } from "../shared/type-check";
 
 export const useInputs = (
   props: RenderNodeArgs,

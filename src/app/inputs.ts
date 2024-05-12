@@ -1,9 +1,10 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
-import { DevtoolsAction, StateAction, ValidJsonObject, assertIsRecord, assertIsUpdateFunction, createStore, getStore, libState, newRecord, readState, setNewStateAndNotifyListeners } from "olik";
+import { BasicRecord, DevtoolsAction, StateAction, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { useEffect, useMemo, useRef } from "react";
-import { is, isoDateRegexPattern, tupleIncludes, useRecord } from "../shared/functions";
+import { isoDateRegexPattern, tupleIncludes, useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
 import { Item, State, initialState } from "./constants";
+import { assertIsRecord, assertIsUpdateFunction, is } from '../shared/type-check';
 
 export const useInputs = () => {
   const localState = useLocalState();
@@ -87,7 +88,7 @@ const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction
 
 const chromeMessageListener = (state: State, event: DevtoolsAction) => {
   if (event.actionType === '$load()') {
-    state.storeRef.current = createStore<ValidJsonObject>({});
+    state.storeRef.current = createStore<BasicRecord>({});
     const notifyAppOfInitialization = () => document.getElementById('olik-init')!.innerHTML = 'done';
     chrome.tabs
       .query({ active: true })
@@ -205,7 +206,7 @@ const applyPayloadPaths = (incoming: DevtoolsAction) => {
     const recurse = (value: unknown, depth: number): unknown => {
       if (is.record(value))
         return Object.keys(value)
-          .reduce((prev, curr) => Object.assign(prev, { [curr]: curr === segments[depth] ? recurse(value[curr], depth + 1) : value[curr] }), newRecord());
+          .reduce((prev, curr) => Object.assign(prev, { [curr]: curr === segments[depth] ? recurse(value[curr], depth + 1) : value[curr] }), {});
       if (is.array(value))
         return value.map((e, i) => i.toString() === segments[depth] ? recurse(value[i], depth + 1) : e);
       return payloadPaths[path] as unknown;

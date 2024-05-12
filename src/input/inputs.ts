@@ -1,8 +1,9 @@
 import flatpickr from "flatpickr";
 import { Instance } from "flatpickr/dist/types/instance";
 import { ForwardedRef, useEffect, useMemo, useRef } from "react";
-import { is, useAttributeObserver, useForwardedRef, usePropsForHTMLElement, useRecord, useResizeObserver } from "../shared/functions";
+import { useAttributeObserver, useForwardedRef, usePropsForHTMLElement, useRecord, useResizeObserver } from "../shared/functions";
 import { Derived, InputValue, Props, State, TextInputElement } from "./constants";
+import { is } from "../shared/type-check";
 
 const inputEl = document.createElement('input');
 const textAreaEl = document.createElement('textarea');

@@ -3,8 +3,6 @@ import { MouseEvent } from 'react';
 
 export type BasicStore = Store<Record<string, unknown>>;
 
-export type ValueOf<T> = T[keyof T];
-
 export type Keys =
 	| 'Backspace'
 	| 'Tab'

@@ -2,11 +2,11 @@ import { ReactNode } from "react";
 import { FaCopy, FaEdit, FaTrash } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { IconOption, PopupList } from "../popup-list";
-import { is } from "../shared/functions";
 import { RecurseArgs, RenderNodeArgs, TreeProps } from "./constants";
 import { useInputs } from "./inputs";
 import { useOutputs } from "./outputs";
 import { ActionType, BraceNode, ChildNode, Colon, CommaNode, Ellipses, KeyNode, ParentNode, ParenthesisNode, ValueNode, Wrapper } from "./styles";
+import { is } from "../shared/type-check";
 
 
 export const Tree = (

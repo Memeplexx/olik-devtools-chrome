@@ -1,8 +1,8 @@
 import { MouseEvent } from "react";
 import { InputValue, ValueType } from "../input/constants";
-import { is, useEventHandlerForDocument } from "../shared/functions";
+import { useEventHandlerForDocument } from "../shared/functions";
 import { RenderNodeArgs, State } from "./constants";
-import { assertIsArray, assertIsRecord } from "olik";
+import { assertIsArray, assertIsRecord, is } from "../shared/type-check";
 
 export const useOutputs = (props: RenderNodeArgs, state: State) => ({
   onClickCopy: async () => {

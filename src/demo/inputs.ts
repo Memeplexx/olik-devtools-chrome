@@ -1,4 +1,4 @@
-import { StateAction, Store } from "olik";
+import { StateAction, Store, is } from "olik";
 import { useEffect } from "react";
 import { useStore } from "./store-utils";
 
@@ -7,7 +7,9 @@ const serialize = (...items: Store<unknown>[]) => {
   items.forEach(readable => {
     readable.$onChange(result => {
       const urlParams = new URLSearchParams(window.location.search);
-      const key = (readable as unknown as { $stateActions: StateAction[] }).$stateActions.map(action => action.name).join('.');
+      const key = (readable as unknown as { $stateActions: StateAction[] }).$stateActions
+        .filter(action => !is.anyReadFunction(action.name))
+        .map(action => action.name).join('.');
       const value = JSON.stringify(result);
       urlParams.set(key, value);
       window.history.replaceState({}, '', `${window.location.href.split('?')[0]}?${urlParams.toString()}`);
