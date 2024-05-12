@@ -1,8 +1,8 @@
 import { ReactNode, useMemo, useRef } from "react";
 import { InputValue, ValueType } from "../input/constants";
 import { useRecord } from "../shared/functions";
-import { RenderNodeArgs } from "./constants";
 import { is } from "../shared/type-check";
+import { RenderNodeArgs } from "./constants";
 
 export const useInputs = (
   props: RenderNodeArgs,
@@ -25,21 +25,7 @@ export const useLocalState = (
   isShowingTextArea: false,
   key: '',
   value: props.item as InputValue,
-  type: (() => {
-    if (is.number(props.item))
-      return 'number';
-    if (is.string(props.item))
-      return 'string';
-    if (is.boolean(props.item))
-      return 'boolean';
-    if (is.date(props.item))
-      return 'date';
-    if (is.null(props.item))
-      return 'null';
-    if (is.undefined(props.item))
-      return 'undefined';
-    return 'string';
-  })() as ValueType,
+  type: getValueType(props.item),
   keyNodeRef: useRef<HTMLInputElement>(null),
 });
 
@@ -144,9 +130,23 @@ const useValueUpdater = (
   state: ReturnType<typeof useLocalState>,
 ) => {
   useMemo(() => {
-    state.set({ value: props.item as InputValue });
+    state.set({ value: props.item as InputValue, type: getValueType(props.item) });
   }, [props.item, state]);
   useMemo(() => {
     state.set({ key: props.objectKey! });
   }, [props.objectKey, state]);
+}
+
+const getValueType = (item: unknown): ValueType => {
+  if (is.number(item))
+    return 'number';
+  if (is.string(item))
+    return 'string';
+  if (is.boolean(item))
+    return 'boolean';
+  if (is.date(item))
+    return 'date';
+  if (is.null(item))
+    return 'null';
+  return 'string';
 }
