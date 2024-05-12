@@ -79,7 +79,7 @@ const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction
   if (event.data.source !== 'olik-devtools-extension') 
     return;
   if (event.data.actionType === '$load()') {
-    state.storeRef.current = getStore<Record<string, unknown>>();
+    state.storeRef.current = getStore<BasicRecord>();
     document.getElementById('olik-init')!.innerHTML = 'done';
     state.set({ error: '' });
   } else {
@@ -114,18 +114,18 @@ const chromeMessageListener = (state: State, event: DevtoolsAction) => {
   }
 }
 
-const readSelectedState = (state: Record<string, unknown>, { stateActions }: DevtoolsAction) => {
+const readSelectedState = (state: BasicRecord, { stateActions }: DevtoolsAction) => {
   const payload = stateActions.at(-1)!.arg;
   let stateActionsNew = new Array<StateAction>();
   const mergeMatchingIndex = stateActions.findIndex(s => s.name === '$mergeMatching');
   if (mergeMatchingIndex !== -1) {
     const withIndex = stateActions.findIndex(s => s.name === '$with');
     const matcherPath = stateActions.slice(mergeMatchingIndex + 1, withIndex);
-    if (is.array<Record<string, unknown>>(payload)) {
-      const payloadSelection = payload.map(p => matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, p))
+    if (is.array<BasicRecord>(payload)) {
+      const payloadSelection = payload.map(p => matcherPath.reduce((prev, curr) => prev[curr.name] as BasicRecord, p))
       stateActionsNew = [...stateActions.slice(0, mergeMatchingIndex), { name: '$filter' }, ...matcherPath, { name: '$in', arg: payloadSelection }];
     } else {
-      const payloadSelection = matcherPath.reduce((prev, curr) => prev[curr.name] as Record<string, unknown>, payload as Record<string, unknown>);
+      const payloadSelection = matcherPath.reduce((prev, curr) => prev[curr.name] as BasicRecord, payload as BasicRecord);
       stateActionsNew = [...stateActions.slice(0, mergeMatchingIndex), { name: '$find' }, ...matcherPath, { name: '$eq', arg: payloadSelection }];
     }
   } else {

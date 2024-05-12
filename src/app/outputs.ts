@@ -1,4 +1,4 @@
-import { libState } from "olik";
+import { BasicRecord, libState } from "olik";
 import { silentlyApplyStateAction } from "../shared/functions";
 import { Item, State } from "./constants";
 
@@ -47,7 +47,7 @@ export const useOutputs = (state: State) => ({
   },
 });
 
-const silentlyUpdateAppStoreState = (state: State, newState: Record<string, unknown>) => {
+const silentlyUpdateAppStoreState = (state: State, newState: BasicRecord) => {
   if (!chrome.runtime) {
     libState.disableDevtoolsDispatch = true;
     state.storeRef.current!.$set(newState);

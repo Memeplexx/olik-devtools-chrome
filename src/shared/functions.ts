@@ -5,19 +5,19 @@ import { is } from "./type-check";
 
 export const useKnownPropsOnly = <T extends HTMLElement>(
 	element: T,
-	props: Record<string, unknown>
+	props: BasicRecord
 ) => {
 	return useMemo(() => {
 		return Object.keys(props)
 			.filter(key => key in element)
-			.reduce<Record<string, unknown>>((acc, key) => {
+			.reduce<BasicRecord>((acc, key) => {
 				acc[key] = props[key];
 				return acc;
 			}, {});
 	}, [props, element]);
 }
 
-export const usePropsWithDefaults = <P extends Record<string, unknown>, I extends P, D extends P>(incomingProps: I, defaultProps: D) => {
+export const usePropsWithDefaults = <P extends BasicRecord, I extends P, D extends P>(incomingProps: I, defaultProps: D) => {
 
 	// We need a ref of incomingProps so we can compare previous props to incoming props
 	const inRef = useRef<P>(incomingProps);
@@ -133,11 +133,11 @@ export const useEventHandlerForDocument = <Type extends 'click' | 'keyup' | 'key
 }
 
 
-export const usePropsForHTMLElement = <T extends HTMLElement>(element: T, props: Record<string, unknown>) => {
+export const usePropsForHTMLElement = <T extends HTMLElement>(element: T, props: BasicRecord) => {
 	return useMemo(() => {
 		return Object.keys(props)
 			.filter(k => (k in element) || k.startsWith('data-'))
-			.reduce<Record<string, unknown>>((acc, key) => { acc[key] = props[key]; return acc; }, {});
+			.reduce<BasicRecord>((acc, key) => { acc[key] = props[key]; return acc; }, {});
 	}, [props, element]);
 }
 

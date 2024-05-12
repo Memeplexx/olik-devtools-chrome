@@ -1,7 +1,7 @@
-import { Store } from 'olik';
+import { BasicRecord, Store } from 'olik';
 import { MouseEvent } from 'react';
 
-export type BasicStore = Store<Record<string, unknown>>;
+export type BasicStore = Store<BasicRecord>;
 
 export type Keys =
 	| 'Backspace'

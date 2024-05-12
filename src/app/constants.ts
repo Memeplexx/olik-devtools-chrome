@@ -1,3 +1,4 @@
+import { BasicRecord } from "olik";
 import { useInputs, useLocalState } from "./inputs";
 import { useOutputs } from "./outputs";
 
@@ -7,7 +8,7 @@ export type Item = {
   actionType: string,
   actionPayload: unknown,
   id: number,
-  fullState: Record<string, unknown>,
+  fullState: BasicRecord,
   changed: string[],
   unchanged: string[],
   location?: string,

@@ -1,8 +1,9 @@
+import { BasicRecord } from "olik";
 import { BasicStore } from "../shared/types";
 import { useLocalState } from "./inputs";
 
 export interface Props {
-  state: Record<string, unknown>,
+  state: BasicRecord,
   changed: string[],
   className?: string,
   query: string,

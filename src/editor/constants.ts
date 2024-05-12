@@ -1,8 +1,9 @@
 import { editor } from "monaco-editor"
 import { useLocalState } from "./inputs";
+import { BasicRecord } from "olik";
 
 export type Props = {
-  state: Record<string, unknown> | null,
+  state: BasicRecord | null,
   onChange: (query: string) => void,
   onEnter: (query: string) => void,
 }
