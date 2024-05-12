@@ -1,8 +1,9 @@
 import { ChangeEvent, FocusEvent, MouseEvent } from "react";
-import { isoDateRegexPattern, tupleIncludes, useEventHandlerForDocument } from "../shared/functions";
+import { useEventHandlerForDocument } from "../shared/functions";
 import { Props, InputValue, State, TextInputElement, ValueType, Inputs } from "./constants";
 import { TypedKeyboardEvent } from "../shared/types";
 import { is } from "../shared/type-check";
+import { isoDateRegexp, tupleIncludes } from "olik";
 
 
 export const useOutputs = <V extends InputValue>(
@@ -37,7 +38,7 @@ export const useOutputs = <V extends InputValue>(
       if (props.valueType === 'boolean') 
         return inputVal === 'true';
       if (props.valueType === 'date') 
-        return new Date(isoDateRegexPattern.test(inputVal) ? inputVal : 0);
+        return new Date(isoDateRegexp.test(inputVal) ? inputVal : 0);
       if (props.valueType === 'null') 
         return null;
     })() as V;
@@ -87,7 +88,7 @@ export const useOutputs = <V extends InputValue>(
       if (type === 'boolean') 
         return (value === 'true');
       if (type === 'date') 
-        return new Date(isoDateRegexPattern.test(value) ? value : 0);
+        return new Date(isoDateRegexp.test(value) ? value : 0);
       if (type === 'null') 
         return null;
     })() as V;

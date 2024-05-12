@@ -1,10 +1,11 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
-import { BasicRecord, DevtoolsAction, StateAction, createStore, getStore, libState, readState, setNewStateAndNotifyListeners } from "olik";
+import { BasicRecord, DevtoolsAction, StateAction, createStore, getStore, isoDateRegexp, libState, readState, setNewStateAndNotifyListeners } from "olik";
 import { useEffect, useMemo, useRef } from "react";
-import { isoDateRegexPattern, tupleIncludes, useRecord } from "../shared/functions";
+import { useRecord } from "../shared/functions";
 import { BasicStore } from '../shared/types';
 import { Item, State, initialState } from "./constants";
 import { assertIsRecord, assertIsUpdateFunction, is } from '../shared/type-check';
+import { tupleIncludes } from 'olik';
 
 export const useInputs = () => {
   const localState = useLocalState();
@@ -101,7 +102,7 @@ const chromeMessageListener = (state: State, event: DevtoolsAction) => {
         Object.keys(val).forEach(key => val[key] = convertAnyDateStringsToDates(val[key]))
       if (is.array(val))
         return val.map(convertAnyDateStringsToDates);
-      if (is.string(val) && isoDateRegexPattern.test(val))
+      if (is.string(val) && isoDateRegexp.test(val))
         return new Date(val);
       return val;
     }
