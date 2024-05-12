@@ -1,4 +1,4 @@
-import { StateAction, deserialize, is, readState } from "olik";
+import { StateAction, deserialize, readState, updatePropMap } from "olik";
 import { ForwardedRef } from "react";
 import { silentlyApplyStateAction, useForwardedRef, useRecord } from "../shared/functions";
 import { Props, State } from "./constants";
@@ -55,7 +55,7 @@ const doReadState = (type: string, state: unknown) => {
     .map(seg => {
       const arg = seg.match(/\(([^)]*)\)/)?.[1];
       const containsParenthesis = arg !== null && arg !== undefined;
-      if (containsParenthesis && !is.anyUpdateFunction(seg)) {
+      if (containsParenthesis && !(seg in updatePropMap)) {
         const functionName = seg.split('(')[0];
         const typedArg = deserialize(arg);
         return { name: functionName, arg: typedArg };
