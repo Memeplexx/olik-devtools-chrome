@@ -84,12 +84,18 @@ export const ItemHeading = styled(div)`
 	}
 `;
 
+export const Divider = styled(div)`
+	height: 2px;
+	background-color: grey;
+	margin: 4px 0;
+`;
+
 export const ItemHead = styled.div`
   white-space: nowrap;
 	text-align: end;
 `;
 
-export const ItemContent = styled.div<{ $isSelected?: boolean }>`
+export const ItemContent = styled.div<{ $isSelected?: boolean, $showBottomBorder: boolean }>`
 	${p => p.$isSelected ? css`filter: invert(1)` : ''};
 	background-color: rgb(28, 28, 28);
 	cursor: pointer;
@@ -99,6 +105,7 @@ export const ItemContent = styled.div<{ $isSelected?: boolean }>`
 	&:hover {
 		background-color: black;
 	}
+	${p => p.$showBottomBorder ? css`border-bottom: 1px solid #4c4c4c;` : ''};
 `;
 
 export const ItemJsx = styled(Tree)`

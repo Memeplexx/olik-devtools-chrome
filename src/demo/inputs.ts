@@ -18,12 +18,17 @@ const serialize = (...items: Store<unknown>[]) => {
 }
 
 export const useInputs = () => {
-  const { store, num } = useStore();
+
+  const { store, num, localState, localStore } = useStore({ key: 'testing', value: { num: 0, obj: { num2: 0 } } });
+  // const { store, num } = useStore();
   useEffect(() => {
     serialize(store.bool, store.num);
   }, [store]);
   return {
     store,
     num,
+
+    localState,
+    localStore,
   }
 }

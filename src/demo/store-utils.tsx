@@ -1,6 +1,6 @@
 import { StoreDef, createStore } from 'olik';
 import { augmentOlikForReact, createUseStoreHook } from 'olik-react';
-import { connectOlikDevtoolsToStore } from 'olik/devtools';
+import { configureDevtools } from 'olik/devtools';
 import { createContext, useMemo } from "react";
 import { AppState, initialState } from './constants';
 
@@ -18,7 +18,7 @@ export default function StoreProvider({ children }: { children: React.ReactNode 
   const store = useMemo(() => createStore(initialState), []);
 
   if (typeof(navigator) !== 'undefined' && !/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-    connectOlikDevtoolsToStore();
+    configureDevtools({ whitelist: [store.flatObj.one, store.flatObj.two] });
   }
 
   return (

@@ -24,6 +24,7 @@ export const useLocalState = () => useRecord({
   storeRef: useRef<BasicStore | null>(null),
   treeRef: useRef<HTMLDivElement | null>(null),
   idRef: useRef(0),
+  whitelist: new Array<string>(),
 });
 
 const useDerivedState = (state: State) => ({
@@ -48,7 +49,7 @@ const useAutoScroller = (state: State) => {
 
 const useRefreshOnPageRefresh = (state: State) => {
   useEffect(() => {
-    if (!chrome.runtime) 
+    if (!chrome.runtime)
       return;
     const eventHandler: Parameters<typeof chrome.webNavigation.onCommitted.addListener>[0] = details => {
       if (details.transitionType === 'reload')
@@ -74,14 +75,14 @@ const useMessageHandler = (state: State) => {
 }
 
 const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction>) => {
-  if (event.origin !== window.location.origin) 
+  if (event.origin !== window.location.origin)
     return;
-  if (event.data.source !== 'olik-devtools-extension') 
+  if (event.data.source !== 'olik-devtools-extension')
     return;
   if (event.data.actionType === '$load()') {
     state.storeRef.current = getStore<BasicRecord>();
     document.getElementById('olik-init')!.innerHTML = 'done';
-    state.set({ error: '' });
+    state.set({ error: '', whitelist: event.data.stateActions.map(s => s.name) });
   } else {
     processEvent(state, event.data);
   }
@@ -95,7 +96,7 @@ const chromeMessageListener = (state: State, event: DevtoolsAction) => {
       .query({ active: true })
       .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: notifyAppOfInitialization }))
       .catch(console.error);
-    state.set({ error: '' });
+    state.set({ error: '', whitelist: event.stateActions.map(s => s.name) });
   } else {
     const convertAnyDateStringsToDates = (val: unknown): unknown => {
       if (is.record<unknown>(val))
@@ -106,10 +107,12 @@ const chromeMessageListener = (state: State, event: DevtoolsAction) => {
         return new Date(val);
       return val;
     }
-    event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: convertAnyDateStringsToDates(sa.arg) }));
-    libState.disableDevtoolsDispatch = true;
-    setNewStateAndNotifyListeners(event.stateActions);
-    libState.disableDevtoolsDispatch = false;
+    if (event.actionType !== '$addToWhitelist()') {
+      event.stateActions = event.stateActions.map(sa => ({ ...sa, arg: convertAnyDateStringsToDates(sa.arg) }));
+      libState.disableDevtoolsDispatch = true;
+      setNewStateAndNotifyListeners(event.stateActions);
+      libState.disableDevtoolsDispatch = false;
+    }
     processEvent(state, event);
   }
 }
@@ -135,7 +138,33 @@ const readSelectedState = (state: BasicRecord, { stateActions }: DevtoolsAction)
   return readState(state, stateActionsNew);
 }
 
+const stripPayloadWithWhitelist = (event: DevtoolsAction, whitelist: string[]) => {
+  const payload = event.stateActions.at(-1)!.arg;
+  const actionTypePath = event.actionType.substring(0, event.actionType.lastIndexOf('.'));
+  if (is.primitive(payload) || is.date(payload) || is.null(payload) || is.undefined(payload) || is.array(payload))
+    return { show: !whitelist.some(whitelist => actionTypePath.startsWith(whitelist)), payload };
+  const recurse = (state: unknown): unknown => {
+    if (is.record(state)) {
+      return Object.keys(state).reduce((prev, curr) => {
+        if (!whitelist.some(whitelist => `${actionTypePath}.${curr}`.startsWith(whitelist))) {
+          const result = recurse(state[curr]);
+          if (result !== undefined) {
+            prev[curr] = result;
+          }
+        }
+        return prev;
+      }, {} as Record<string, unknown>);
+    } else if (!whitelist.some(whitelist => actionTypePath.startsWith(whitelist))) {
+      return state;
+    }
+  }
+  const newPayload = recurse(payload);
+  return { show: !Object.keys(payload as BasicRecord).length || !!Object.keys(newPayload as BasicRecord).length, payload: newPayload };
+}
+
 const processEvent = (state: State, event: DevtoolsAction) => {
+  if (event.actionType === '$addToWhitelist()')
+    return state.set(s => ({ whitelist: [...new Set([...s.whitelist, ...event.stateActions.map(s => s.name)])] }));
   state.set(s => {
     const date = new Date();
     const previousItem = s.items.at(-1) ?? { fullState: {}, event: [], groupIndex: 0, date };
@@ -144,6 +173,7 @@ const processEvent = (state: State, event: DevtoolsAction) => {
     const selectedStateBefore = readSelectedState(fullStateBefore, event);
     const selectedStateAfter = readSelectedState(fullStateAfter, event);
     const currentEvent = getCleanStackTrace(event.trace!);
+    const { show, payload } = stripPayloadWithWhitelist(event, s.whitelist);
     return {
       items: [
         ...s.items,
@@ -152,14 +182,14 @@ const processEvent = (state: State, event: DevtoolsAction) => {
           event: currentEvent,
           groupIndex: currentEvent.join() === previousItem.event.join() ? previousItem.groupIndex : previousItem.groupIndex + 1,
           fullState: fullStateAfter,
-          visible: true,
+          visible: show,
           contractedKeys: [],
           time: getTimeDiff(date, previousItem?.date ?? date),
           date,
           changed: event.stateActions.at(-1)!.name === '$delete' ? [] : getChangedKeys({ fullStateBefore, fullStateAfter }),
           unchanged: getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming: event }),
           actionType: event.actionType.substring(0, event.actionType.length - 2),
-          actionPayload: applyPayloadPaths(event),
+          actionPayload: applyPayloadPaths(payload, event),
         }
       ],
     };
@@ -196,8 +226,7 @@ const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }:
   return unchanged;
 }
 
-const applyPayloadPaths = (incoming: DevtoolsAction) => {
-  const payload = incoming.stateActions.at(-1)!.arg;
+const applyPayloadPaths = (payload: unknown, incoming: DevtoolsAction) => {
   const { payloadPaths } = incoming;
   if (!payloadPaths) return payload;
   assertIsRecord(payloadPaths);
@@ -241,13 +270,13 @@ const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: 
 
 const getTimeDiff = (from: Date, to: Date) => {
   const milliseconds = differenceInMilliseconds(from, to);
-  if (milliseconds < 10 * 1000) 
+  if (milliseconds < 10 * 1000)
     return `${milliseconds} ms`;
-  if (milliseconds < 60 * 1000) 
+  if (milliseconds < 60 * 1000)
     return `${differenceInSeconds(from, to)} s`;
-  if (milliseconds < 60 * 60 * 1000) 
+  if (milliseconds < 60 * 60 * 1000)
     return `${differenceInMinutes(from, to)} m`;
-  if (milliseconds < 24 * 60 * 60 * 1000) 
+  if (milliseconds < 24 * 60 * 60 * 1000)
     return `${differenceInHours(from, to)} h`;
   return to.toLocaleDateString();
 }

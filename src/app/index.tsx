@@ -4,7 +4,7 @@ import { IconOption, PopupList } from '../popup-list';
 import { FragmentProps } from './constants';
 import { useInputs } from './inputs';
 import { useOutputs } from './outputs';
-import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, HeaderDown, HeaderUp, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, TimeIcon, ToggleOffIcon, ToggleOnIcon } from './styles';
+import { ClearIcon, DemoPanel, DevtoolsPanel, Divider, EditorPanel, Error, HeaderDown, HeaderUp, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, TimeIcon, ToggleOffIcon, ToggleOnIcon } from './styles';
 
 export const App = () => {
   const inputs = useInputs();
@@ -142,12 +142,16 @@ const ListItemsFragment = ({ inputs, outputs }: FragmentProps) => (
                     />
                   ))}
                 />
-                {itemGroup.items.map(item => (
+                <Divider
+                  if={inputs.hideHeaders}
+                />
+                {itemGroup.items.map((item, i, arr) => (
                   <ItemContent
                     id={item.id.toString()}
                     key={item.id}
                     onClick={outputs.onClickItem(item.id)}
                     $isSelected={item.id === inputs.selectedId}
+                    $showBottomBorder={inputs.hideHeaders && i < arr.length - 1}
                     children={
                       <>
                         <ItemJsx
