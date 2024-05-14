@@ -1,5 +1,5 @@
 import { StoreDef, createStore } from 'olik';
-import { augmentOlikForReact, createUseStoreHook } from 'olik-react';
+import { augmentForReact, createUseStoreHook } from 'olik-react';
 import { configureDevtools } from 'olik/devtools';
 import { createContext, useMemo } from "react";
 import { AppState, initialState } from './constants';
@@ -13,7 +13,7 @@ export const useStore = createUseStoreHook(StoreContext);
 
 export default function StoreProvider({ children }: { children: React.ReactNode }) {
 
-  augmentOlikForReact() // invoke before initializing store
+  augmentForReact() // invoke before initializing store
 
   const store = useMemo(() => createStore(initialState), []);
 
