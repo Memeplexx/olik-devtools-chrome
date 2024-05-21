@@ -1,11 +1,10 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
-import { BasicRecord, DevtoolsAction, StateAction, createStore, getStore, isoDateRegexp, libState, readState, setNewStateAndNotifyListeners } from "olik";
+import { BasicRecord, DevtoolsAction, StateAction, createStore, isoDateRegexp, libState, readState, setNewStateAndNotifyListeners, tupleIncludes } from "olik";
 import { useEffect, useMemo, useRef } from "react";
 import { useRecord } from "../shared/functions";
+import { assertIsRecord, assertIsUpdateFunction, is } from '../shared/type-check';
 import { BasicStore } from '../shared/types';
 import { Item, State, initialState } from "./constants";
-import { assertIsRecord, assertIsUpdateFunction, is } from '../shared/type-check';
-import { tupleIncludes } from 'olik';
 
 export const useInputs = () => {
   const localState = useLocalState();
@@ -80,7 +79,7 @@ const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction
   if (event.data.source !== 'olik-devtools-extension')
     return;
   if (event.data.actionType === '$load()') {
-    state.storeRef.current = getStore<BasicRecord>();
+    state.storeRef.current = libState.store as unknown as BasicStore;
     document.getElementById('olik-init')!.innerHTML = 'done';
     state.set({ error: '', whitelist: event.data.stateActions.map(s => s.name) });
   } else {
@@ -148,9 +147,8 @@ const stripPayloadWithWhitelist = (event: DevtoolsAction, whitelist: string[]) =
       return Object.keys(state).reduce((prev, curr) => {
         if (!whitelist.some(whitelist => `${actionTypePath}.${curr}`.startsWith(whitelist))) {
           const result = recurse(state[curr]);
-          if (result !== undefined) {
+          if (result !== undefined)
             prev[curr] = result;
-          }
         }
         return prev;
       }, {} as Record<string, unknown>);
@@ -203,14 +201,12 @@ const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }:
   const updateUnchanged = (stateBefore: unknown, stateAfter: unknown) => {
     const recurse = (before: unknown, after: unknown, keyCollector: string) => {
       if (is.record(after)) {
-        if (JSON.stringify(after) === JSON.stringify(before)) {
+        if (JSON.stringify(after) === JSON.stringify(before))
           unchanged.push(keyCollector);
-        }
         Object.keys(after).forEach(key => recurse(is.record(before) ? before[key] : {}, after[key], `${keyCollector}.${key}`));
       } else if (is.array(after)) {
-        if (JSON.stringify(after) === JSON.stringify(before)) {
+        if (JSON.stringify(after) === JSON.stringify(before))
           unchanged.push(keyCollector);
-        }
         after.forEach((_, i) => recurse(is.array(before) ? before[i] : [], after[i], `${keyCollector}.${i}`));
       } else if (before === after) {
         unchanged.push(keyCollector);
@@ -218,11 +214,10 @@ const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }:
     }
     recurse(stateBefore, stateAfter, '');
   }
-  if (tupleIncludes(func, ['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge', '$toggle', '$add', '$subtract', '$push'])) {
+  if (tupleIncludes(func, ['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge', '$toggle', '$add', '$subtract', '$push']))
     updateUnchanged(selectedStateBefore, selectedStateAfter);
-  } else if (tupleIncludes(func, ['$clear']) && is.array(selectedStateBefore) && !selectedStateBefore.length) {
+  else if (tupleIncludes(func, ['$clear']) && is.array(selectedStateBefore) && !selectedStateBefore.length)
     unchanged.push('');
-  }
   return unchanged;
 }
 

@@ -1,5 +1,5 @@
 import { StateAction, deserialize, readState, updatePropMap } from "olik";
-import { ForwardedRef } from "react";
+import { ForwardedRef, useMemo } from "react";
 import { silentlyApplyStateAction, useForwardedRef, useRecord } from "../shared/functions";
 import { Props, State } from "./constants";
 import { TreeProps } from "../tree/constants";
@@ -9,10 +9,11 @@ export const useInputs = (
   props: Props,
   ref: ForwardedRef<HTMLDivElement>
 ) => {
-  const localState = useLocalState(ref);
+  const state = useLocalState(ref);
+  useStorageSynchronizer(state);
   return {
-    ...localState,
-    treeProps: getTreeProps(props, localState),
+    ...state,
+    treeProps: getTreeProps(props, state),
   };
 }
 
@@ -67,3 +68,22 @@ const doReadState = (type: string, state: unknown) => {
   return readState(state, stateActions);
 }
 
+const useStorageSynchronizer = (state: ReturnType<typeof useLocalState>) => {
+  const { set } = state;
+  const key = 'contractedKeys' as const;
+  useMemo(() => {
+    if (chrome.runtime) {
+      chrome.storage.local.get(key, (result) => { set({ [key]: result as string[] }); });
+    } else {
+      const keys = localStorage.getItem(key);
+      if (keys)
+        set({ [key]: JSON.parse(keys) as string[] });
+    }
+  }, [set])
+  useMemo(() => {
+    if (chrome.runtime)
+      chrome.storage.local.set({ [key]: state.contractedKeys }, () => null);
+    else
+      localStorage.setItem(key, JSON.stringify(state.contractedKeys));
+  }, [state.contractedKeys]);
+}
