@@ -32,27 +32,30 @@ export const useLocalState = (
 const useDerivedState = (
   props: RenderNodeArgs,
   state: ReturnType<typeof useLocalState>,
-) => {
-  const isPrimitive = !is.array(props.item) && !is.record(props.item);
-  const hasObjectKey = props.objectKey !== undefined;
-  const showActionType = props.isTopLevel && !!props.actionType;
-  const isUnchanged = useMemo(() => {
+) => ({
+  isPrimitive: !is.array(props.item) && !is.record(props.item),
+  hasObjectKey: props.objectKey !== undefined,
+  showActionType: props.isTopLevel && !!props.actionType,
+  isUnchanged: useMemo(() => {
     return props.unchanged.includes(props.keyConcat);
-  }, [props.keyConcat, props.unchanged]);
-  const isContracted = useMemo(() => {
+  }, [props.keyConcat, props.unchanged]),
+  isContracted: useMemo(() => {
     return props.contractedKeys.includes(props.keyConcat);
-  }, [props.contractedKeys, props.keyConcat]);
-  const isHidden = useMemo(() => {
+  }, [props.contractedKeys, props.keyConcat]),
+  isHidden: useMemo(() => {
     return props.unchanged.includes(props.keyConcat) && props.hideUnchanged;
-  }, [props.hideUnchanged, props.keyConcat, props.unchanged]);
-  const isEmpty = useMemo(() => {
+  }, [props.hideUnchanged, props.keyConcat, props.unchanged]),
+  isChanged: useMemo(() => {
+    return props.changed.includes(props.keyConcat);
+  }, [props.changed, props.keyConcat]),
+  isEmpty: useMemo(() => {
     if (is.array(props.item))
       return !props.item.length;
     if (is.record(props.item))
       return !Object.keys(props.item).length;
     return false;
-  }, [props.item]);
-  const nodeEl = useMemo(() => {
+  }, [props.item]),
+  nodeEl: useMemo(() => {
     if (is.null(props.item))
       return 'null';
     if (is.undefined(props.item))
@@ -66,64 +69,43 @@ const useDerivedState = (
     if (is.date(props.item))
       return props.item.toISOString();
     return props.item;
-  }, [props.item]) as ReactNode;
-  const isChanged = useMemo(() => {
-    return props.changed.includes(props.keyConcat);
-  }, [props.changed, props.keyConcat]);
-  const $displayInline = props.displayInline;
-  const $showTextArea = state.isShowingTextArea;
-  const $unchanged = useMemo(() => {
-    return props.unchanged.includes(props.keyConcat);
-  }, [props.keyConcat, props.unchanged])
-  const $isArrayOrObject = useMemo(() => {
-    return is.array(props.item) || is.record(props.item);
-  }, [props.item]);
-  const $color = useMemo(() => {
-    if (props.unchanged.includes(props.keyConcat))
-      return 'gray';
-    if (is.array(props.item))
-      return 'red';
-    if (is.record(props.item))
-      return 'violet';
-    if (is.number(props.item))
-      return 'darkorange';
-    if (is.string(props.item))
-      return 'green';
-    if (is.date(props.item))
-      return 'deepskyblue';
-    if (is.null(props.item))
-      return 'lightblue';
-    if (is.boolean(props.item))
-      return '#00ff3c';
-    if (is.undefined(props.item))
-      return 'magenta';
-  }, [props.item, props.keyConcat, props.unchanged]);
-  const $nonValueColor = useMemo(() => {
-    if (props.unchanged.includes(props.keyConcat))
-      return 'gray';
-    return '#e4e4e4';
-  }, [props.keyConcat, props.unchanged]);
-  const styles = useMemo(() => ({
-    $unchanged,
-    $displayInline,
-    $showTextArea,
-    $isArrayOrObject,
-    $color,
-    $nonValueColor,
-  }), [$unchanged, $displayInline, $showTextArea, $isArrayOrObject, $color, $nonValueColor]);
-  return {
-    isPrimitive,
-    hasObjectKey,
-    showActionType,
-    isUnchanged,
-    isContracted,
-    isHidden,
-    isEmpty,
-    nodeEl,
-    isChanged,
-    styles,
-  }
-};
+  }, [props.item]) as ReactNode,
+  styles: {
+    $displayInline: props.displayInline,
+    $showTextArea: state.isShowingTextArea,
+    $unchanged: useMemo(() => {
+      return props.unchanged.includes(props.keyConcat);
+    }, [props.keyConcat, props.unchanged]),
+    $isArrayOrObject: useMemo(() => {
+      return is.array(props.item) || is.record(props.item);
+    }, [props.item]),
+    $nonValueColor: useMemo(() => {
+      if (props.unchanged.includes(props.keyConcat))
+        return 'gray';
+      return '#e4e4e4';
+    }, [props.keyConcat, props.unchanged]),
+    $color: useMemo(() => {
+      if (props.unchanged.includes(props.keyConcat))
+        return 'gray';
+      if (is.array(props.item))
+        return 'red';
+      if (is.record(props.item))
+        return 'violet';
+      if (is.number(props.item))
+        return 'darkorange';
+      if (is.string(props.item))
+        return 'green';
+      if (is.date(props.item))
+        return 'deepskyblue';
+      if (is.null(props.item))
+        return 'lightblue';
+      if (is.boolean(props.item))
+        return '#00ff3c';
+      if (is.undefined(props.item))
+        return 'magenta';
+    }, [props.item, props.keyConcat, props.unchanged]),
+  },
+});
 
 const useValueUpdater = (
   props: RenderNodeArgs,
