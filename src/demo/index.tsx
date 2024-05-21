@@ -82,18 +82,6 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
             children='set empty array deep 2'
             onClick={outputs.setEmptyArrayDeep2}
           />
-
-
-
-
-          <SimpleButton
-            children={`increment | ${inputs.localState.num}`}
-            onClick={() => inputs.localStore.num.$add(1)}
-          />
-          <SimpleButton
-            children={`increment | ${inputs.localState.obj.num2}`}
-            onClick={() => inputs.localStore.obj.num2.$add(1)}
-          />
         </>
       }
     />

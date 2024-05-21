@@ -53,6 +53,7 @@ export const ParentNode = styled(span) <StyleProps>`
 export const ChildNode = styled(span) <StyleProps>`
   position: relative;
   min-width: 0;
+  word-wrap: break-word;
   color: ${p => p.$color};
   ${p => !p.$displayInline && p.$isArrayOrObject && css`padding-left: 16px`};
   ${p => !p.$displayInline && p.$isArrayOrObject && css`display: block`};

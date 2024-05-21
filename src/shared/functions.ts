@@ -59,13 +59,13 @@ export const silentlyApplyStateAction = (store: BasicStore, queryString: string)
 		const segments = new Array<string>();
 		let parenOpened = false;
 		str.split('').forEach(char => {
-			if (char === '.' && !parenOpened) 
+			if (char === '.' && !parenOpened)
 				return segments.push('');
-			if (char === '(') 
+			if (char === '(')
 				parenOpened = true;
 			if (char === ')')
 				parenOpened = false;
-			if (!segments.length) 
+			if (!segments.length)
 				segments.push('');
 			segments[segments.length - 1] += char;
 		});
@@ -98,7 +98,7 @@ export const useRecord = <R extends BasicRecord>(record: R) => {
 	const [, setCount] = useState(0);
 	const stateRef = useRef({
 		...record,
-		set: (arg: Partial<R> | ((r: R) => (Partial<R> | void) )) => {
+		set: (arg: Partial<R> | ((r: R) => (Partial<R> | void))) => {
 			const newState = is.function<[R], Partial<R>>(arg) ? arg(stateRef) : arg;
 			if (newState === undefined)
 				return;
@@ -178,3 +178,39 @@ export const useAttributeObserver = <T extends HTMLElement>(
 		return () => observer?.disconnect();
 	}, [arg.element]);
 }
+
+/**
+ * An alternative to navigator.clipboard.readText() which works within the chrome extension context without errors.
+ */
+export const clipboardRead = () => {
+	return new Promise<string>((resolve, reject) => {
+		const el = document.createElement('textarea')
+		el.value = 'before paste'
+		document.body.append(el)
+		el.select()
+		const success = document.execCommand('paste')
+		const text = el.value
+		el.remove()
+		if (!success)
+			reject(new Error('Unable to read from clipboard'))
+		resolve(text)
+	});
+}
+
+/**
+ * An alternative to navigator.clipboard.writeText() which works within the chrome extension context without errors.
+ */
+export const clipboardWrite = (text: string) => {
+	return new Promise<string>((resolve, reject) => {
+		const el = document.createElement('textarea')
+		el.value = text
+		document.body.append(el)
+		el.select()
+		const success = document.execCommand('copy')
+		el.remove()
+		if (!success)
+			reject(new Error('Unable to write to clipboard'))
+		resolve(text)
+	});
+}
+	

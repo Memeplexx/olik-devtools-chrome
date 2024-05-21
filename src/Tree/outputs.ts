@@ -1,12 +1,12 @@
 import { MouseEvent } from "react";
 import { InputValue, ValueType } from "../input/constants";
-import { useEventHandlerForDocument } from "../shared/functions";
+import { clipboardWrite, useEventHandlerForDocument } from "../shared/functions";
 import { RenderNodeArgs, State } from "./constants";
 import { assertIsArray, assertIsRecord, is } from "../shared/type-check";
 
 export const useOutputs = (props: RenderNodeArgs, state: State) => ({
   onClickCopy: async () => {
-    await navigator.clipboard.writeText(JSON.stringify(props.item, null, 2));
+    await clipboardWrite(JSON.stringify(props.item, null, 2));
     state.set({ showOptions: false, showArrayOptions: false });
   },
   onClickDelete: () => {

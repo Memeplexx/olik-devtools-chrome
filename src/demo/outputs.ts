@@ -2,11 +2,11 @@ import { useInputs } from "./inputs";
 import { useShared } from "./shared";
 
 export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
-  const { store } = inputs;
+  const { store, numStore } = inputs;
   const shared = useShared(inputs);
   return {
     increment: () => {
-      store.num.$add(1);
+      numStore.$add(1);
     },
     patch: () => {
       store.flatObj.$patch({ one: 'hee', two: '' });
@@ -65,13 +65,13 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
       })
     },
     setEmptyArrayDeep2: () => {
-      store.$patch({
-        arrNested: [
-          [
-            store.obj.one.four,
-          ]
-        ]
-      })
+      // store.$patch({
+      //   arrNested: [
+      //     [
+      //       store.obj.one.four,
+      //     ]
+      //   ]
+      // })
     },
   };
 };

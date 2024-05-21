@@ -1,13 +1,14 @@
 export const initialState = {
   modal: null as 'confirmDeleteGroup' | 'confirmDeleteTag' | 'synonymOptions' | 'groupOptions' | null,
   bool: false,
+  lll: 0,
   thing: {},
   flatObj: {
     one: 'hello hello hello hello hello hello hello hello',
     two: 'world',
     three: 'another',
   },
-  num: 0,
+  // num: 0,
   obj: {
     one: {
       two: 'hello',
