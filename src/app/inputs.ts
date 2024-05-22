@@ -1,7 +1,7 @@
 import { differenceInHours, differenceInMilliseconds, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { BasicRecord, DevtoolsAction, StateAction, createStore, isoDateRegexp, libState, readState, setNewStateAndNotifyListeners, tupleIncludes } from "olik";
 import { useEffect, useMemo, useRef } from "react";
-import { useRecord } from "../shared/functions";
+import { useRecord, useStorageSynchronizer } from "../shared/functions";
 import { assertIsRecord, assertIsUpdateFunction, is } from '../shared/type-check';
 import { BasicStore } from '../shared/types';
 import { Item, State, initialState } from "./constants";
@@ -12,6 +12,9 @@ export const useInputs = () => {
   useMessageHandler(localState);
   useAutoScroller(localState);
   useRefreshOnPageRefresh(localState);
+  useStorageSynchronizer(localState, 'hideHeaders');
+  useStorageSynchronizer(localState, 'hideUnchanged');
+  useStorageSynchronizer(localState, 'displayInline');
   return {
     ...localState,
     ...derivedState,

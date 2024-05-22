@@ -94,7 +94,8 @@ export const silentlyApplyStateAction = (store: BasicStore, queryString: string)
 	}
 }
 
-export const useRecord = <R extends BasicRecord>(record: R) => {
+export type Record<R> = R & { set: (arg: Partial<R> | ((r: R) => void | Partial<R>)) => void; }
+export const useRecord = <R extends BasicRecord>(record: R): Record<R> => {
 	const [, setCount] = useState(0);
 	const stateRef = useRef({
 		...record,
@@ -213,4 +214,25 @@ export const clipboardWrite = (text: string) => {
 		resolve(text)
 	});
 }
-	
+
+export const useStorageSynchronizer = <S, K extends keyof S & string>(state: Record<S>, key: K) => {
+  useMemo(() => {
+    if (chrome.runtime) {
+      chrome.storage.local.get(key, (result) => {
+        if (!result[key]) return;
+        state.set({ [key]: (result as S)[key] } as unknown as Partial<S>);
+      });
+    } else {
+      const str = localStorage.getItem(key);
+      if (!str) return;
+      state.set({ [key]: JSON.parse(str) as unknown as S } as unknown as Partial<S>);
+    }
+  }, [state, key])
+	const val = state[key];
+  useMemo(() => {
+    if (chrome.runtime)
+			chrome.storage.local.set({ [key]: val }, () => null);
+    else
+      localStorage.setItem(key, JSON.stringify(val));
+  }, [key, val]);
+}

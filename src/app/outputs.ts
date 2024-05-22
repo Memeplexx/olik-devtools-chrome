@@ -47,16 +47,16 @@ export const useOutputs = (state: State) => ({
   },
 });
 
-const silentlyUpdateAppStoreState = (state: State, newState: BasicRecord) => {
+const silentlyUpdateAppStoreState = (local: State, newState: BasicRecord) => {
   if (!chrome.runtime) {
     libState.disableDevtoolsDispatch = true;
-    state.storeRef.current!.$set(newState);
+    local.storeRef.current!.$set(newState);
     libState.disableDevtoolsDispatch = false;
   } else {
     const updateDiv = (state: string) => document.getElementById('olik-state')!.innerHTML = state;
     chrome.tabs
       .query({ active: true })
-      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: updateDiv, args: [JSON.stringify(state)] }))
+      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: updateDiv, args: [JSON.stringify(newState)] }))
       .catch(console.error);
   }
 }
