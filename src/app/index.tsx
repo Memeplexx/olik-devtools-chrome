@@ -4,7 +4,7 @@ import { IconOption, PopupList } from '../popup-list';
 import { FragmentProps } from './constants';
 import { useInputs } from './inputs';
 import { useOutputs } from './outputs';
-import { ClearIcon, DemoPanel, DevtoolsPanel, Divider, EditorPanel, Error, HeaderDown, HeaderUp, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, TimeIcon, ToggleOffIcon, ToggleOnIcon } from './styles';
+import { ClearIcon, DemoPanel, DevtoolsPanel, Divider, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, TimeIcon, ToggleOffIcon, ToggleOnIcon } from './styles';
 
 export const App = () => {
   const inputs = useInputs();
@@ -100,14 +100,14 @@ const ResizerFragment = ({ inputs, outputs }: FragmentProps) => (
                           onClick={outputs.onClickDisplayInline}
                         />
                         <IconOption
+                          icon={inputs.hideHeaders ? ToggleOnIcon : ToggleOffIcon}
+                          text='Hide trace headers'
+                          onClick={outputs.onClickHideHeaders}
+                        />
+                        <IconOption
                           icon={ClearIcon}
                           text='Clear'
                           onClick={outputs.onClickClear}
-                        />
-                        <IconOption
-                          icon={inputs.hideHeaders ? HeaderDown : HeaderUp}
-                          text='Hide trace headers'
-                          onClick={outputs.onClickHideHeaders}
                         />
                       </>
                     }

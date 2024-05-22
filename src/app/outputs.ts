@@ -53,10 +53,13 @@ const silentlyUpdateAppStoreState = (local: State, newState: BasicRecord) => {
     local.storeRef.current!.$set(newState);
     libState.disableDevtoolsDispatch = false;
   } else {
-    const updateDiv = (state: string) => document.getElementById('olik-state')!.innerHTML = state;
     chrome.tabs
       .query({ active: true })
-      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: updateDiv, args: [JSON.stringify(newState)] }))
+      .then(result => chrome.scripting.executeScript({
+        target: { tabId: result[0].id! },
+        func: (state: string) => document.getElementById('olik-state')!.innerHTML = state,
+        args: [JSON.stringify(newState)]
+      }))
       .catch(console.error);
   }
 }

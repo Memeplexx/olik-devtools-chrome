@@ -219,12 +219,12 @@ export const useStorageSynchronizer = <S, K extends keyof S & string>(state: Rec
   useMemo(() => {
     if (chrome.runtime) {
       chrome.storage.local.get(key, (result) => {
-        if (!result[key]) return;
+        if (typeof(result[key]) === 'undefined') return;
         state.set({ [key]: (result as S)[key] } as unknown as Partial<S>);
       });
     } else {
       const str = localStorage.getItem(key);
-      if (!str) return;
+      if (str === null) return;
       state.set({ [key]: JSON.parse(str) as unknown as S } as unknown as Partial<S>);
     }
   }, [state, key])
@@ -232,7 +232,7 @@ export const useStorageSynchronizer = <S, K extends keyof S & string>(state: Rec
   useMemo(() => {
     if (chrome.runtime)
 			chrome.storage.local.set({ [key]: val }, () => null);
-    else
+		else
       localStorage.setItem(key, JSON.stringify(val));
   }, [key, val]);
 }

@@ -93,10 +93,12 @@ const demoAppMessageListener = (state: State, event: MessageEvent<DevtoolsAction
 const chromeMessageListener = (state: State, event: DevtoolsAction) => {
   if (event.actionType === '$load()') {
     state.storeRef.current = createStore<BasicRecord>({});
-    const notifyAppOfInitialization = () => document.getElementById('olik-init')!.innerHTML = 'done';
     chrome.tabs
       .query({ active: true })
-      .then(result => chrome.scripting.executeScript({ target: { tabId: result[0].id! }, func: notifyAppOfInitialization }))
+      .then(result => chrome.scripting.executeScript({
+        target: { tabId: result[0].id! },
+        func: () => document.getElementById('olik-init')!.innerHTML = 'done'
+      }))
       .catch(console.error);
     state.set({ error: '', whitelist: event.stateActions.map(s => s.name) });
   } else {
