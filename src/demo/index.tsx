@@ -20,10 +20,6 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
             onClick={outputs.patch}
           />
           <SimpleButton
-            children='patch2'
-            onClick={outputs.patch2}
-          />
-          <SimpleButton
             children='patchDeep'
             onClick={outputs.patchDeep}
           />
@@ -53,6 +49,10 @@ export const Demo = (props: React.HTMLAttributes<HTMLDivElement>) => {
           <SimpleButton
             children='find & set'
             onClick={outputs.findAndSet}
+          />
+          <SimpleButton
+            children='find & set 2'
+            onClick={outputs.findAndSet2}
           />
           <SimpleButton
             children='merge matching arr'

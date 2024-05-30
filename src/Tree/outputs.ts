@@ -76,7 +76,7 @@ export const useOutputs = (props: RenderNodeArgs, state: State) => ({
   },
   onChangeInputElement: (isShowingTextArea: boolean) => {
     state.set({ isShowingTextArea });
-  },
+  }, 
   onChangeValueType: (type: ValueType) => {
     state.set({ type });
   },

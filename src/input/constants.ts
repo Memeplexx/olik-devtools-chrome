@@ -3,7 +3,7 @@ import { PopupListProps } from "../popup-list/consts";
 import { useDerivedState, useInputs, useLocalState } from "./inputs";
 
 
-export const types = ['string', 'number', 'boolean', 'date', 'null'] as const;
+export const types = ['string', 'number', 'boolean', 'date', 'null', ''] as const;
 
 export type ValueType = typeof types[keyof typeof types];
 

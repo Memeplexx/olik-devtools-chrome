@@ -130,5 +130,5 @@ const getValueType = (item: unknown): ValueType => {
     return 'date';
   if (is.null(item))
     return 'null';
-  return 'string';
+  return '';
 }

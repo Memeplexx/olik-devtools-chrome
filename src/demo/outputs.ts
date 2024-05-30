@@ -11,9 +11,6 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
     patch: () => {
       store.flatObj.$patch({ one: 'hee', two: '' });
     },
-    patch2: () => {
-      store.flatObj.$patch({ one: 'hee', two: store.arr.$find.id.$eq(3).text });
-    },
     patchDeep: () => {
       store.obj.$patchDeep({ one: { two: 'hee', three: true, four: 4 }, two: { three: [[9]] } });
     },
@@ -38,6 +35,11 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
       const id = store.$state.arr[0]?.id;
       if (!id) return;
       store.arr.$find.id.$eq(id).text.$set('changed');
+    },
+    findAndSet2: () => {
+      const id = store.$state.arr[0]?.id;
+      if (!id) return;
+      store.arr.$find.id.$eq(store.arr.$at(0).id).text.$set('changed');
     },
     onClickLongStackTrace: () => {
       shared.thing();

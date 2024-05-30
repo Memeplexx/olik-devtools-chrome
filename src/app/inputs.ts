@@ -2,7 +2,7 @@ import { differenceInHours, differenceInMilliseconds, differenceInMinutes, diffe
 import { BasicRecord, DevtoolsAction, StateAction, createStore, isoDateRegexp, libState, readState, setNewStateAndNotifyListeners, tupleIncludes } from "olik";
 import { useEffect, useMemo, useRef } from "react";
 import { useRecord, useStorageSynchronizer } from "../shared/functions";
-import { assertIsRecord, assertIsUpdateFunction, is } from '../shared/type-check';
+import { assertIsUpdateFunction, is } from '../shared/type-check';
 import { BasicStore } from '../shared/types';
 import { Item, State, initialState } from "./constants";
 
@@ -192,7 +192,7 @@ const processEvent = (state: State, event: DevtoolsAction) => {
           changed: event.stateActions.at(-1)!.name === '$delete' ? [] : getChangedKeys({ fullStateBefore, fullStateAfter }),
           unchanged: getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming: event }),
           actionType: event.actionType.substring(0, event.actionType.length - 2),
-          actionPayload: applyPayloadPaths(payload, event),
+          actionPayload: payload,
         }
       ],
     };
@@ -224,26 +224,6 @@ const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }:
   else if (tupleIncludes(func, ['$clear']) && is.array(selectedStateBefore) && !selectedStateBefore.length)
     unchanged.push('');
   return unchanged;
-}
-
-const applyPayloadPaths = (payload: unknown, incoming: DevtoolsAction) => {
-  const { payloadPaths } = incoming;
-  if (!payloadPaths) return payload;
-  assertIsRecord(payloadPaths);
-  let payloadCopy = JSON.parse(JSON.stringify(payload)) as unknown;
-  Object.keys(payloadPaths).forEach(path => {
-    const segments = path.split('.');
-    const recurse = (value: unknown, depth: number): unknown => {
-      if (is.record(value))
-        return Object.keys(value)
-          .reduce((prev, curr) => Object.assign(prev, { [curr]: curr === segments[depth] ? recurse(value[curr], depth + 1) : value[curr] }), {});
-      if (is.array(value))
-        return value.map((e, i) => i.toString() === segments[depth] ? recurse(value[i], depth + 1) : e);
-      return payloadPaths[path] as unknown;
-    }
-    payloadCopy = recurse(payloadCopy, 0);
-  });
-  return payloadCopy;
 }
 
 const getChangedKeys = ({ fullStateBefore, fullStateAfter }: { fullStateBefore: unknown, fullStateAfter: unknown }) => {
