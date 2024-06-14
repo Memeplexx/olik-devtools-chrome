@@ -32,7 +32,7 @@ export const App = () => {
                     onEnter={outputs.onEditorEnter}
                   />
                   <PanelGroup
-                    direction="vertical"
+                    direction='vertical'
                     children={
                       <>
                         <CurrentStateFragment

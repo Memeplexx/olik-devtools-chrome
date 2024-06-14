@@ -4,7 +4,7 @@ import { State } from "../state";
 import { Panel, PanelResizeHandle } from "react-resizable-panels";
 import { CiCircleRemove } from 'react-icons/ci';
 import { BsToggleOff, BsToggleOn } from 'react-icons/bs';
-import { DemoWrapper } from "../demo/demo-wrapper";
+import { Demo } from "../demo";
 import { IoMdMore } from "react-icons/io";
 import { Tree } from "../tree";
 import { LiaArrowsAltVSolid } from "react-icons/lia";
@@ -196,6 +196,6 @@ export const ItemsWrapper = styled(Panel)`
 	flex-direction:column-reverse;
 `;
 
-export const DemoPanel = styled(element(DemoWrapper))`
+export const DemoPanel = styled(element(Demo))`
 	max-width: 50vw;
 `;

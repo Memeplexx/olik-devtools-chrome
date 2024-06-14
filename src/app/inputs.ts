@@ -219,7 +219,7 @@ const getUnchangedKeys = ({ selectedStateBefore, selectedStateAfter, incoming }:
     }
     recurse(stateBefore, stateAfter, '');
   }
-  if (tupleIncludes(func, ['$set', '$setUnique', '$setNew', '$patchDeep', '$patch', '$with', '$merge', '$toggle', '$add', '$subtract', '$push']))
+  if (tupleIncludes(func, ['$set', '$setNew', '$patchDeep', '$patch', '$with', '$merge', '$toggle', '$add', '$subtract', '$push']))
     updateUnchanged(selectedStateBefore, selectedStateAfter);
   else if (tupleIncludes(func, ['$clear']) && is.array(selectedStateBefore) && !selectedStateBefore.length)
     unchanged.push('');
