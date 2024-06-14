@@ -13,7 +13,7 @@ export const useInputs = () => {
   const numStore = local.num;
 
   if (typeof (navigator) !== 'undefined' && !/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
-    configureDevtools({ whitelist: [store.flatObj.one, store.flatObj.two] }); // TODO: fix typing issue
+    configureDevtools(/*{ whitelist: [store.flatObj.one, store.flatObj.two] }*/); // TODO: fix typing issue
 
   return {
     store,

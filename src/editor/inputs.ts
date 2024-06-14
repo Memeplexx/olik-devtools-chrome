@@ -71,7 +71,7 @@ const respondToEditorTextChanges = (props: Props, state: State) => {
     if (lines.length === 1 || lines.length > 2 || !lines[1].startsWith('store.')) {
       state.editorRef.current!.setValue(state.defaultEditorValue);
     } else {
-      const lastLine = state.editorRef.current!.getModel()!.getLineContent(2);
+      const lastLine = getSecondLineContent(state);
       props.onChange(lastLine.substring('store.'.length));
     }
   });
@@ -93,10 +93,17 @@ const respondToEditorEnterKeyup = (props: Props, state: State) => {
 
 const useStateChangeResponder = (props: Props, state: State) => {
   const previousStateRef = useRef(props.state);
-  if (!props.state) { return; }
-  if (props.state !== previousStateRef.current) {
-    const defaultEditorValue = reGenerateTypeDefinitions(props, state);
-    setTimeout(() => state.editorRef.current!.setValue(defaultEditorValue));
-    previousStateRef.current = props.state;
-  }
+  if (!props.state) return;
+  if (props.state === previousStateRef.current) return;
+  if (getSecondLineContent(state) !== 'store.') return;
+  const defaultEditorValue = reGenerateTypeDefinitions(props, state);
+  setTimeout(() => state.editorRef.current!.setValue(defaultEditorValue));
+  previousStateRef.current = props.state;
+}
+
+const getSecondLineContent = (state: State) => {
+  if (!state.editorRef.current) return '';
+  const model = state.editorRef.current.getModel()!;
+  if (model.getLineCount() === 1) return '';
+  return model.getLineContent(2);
 }

@@ -33,9 +33,10 @@ const useDerivedState = (state: State) => ({
   itemsGrouped: useMemo(() => {
     return state.items
       .filter(i => i.visible)
+      .filter(i => i.actionType.startsWith(state.query))
       .groupBy(i => i.groupIndex)
       .map(items => ({ id: items[0].id, event: items[0].event, items }));
-  }, [state.items]),
+  }, [state.items, state.query]),
   ...useMemo(() => {
     return state.items.find(i => i.id === state.selectedId) ?? state.items.at(-1) ?? { changed: [], fullState: {} } as Partial<Item>;
   }, [state.items, state.selectedId]),
