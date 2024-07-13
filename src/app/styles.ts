@@ -3,7 +3,7 @@ import { Editor } from "../editor";
 import { State } from "../state";
 import { Panel, PanelResizeHandle } from "react-resizable-panels";
 import { CiCircleRemove } from 'react-icons/ci';
-import { BsToggleOff, BsToggleOn } from 'react-icons/bs';
+import { BsCopy, BsToggleOff, BsToggleOn } from 'react-icons/bs';
 import { Demo } from "../demo";
 import { IoMdMore } from "react-icons/io";
 import { Tree } from "../tree";
@@ -67,56 +67,79 @@ export const Items = styled.div`
 `;
 
 export const ItemWrapper = styled.div`
-  padding-left: 3px solid rgba(255,255,255,0.4);
+	position: relative;
 `;
 
 export const TimeIcon = styled(TbClock)``;
 
-export const ItemHeading = styled(div)`
-	color: white;
-	transition: all 0.2s;
-	padding: 4px;
-	overflow: hidden;
-	background-color: rgba(255,255,255,0.1);
-	cursor: pointer;
-	:hover {
-		background-color: rgba(255,255,255,0.4);
-	}
-`;
 
-export const Divider = styled(div)`
-	height: 2px;
-	background-color: grey;
-	margin: 4px 0;
-`;
-
-export const ItemHead = styled.div`
-  white-space: nowrap;
-	text-align: end;
-`;
-
-export const ItemContent = styled.div<{ $isSelected?: boolean, $showBottomBorder: boolean }>`
+export const ItemContent = styled.div<{ $isSelected?: boolean }>`
 	${p => p.$isSelected ? css`filter: invert(1)` : ''};
 	background-color: rgb(28, 28, 28);
 	cursor: pointer;
-  margin-left: 4px;
 	position: relative;
-	padding: 4px;
+	padding: 0 8px;
 	&:hover {
 		background-color: black;
 	}
-	${p => p.$showBottomBorder ? css`border-bottom: 1px solid #4c4c4c;` : ''};
 `;
 
 export const ItemJsx = styled(Tree)`
 	white-space: nowrap;
 `;
 
-export const ItemTime = styled.div`
-	color: white;
+export const LeftBorder = styled.div<{ $isLast: boolean, $isHovered: boolean }>`
 	position: absolute;
-	right: 0;
+	bottom: ${p => p.$isLast ? '4px' : '0'};
 	top: 0;
+	left: 0;
+	width: 4px;
+	background-color: ${p => p.$isHovered ? '#FFF' : '#363636'};
+`;
+
+export const CopyButton = styled.button`
+	color: #000;
+	border-radius: 50%;
+	padding: 4px;
+	margin: -4px 0;
+	width: 24px;
+	height: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	:hover {
+		background-color: #CCC;
+	}
+`;
+
+export const CopyIcon = styled(BsCopy)`
+`;
+
+export const Tag = styled(div)`
+	background-color: #000;
+	color: #FFF;
+	text-decoration: underline;
+	font-weight: bold;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0px 4px;
+  margin: 0 -4px;
+	z-index: 2;
+	:hover {
+		${CopyButton} {
+			opacity: 1;
+		}
+	}
+`;
+
+export const TagName = styled(div)`
+	display: flex;
+	align-items: center;
+`;
+
+export const ItemTime = styled.div`
 	padding: 2px;
 	background: #9d9d9d;
 	width: 70px;
@@ -124,6 +147,7 @@ export const ItemTime = styled.div`
 	display: flex;
 	justify-content: space-between;
 	background-color: transparent;
+	z-index: 2;
 `;
 
 export const EditorPanel = styled(Editor)`
@@ -170,7 +194,6 @@ export const ResizeHandle = styled(PanelResizeHandle)`
 export const ResizeHandleInner = styled.div`
 	flex: 1;
 	position: absolute;
-	transition: all - color 0.2s linear;
 	position: relative;
 	display: flex;
 `;

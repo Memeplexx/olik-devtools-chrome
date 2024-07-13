@@ -1,14 +1,16 @@
 import { BasicRecord, libState } from "olik";
-import { silentlyApplyStateAction } from "../shared/functions";
+import { clipboardWrite, silentlyApplyStateAction } from "../shared/functions";
 import { Item, State } from "./constants";
+import { MouseEvent } from "react";
 
 
 export const useOutputs = (state: State) => ({
+  onClickCopyTag: (tag: string) => (event: MouseEvent) => {
+    event.stopPropagation();
+    clipboardWrite(tag).catch(console.error);
+  },
   onClickHideIneffectiveActions: () => {
     state.set(s => ({ showOptions: false, hideUnchanged: !s.hideUnchanged }));
-  },
-  onClickHideHeaders: () => {
-    state.set(s => ({ showOptions: false, hideHeaders: !s.hideHeaders }));
   },
   onClickDisplayInline: () => {
     state.set(s => ({ showOptions: false, displayInline: !s.displayInline }));
@@ -43,6 +45,16 @@ export const useOutputs = (state: State) => ({
           contractedKeys: item.contractedKeys.includes(key) ? item.contractedKeys.filter(k => k !== key) : [...item.contractedKeys, key],
         } as Item;
       })
+    }));
+  },
+  onMouseOverItem: (id: number) => () => {
+    state.set(s => ({
+      items: s.items.map(item => ({ ...item, hovered: item.id === id })),
+    }));
+  },
+  onMouseOutItem: () => {
+    state.set(s => ({
+      items: s.items.map(item => ({ ...item, hovered: false })),
     }));
   },
 });

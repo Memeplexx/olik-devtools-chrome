@@ -20,6 +20,9 @@ dependencies:
   date-fns:
     specifier: ^3.4.0
     version: 3.4.0
+  error-stack-parser:
+    specifier: ^2.1.4
+    version: 2.1.4
   flatpickr:
     specifier: ^4.6.13
     version: 4.6.13
@@ -27,11 +30,11 @@ dependencies:
     specifier: ^0.40.0
     version: 0.40.0
   olik:
-    specifier: 1.0.118
-    version: 1.0.118
+    specifier: 1.0.130
+    version: 1.0.130
   olik-react:
-    specifier: 1.0.23
-    version: 1.0.23(olik@1.0.118)(vite@4.5.0)
+    specifier: 1.0.26
+    version: 1.0.26(olik@1.0.130)(vite@4.5.0)
   react:
     specifier: ^18.2.0
     version: 18.2.0
@@ -1466,6 +1469,12 @@ packages:
       is-arrayish: 0.2.1
     dev: false
 
+  /error-stack-parser@2.1.4:
+    resolution: {integrity: sha512-Sk5V6wVazPhq5MhpO+AUxJn5x7XSXGl1R93Vn7i+zS15KDVxQijejNCrz8340/2bgLBjR9GtEG8ZVKONDjcqGQ==}
+    dependencies:
+      stackframe: 1.3.4
+    dev: false
+
   /esbuild@0.18.20:
     resolution: {integrity: sha512-ceqxoedUrcayh7Y7ZX6NdbbDzGROiyVBgC4PriJThBKSVPWnnFHZAkfI1lJT8QFkOwH4qOS2SJkS4wvpGl8BpA==}
     engines: {node: '>=12'}
@@ -2094,21 +2103,21 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: false
 
-  /olik-react@1.0.23(olik@1.0.118)(vite@4.5.0):
-    resolution: {integrity: sha512-hBOILHpCG1hs2FPgAR+leD/KeCCjWywf439NgIHLjAuIetzu06bZ2iisrJNeXIUnnAsvVjbPEzxw6L6hHcFWrw==}
+  /olik-react@1.0.26(olik@1.0.130)(vite@4.5.0):
+    resolution: {integrity: sha512-PEA92Zxbz0nt8BDWMtEtqLnJ0bm10X4OVmswUkk83PVA7Qdb0iG7vyaQNm5knbSHETgqIBWXOAE4EQAww4wYyg==}
     peerDependencies:
       olik: ^1.0.8
     dependencies:
       '@testing-library/jest-dom': 5.17.0
       '@vitejs/plugin-react': 4.2.0(vite@4.5.0)
-      olik: 1.0.118
+      olik: 1.0.130
     transitivePeerDependencies:
       - supports-color
       - vite
     dev: false
 
-  /olik@1.0.118:
-    resolution: {integrity: sha512-WHJSerbdG9AXCTvN8HF4QmKA23jlCq2dHXhdsVnTpDFdEyifN8k+0hiaVu7Fh2oEJkJ7riVQtrSwZUC75p7QxQ==}
+  /olik@1.0.130:
+    resolution: {integrity: sha512-DQyAF6nm1iypyWSTwZbI9jJtTFLL4RQNYziJBDo6meKcKFEUSrX+tKAvuOEx0gZ3eo16c4LHXu3y+0gUy0PpyA==}
     dev: false
 
   /once@1.4.0:
@@ -2373,6 +2382,10 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       escape-string-regexp: 2.0.0
+    dev: false
+
+  /stackframe@1.3.4:
+    resolution: {integrity: sha512-oeVtt7eWQS+Na6F//S4kJ2K2VbRlS9D43mAlMyVpVWovy9o+jfgH8O9agzANzaiLjclA0oYzUXEM4PurhSUChw==}
     dev: false
 
   /strip-ansi@6.0.1:

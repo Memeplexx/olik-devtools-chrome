@@ -1,15 +1,13 @@
 import { configureDevtools } from "olik/devtools";
-import { createStoreHooks } from "olik-react";
-import { initialState } from "./constants";
-import { useMemo } from "react";
+import { hooks } from "./store";
+
+
 
 
 export const useInputs = () => {
 
-  const { useStore, useLocalStore } = useMemo(() => createStoreHooks(initialState), []);
-
-  const { store } = useStore();
-  const { local, state: { num, bool } } = useLocalStore('child', { num: 0, bool: false });
+  const { store } = hooks.useStore();
+  const { local, state: { num, bool } } = hooks.useLocalStore('child', { num: 0, bool: false });
   const numStore = local.num;
 
   if (typeof (navigator) !== 'undefined' && !/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))

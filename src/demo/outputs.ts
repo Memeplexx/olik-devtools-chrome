@@ -4,7 +4,7 @@ import { useShared } from "./shared";
 export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
   const { store, numStore } = inputs;
   const shared = useShared(inputs);
-  return {
+  const result = {
     increment: () => {
       numStore.$add(1);
     },
@@ -45,10 +45,10 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
       shared.thing();
     },
     mergeMatchingArr: () => {
-      store.arr.$mergeMatching.id.$with([{ id: 3, text: 'changed'}, { id: 4, text: 'another'}]);
+      store.arr.$mergeMatching.id.$with([{ id: 3, text: 'changed' }, { id: 4, text: 'another' }]);
     },
     mergeMatchingSing: () => {
-      store.arr.$mergeMatching.id.$with({ id: 3, text: 'changed'})
+      store.arr.$mergeMatching.id.$with({ id: 3, text: 'changed' })
     },
     setNew: () => {
       store.$setNew({ hello: { one: 'world' } });
@@ -76,4 +76,5 @@ export const useOutputs = (inputs: ReturnType<typeof useInputs>) => {
       // })
     },
   };
+  return result;
 };

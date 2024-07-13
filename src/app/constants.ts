@@ -15,9 +15,10 @@ export type Item = {
   contractedKeys: string[],
   time: string,
   date: Date,
-  event: string[],
+  tag: string,
   groupIndex: number,
   visible: boolean,
+  hovered: boolean,
 }
 
 export const initialState = {
@@ -26,7 +27,6 @@ export const initialState = {
   items: new Array<Item>(),
   hideUnchanged: false,
   displayInline: false,
-  hideHeaders: false,
   query: '',
   showOptions: false,
 }

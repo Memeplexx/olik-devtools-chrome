@@ -5,6 +5,7 @@ import { useRecord, useStorageSynchronizer } from "../shared/functions";
 import { assertIsUpdateFunction, is } from '../shared/type-check';
 import { BasicStore } from '../shared/types';
 import { Item, State, initialState } from "./constants";
+import ErrorStackParser from 'error-stack-parser';
 
 export const useInputs = () => {
   const localState = useLocalState();
@@ -12,7 +13,6 @@ export const useInputs = () => {
   useMessageHandler(localState);
   useAutoScroller(localState);
   useRefreshOnPageRefresh(localState);
-  useStorageSynchronizer(localState, 'hideHeaders');
   useStorageSynchronizer(localState, 'hideUnchanged');
   useStorageSynchronizer(localState, 'displayInline');
   return {
@@ -35,7 +35,7 @@ const useDerivedState = (state: State) => ({
       .filter(i => i.visible)
       .filter(i => i.actionType.startsWith(state.query))
       .groupBy(i => i.groupIndex)
-      .map(items => ({ id: items[0].id, event: items[0].event, items }));
+      .map(items => ({ id: items[0].id, tag: items[0].tag, items }));
   }, [state.items, state.query]),
   ...useMemo(() => {
     return state.items.find(i => i.id === state.selectedId) ?? state.items.at(-1) ?? { changed: [], fullState: {} } as Partial<Item>;
@@ -46,7 +46,7 @@ const useAutoScroller = (state: State) => {
   useMemo(() => {
     const selectors = state.items.find(i => i.id === state.selectedId)?.changed ?? state.items.at(-1)?.changed ?? [];
     const element = selectors.find(e => document.querySelector(`[data-key-input="${e}"]`));
-    element && document.querySelector(`[data-key-input="${element}"]`)?.scrollIntoView({ behavior: 'smooth' });
+    element && document.querySelector(`[data-key-input="${element}"]`)?.scrollIntoView();
   }, [state.items, state.selectedId])
 }
 
@@ -169,22 +169,30 @@ const stripPayloadWithWhitelist = (event: DevtoolsAction, whitelist: string[]) =
 const processEvent = (state: State, event: DevtoolsAction) => {
   if (event.actionType === '$addToWhitelist()')
     return state.set(s => ({ whitelist: [...new Set([...s.whitelist, ...event.stateActions.map(s => s.name)])] }));
+  const error = new Error();
+  Object.defineProperty(error, 'stack', { value: event.trace });
+  const traceItems = ErrorStackParser.parse(error).filter(e => !e.source?.includes('/node_modules/'));
+  console.log(traceItems)
+
   state.set(s => {
     const date = new Date();
-    const previousItem = s.items.at(-1) ?? { fullState: {}, event: [], groupIndex: 0, date };
+    const previousItem = s.items.at(-1) ?? { fullState: {}, tag: '', groupIndex: 0, date };
     const fullStateBefore = previousItem?.fullState ?? {};
     const fullStateAfter = s.storeRef.current!.$state;
     const selectedStateBefore = readSelectedState(fullStateBefore, event);
     const selectedStateAfter = readSelectedState(fullStateAfter, event);
-    const currentEvent = getCleanStackTrace(event.trace!);
+    const currentEvent = ErrorStackParser.parse(error).filter(e => !e.source?.includes('/node_modules/')).map(e => e.functionName!);
     const { show, payload } = stripPayloadWithWhitelist(event, s.whitelist);
+    const actionType = event.actionType.substring(0, event.actionType.length - 2);
+    const tag = currentEvent.at(0)!;
     return {
       items: [
         ...s.items,
         {
           id: ++s.idRef.current,
           event: currentEvent,
-          groupIndex: currentEvent.join() === previousItem.event.join() ? previousItem.groupIndex : previousItem.groupIndex + 1,
+          tag,
+          groupIndex: tag === previousItem.tag ? previousItem.groupIndex : previousItem.groupIndex + 1,
           fullState: fullStateAfter,
           visible: show,
           contractedKeys: [],
@@ -192,8 +200,9 @@ const processEvent = (state: State, event: DevtoolsAction) => {
           date,
           changed: event.stateActions.at(-1)!.name === '$delete' ? [] : getChangedKeys({ fullStateBefore, fullStateAfter }),
           unchanged: getUnchangedKeys({ selectedStateBefore, selectedStateAfter, incoming: event }),
-          actionType: event.actionType.substring(0, event.actionType.length - 2),
+          actionType,
           actionPayload: payload,
+          hovered: false,
         }
       ],
     };
@@ -261,28 +270,3 @@ const getTimeDiff = (from: Date, to: Date) => {
     return `${differenceInHours(from, to)} h`;
   return to.toLocaleDateString();
 }
-
-const getCleanStackTrace = (stack: string) => stack
-  .trim()
-  .substring('Error'.length)
-  .trim()
-  .split('\n')
-  .filter(s => !s.includes('node_modules'))
-  .map(s => s.trim().substring('at '.length).trim())
-  .map(s => {
-    const [fn, filePath] = s.split(' (');
-    let url: string;
-    const fun = fn.substring(fn.indexOf('.') + 1);
-    try {
-      url = new URL(filePath.replace('(app-pages-browser)/', '').substring(1, filePath.length - 2)).pathname;
-    } catch (e) {
-      return { fn: fun, filePath: '' };
-    }
-    return { fn: fun, filePath: url };
-  })
-  .filter(s => s.filePath !== '')
-  .map(s => ({ ...s, filePath: s.filePath.includes(':') ? s.filePath.substring(0, s.filePath.indexOf(':')) : s.filePath }))
-  .map(s => ({ ...s, filePath: s.filePath.replace(/\.[^/.]+$/, "") }))
-  .map(s => `${s.filePath}.${s.fn}`)
-  .map(s => s.replace('///', '').replace('//', ' '))
-  .reverse();

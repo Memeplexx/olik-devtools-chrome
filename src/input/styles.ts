@@ -12,7 +12,6 @@ const commonInputProps = css<CommonProps & { readOnly?: boolean }>`
     background-color: rgba(255,255,255,0.1);
   }
   ${p => p.$isChanged ? css`background-color: rgba(255,255,255,0.2); border-radius: 2px;` : css``};
-  ${p => p.$animate ? css`transition: 0.4s opacity` : ''};
   ${p => p.$initialized ? css`opacity: 1` : css`opacity: 0`};
   ${p => p.readOnly && css`pointer-events: none;`}
   ${p => p.readOnly ? css`cursor: not-allowed` : p.$valueType === 'boolean' || p.$valueType === 'date' ? css`cursor: pointer` : css`cursor: text`};

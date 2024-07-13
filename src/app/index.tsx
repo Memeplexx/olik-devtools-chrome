@@ -4,7 +4,7 @@ import { IconOption, PopupList } from '../popup-list';
 import { FragmentProps } from './constants';
 import { useInputs } from './inputs';
 import { useOutputs } from './outputs';
-import { ClearIcon, DemoPanel, DevtoolsPanel, Divider, EditorPanel, Error, ItemContent, ItemHead, ItemHeading, ItemJsx, ItemTime, ItemWrapper, Items, ItemsWrapper, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, TimeIcon, ToggleOffIcon, ToggleOnIcon } from './styles';
+import { ClearIcon, DemoPanel, DevtoolsPanel, EditorPanel, Error, ItemContent, ItemJsx, ItemWrapper, Items, ItemsWrapper, LeftBorder, Tag, MenuButton, MenuIcon, ResizablePanel, ResizeHandle, ResizeHandleInner, ResizeIcon, StatePanel, ToggleOffIcon, ToggleOnIcon, CopyIcon, CopyButton, ItemTime, TimeIcon, TagName } from './styles';
 
 export const App = () => {
   const inputs = useInputs();
@@ -100,11 +100,6 @@ const ResizerFragment = ({ inputs, outputs }: FragmentProps) => (
                           onClick={outputs.onClickDisplayInline}
                         />
                         <IconOption
-                          icon={inputs.hideHeaders ? ToggleOnIcon : ToggleOffIcon}
-                          text='Hide trace headers'
-                          onClick={outputs.onClickHideHeaders}
-                        />
-                        <IconOption
                           icon={ClearIcon}
                           text='Clear'
                           onClick={outputs.onClickClear}
@@ -131,29 +126,49 @@ const ListItemsFragment = ({ inputs, outputs }: FragmentProps) => (
         children={inputs.itemsGrouped.map(itemGroup => (
           <ItemWrapper
             key={itemGroup.id}
+            onMouseOver={outputs.onMouseOverItem(itemGroup.id)}
+            onMouseOut={outputs.onMouseOutItem}
             children={
               <>
-                <ItemHeading
-                  if={!inputs.hideHeaders}
-                  children={itemGroup.event.map((e, i) => (
-                    <ItemHead
-                      key={i}
-                      children={e}
-                    />
-                  ))}
-                />
-                <Divider
-                  if={inputs.hideHeaders}
-                />
-                {itemGroup.items.map((item, i, arr) => (
+                {itemGroup.items.map((item, index, arr) => (
                   <ItemContent
                     id={item.id.toString()}
                     key={item.id}
                     onClick={outputs.onClickItem(item.id)}
                     $isSelected={item.id === inputs.selectedId}
-                    $showBottomBorder={inputs.hideHeaders && i < arr.length - 1}
                     children={
                       <>
+                        <LeftBorder
+                          $isLast={index === arr.length - 1}
+                          $isHovered={itemGroup.items.some(i => i.hovered)}
+                        />
+                        <Tag
+                          if={!index && !!item.tag}
+                          children={
+                            <>
+                              <TagName
+                                children={
+                                  <>
+                                    {item.tag}
+                                    <CopyButton
+                                      title='Copy tag'
+                                      onClick={outputs.onClickCopyTag(item.tag)}
+                                      children={<CopyIcon />}
+                                    />
+                                  </>
+                                }
+                              />
+                              <ItemTime
+                                children={
+                                  <>
+                                    <TimeIcon />
+                                    {item.time}
+                                  </>
+                                }
+                              />
+                            </>
+                          }
+                        />
                         <ItemJsx
                           changed={item.changed}
                           unchanged={item.unchanged}
@@ -163,14 +178,6 @@ const ListItemsFragment = ({ inputs, outputs }: FragmentProps) => (
                           onClickNodeKey={outputs.onClickNodeKey(item.id)}
                           hideUnchanged={inputs.hideUnchanged}
                           displayInline={inputs.displayInline}
-                        />
-                        <ItemTime
-                          children={
-                            <>
-                              <TimeIcon />
-                              {item.time}
-                            </>
-                          }
                         />
                       </>
                     }
